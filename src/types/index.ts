@@ -36,8 +36,10 @@ export interface ProjectionRow {
   monthInYear: number;
   /** O Ay Yapılan DCA Yatırım Miktarı (TL) */
   monthlyDca: number;
-  /** O Aya Kadar Yatırılan Toplam Anapara (TL) */
+  /** O Aya Kadar Yatırılan Toplam Nominal Anapara (TL) */
   totalInvested: number;
+  /** O Aya Kadar Yatırılan Anaparanın t0 Bazındaki Reel Karşılığı (TL) */
+  realTotalInvested: number;
   /** O Ay Sonundaki Portföy Nominal Değeri (TL) */
   nominalValue: number;
   /** O Ay Sonundaki Portföy Enflasyondan Arındırılmış Reel Değeri (TL) */
@@ -60,8 +62,10 @@ export interface ProjectionRow {
 export interface ProjectionSummary {
   /** Toplam Süre (Ay Cinsinden) */
   totalMonths: number;
-  /** Toplam Yatırılan Anapara (TL) */
+  /** Toplam Yatırılan Nominal Anapara (TL) */
   totalInvested: number;
+  /** Toplam Yatırılan Anaparanın t0 Bazındaki Reel Karşılığı (TL) */
+  realTotalInvested: number;
   /** Vade Sonundaki Portföy Nominal Değeri (TL) */
   finalNominalValue: number;
   /** Vade Sonundaki Portföy Reel Değeri (TL) */

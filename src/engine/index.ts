@@ -40,6 +40,8 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
 
   let currentNominalValue = Math.max(0, params.initialCapital || 0);
   let totalInvested = Math.max(0, params.initialCapital || 0);
+  let realTotalInvested = Math.max(0, params.initialCapital || 0);
+
   const rows: ProjectionRow[] = [];
 
   for (let month = 1; month <= totalMonths; month++) {
@@ -53,8 +55,14 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
       month
     );
 
-    // Anaparaya DCA ekle
+    // Kümülatif enflasyon katsayısı (t. aydaki kümülatif enflasyon)
+    const cumInflation = calculateCumulativeInflationFactor(monthlyInflationRate, month);
+
+    // Anaparaya DCA ekle (Nominal)
     totalInvested += monthlyDca;
+
+    // Anaparaya DCA ekle (Reel: O aydaki katkının t0 satın alma gücü cinsinden karşılığı)
+    realTotalInvested += cumInflation > 0 ? monthlyDca / cumInflation : monthlyDca;
 
     // Portföyün bileşik büyümesi
     currentNominalValue = calculateCompoundStep(
@@ -63,8 +71,7 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
       monthlyReturnRate
     );
 
-    // Enflasyon katsayısı ve reel değer hesabı
-    const cumInflation = calculateCumulativeInflationFactor(monthlyInflationRate, month);
+    // Reel değer hesabı (Nominal değer / kümülatif enflasyon)
     const realValue = adjustForInflation(currentNominalValue, cumInflation);
 
     // USD kuru ve USD değer hesabı
@@ -77,7 +84,8 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
 
     // Kar / Zarar hesaplamaları
     const nominalProfit = currentNominalValue - totalInvested;
-    const realProfit = realValue - totalInvested;
+    // Reel Kar: Reel Portföy Değeri - Yatırılan Anaparanın Reel Karşılığı
+    const realProfit = realValue - realTotalInvested;
 
     rows.push({
       month,
@@ -85,6 +93,7 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
       monthInYear,
       monthlyDca: Math.round(monthlyDca * 100) / 100,
       totalInvested: Math.round(totalInvested * 100) / 100,
+      realTotalInvested: Math.round(realTotalInvested * 100) / 100,
       nominalValue: Math.round(currentNominalValue * 100) / 100,
       realValue: Math.round(realValue * 100) / 100,
       usdValue: Math.round(usdValue * 100) / 100,
@@ -103,11 +112,13 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
     : convertToUsd(params.initialCapital, params.usdRate);
 
   const totalNominalProfit = finalNominalValue - totalInvested;
-  const totalRealProfit = finalRealValue - totalInvested;
+  const totalRealProfit = finalRealValue - realTotalInvested;
 
   const nominalRoi =
     totalInvested > 0 ? (totalNominalProfit / totalInvested) * 100 : 0;
-  const realRoi = totalInvested > 0 ? (totalRealProfit / totalInvested) * 100 : 0;
+  const realRoi =
+    realTotalInvested > 0 ? (totalRealProfit / realTotalInvested) * 100 : 0;
+
   const purchasingPowerLossRate = calculatePurchasingPowerLossRate(
     finalNominalValue,
     finalRealValue
@@ -117,6 +128,7 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
   const summary: ProjectionSummary = {
     totalMonths,
     totalInvested: Math.round(totalInvested * 100) / 100,
+    realTotalInvested: Math.round(realTotalInvested * 100) / 100,
     finalNominalValue: Math.round(finalNominalValue * 100) / 100,
     finalRealValue: Math.round(finalRealValue * 100) / 100,
     finalUsdValue: Math.round(finalUsdValue * 100) / 100,
