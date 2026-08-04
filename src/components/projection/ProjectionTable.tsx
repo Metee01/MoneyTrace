@@ -6,12 +6,14 @@ import {
   TrendingUp,
   TrendingDown,
   Calendar,
+  Download,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { usePortfolioStore } from '../../store';
 import { calculateProjection } from '../../engine';
 import { formatTL, formatUSD, formatPercent, formatNumber } from '../../lib/formatters';
+import { exportToCSV } from '../../lib/export';
 import type { ProjectionRow } from '../../types';
 
 export const ProjectionTable: React.FC = () => {
@@ -50,6 +52,14 @@ export const ProjectionTable: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleExportCSV = () => {
+    exportToCSV(
+      projectionResult.rows,
+      projectionResult.summary,
+      `MoneyTrace_Projeksiyon_${currentParams.targetYears}Yil.csv`
+    );
+  };
+
   return (
     <Card className="w-full shadow-sm border border-border bg-card">
       <CardHeader className="pb-3">
@@ -64,7 +74,18 @@ export const ProjectionTable: React.FC = () => {
           </div>
 
           {/* Filtre ve Görünüm Butonları */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-8 gap-1.5 font-medium"
+              onClick={handleExportCSV}
+              title="Tabloyu Excel / CSV formatında indir"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>{t('projection.exportCsv')}</span>
+            </Button>
+
             <div className="inline-flex rounded-lg border border-border p-1 bg-muted/40">
               <Button
                 variant={viewMode === 'all' ? 'secondary' : 'ghost'}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
@@ -8,6 +8,8 @@ import {
   ArrowUpRight,
   Check,
   AlertCircle,
+  Download,
+  Upload,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -22,7 +24,9 @@ import {
   DialogFooter,
 } from '../ui/dialog';
 import { usePortfolioStore } from '../../store';
+import { exportToJson, importFromJson } from '../../lib/export';
 import { ScenarioComparisonDialog } from './ScenarioComparisonDialog';
+import type { Scenario } from '../../types';
 
 const PRESET_COLORS = [
   '#3b82f6', // Blue
@@ -49,6 +53,8 @@ export const ScenarioManager: React.FC = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Silme Onay Dialog State
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const targetScenario = scenarios.find((s) => s.id === deleteTargetId);
@@ -69,27 +75,88 @@ export const ScenarioManager: React.FC = () => {
     }
   };
 
+  const handleExportJSON = () => {
+    exportToJson(scenarios, 'MoneyTrace_Senaryolar.json');
+  };
+
+  const handleImportJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const imported = await importFromJson<any>(file);
+      const scenarioList: Scenario[] = Array.isArray(imported)
+        ? imported
+        : imported?.scenarios || [];
+
+      if (scenarioList.length > 0) {
+        scenarioList.forEach((s) => {
+          if (s.name && s.params) {
+            addScenario(s.name, s.color || '#3b82f6', s.params);
+          }
+        });
+      }
+    } catch (err) {
+      alert(t('common.error') + ': Geçersiz JSON dosyası.');
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <>
       <Card className="w-full shadow-sm border border-border bg-card">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
               <SlidersHorizontal className="w-5 h-5 text-primary" />
               <span>{t('scenarios.title')}</span>
             </CardTitle>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               {scenarios.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs font-medium"
-                  onClick={() => setIsCompareOpen(true)}
-                >
-                  {t('scenarios.compareScenarios')}
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs font-medium"
+                    onClick={() => setIsCompareOpen(true)}
+                  >
+                    {t('scenarios.compareScenarios')}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    title={t('scenarios.exportJson')}
+                    onClick={handleExportJSON}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </>
               )}
+
+              {/* JSON İthal Et Butonu & Gizli Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={handleImportJSON}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                title={t('scenarios.importJson')}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-4 h-4" />
+              </Button>
+
               <Button
                 size="sm"
                 className="h-8 text-xs gap-1"
