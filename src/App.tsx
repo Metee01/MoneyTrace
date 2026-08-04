@@ -6,6 +6,7 @@ import { PortfolioForm } from "@/components/portfolio/PortfolioForm"
 import { ProjectionTable } from "@/components/projection/ProjectionTable"
 import { ProjectionChart } from "@/components/projection/ProjectionChart"
 import { InflationImpactChart } from "@/components/projection/InflationImpactChart"
+import { ProjectionSummaryCards } from "@/components/projection/ProjectionSummaryCards"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TrendingUp, Flame } from "lucide-react"
 import {
@@ -13,7 +14,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card"
 import {
   Dialog,
@@ -32,28 +32,8 @@ function App() {
   return (
     <Layout onOpenSettings={() => setIsSettingsOpen(true)}>
       <div className="space-y-6">
-        {/* 1. Projeksiyon Özeti / Dashboard Kartları (Placeholder) */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {["Nominal Değer", "Reel Bakiye", "Dolar Değeri", "Reel Getiri"].map(
-            (title, idx) => (
-              <Card key={idx} className="bg-card">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-xs font-semibold uppercase tracking-wider">
-                    {title}
-                  </CardDescription>
-                  <CardTitle className="text-2xl font-bold">
-                    {idx === 2 ? "$0.00" : idx === 3 ? "%0.00" : "₺0,00"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-muted-foreground">
-                    Placeholder veri - Adım 3
-                  </p>
-                </CardContent>
-              </Card>
-            ),
-          )}
-        </div>
+        {/* 1. Projeksiyon Özeti / Dashboard Özet Kartları */}
+        <ProjectionSummaryCards />
 
         {/* 2. Ana Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
