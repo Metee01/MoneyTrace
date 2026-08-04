@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+ROADMAP.md
+session-ses_0324.md
 
 # Editor directories and files
 .vscode/*
