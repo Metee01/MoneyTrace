@@ -84,10 +84,10 @@ export const ScenarioManager: React.FC = () => {
     if (!file) return;
 
     try {
-      const imported = await importFromJson<any>(file);
+      const imported = await importFromJson<unknown>(file);
       const scenarioList: Scenario[] = Array.isArray(imported)
         ? imported
-        : imported?.scenarios || [];
+        : (imported as { scenarios?: Scenario[] })?.scenarios || [];
 
       if (scenarioList.length > 0) {
         scenarioList.forEach((s) => {
@@ -96,7 +96,7 @@ export const ScenarioManager: React.FC = () => {
           }
         });
       }
-    } catch (err) {
+    } catch {
       alert(t('common.error') + ': Geçersiz JSON dosyası.');
     } finally {
       if (fileInputRef.current) {

@@ -111,13 +111,10 @@
   },
   "settings": {
     "title": "Uygulama Ayarları",
-    "evdsApiKey": "TCMB EVDS API Anahtarı",
-    "evdsApiKeyHelp": "TCMB EVDS web servisinden canlı veri çekmek için API anahtarına ihtiyacınız vardır.",
-    "getApiKey": "API Anahtarı Nasıl Alınır?",
-    "apiKeyPlaceholder": "API anahtarınızı buraya yapıştırın",
     "languageSelect": "Varsayılan Dil",
     "themeSelect": "Tema Tercihi",
     "saved": "Ayarlar başarıyla kaydedildi.",
-    "invalidKey": "Geçersiz API Anahtarı formatı."
+    "appVersion": "Sürüm",
+    "defaultCurrency": "Varsayılan Para Birimi"
   }
 }

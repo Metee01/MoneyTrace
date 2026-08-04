@@ -17,9 +17,16 @@ import { calculateProjection } from '../../engine';
 import { useTheme } from '../../hooks/useTheme';
 import { formatTL, formatUSD } from '../../lib/formatters';
 
+interface TooltipPayloadItem {
+  color?: string;
+  name?: string;
+  value?: number;
+  payload?: Record<string, unknown>;
+}
+
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: TooltipPayloadItem[];
   label?: string;
   currencyMode: 'TRY' | 'USD';
 }
@@ -37,7 +44,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
       <p className="font-semibold text-sm border-b border-border pb-1 mb-1">
         {label}
       </p>
-      {payload.map((entry: any, index: number) => {
+      {payload.map((entry: TooltipPayloadItem, index: number) => {
         const valueFormatter = currencyMode === 'USD' ? formatUSD : formatTL;
         return (
           <div key={`item-${index}`} className="flex justify-between items-center gap-4">
@@ -49,7 +56,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
               <span className="text-muted-foreground">{entry.name}:</span>
             </div>
             <span className="font-semibold font-mono">
-              {valueFormatter(entry.value)}
+              {valueFormatter(entry.value ?? 0)}
             </span>
           </div>
         );

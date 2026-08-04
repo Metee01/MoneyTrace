@@ -17,9 +17,20 @@ import { calculateProjection } from '../../engine';
 import { useTheme } from '../../hooks/useTheme';
 import { formatTL, formatPercent } from '../../lib/formatters';
 
+interface TooltipPayloadItem {
+  payload: {
+    nominalValue: number;
+    inflationLoss: number;
+    realValue: number;
+    [key: string]: unknown;
+  };
+  value?: number;
+  name?: string;
+}
+
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: TooltipPayloadItem[];
   label?: string;
 }
 

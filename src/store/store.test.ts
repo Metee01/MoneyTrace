@@ -43,9 +43,9 @@ function runStoreTests() {
   console.log(`Updated Theme: ${useSettingsStore.getState().theme} (Expected: dark)`);
   console.assert(useSettingsStore.getState().theme === 'dark', 'Theme update failed');
 
-  useSettingsStore.getState().setEvdsApiKey('test_api_key_123');
-  console.log(`EVDS API Key: ${useSettingsStore.getState().evdsApiKey}`);
-  console.assert(useSettingsStore.getState().evdsApiKey === 'test_api_key_123', 'API key update failed');
+  useSettingsStore.getState().setLanguage('tr');
+  console.log(`Updated Language: ${useSettingsStore.getState().language} (Expected: tr)`);
+  console.assert(useSettingsStore.getState().language === 'tr', 'Language update failed');
 
   // Test 2: Portfolio Store Defaults & Parameter Actions
   console.log('\n--- Test 2: Portfolio Store Parameter Actions ---');

@@ -49,6 +49,12 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
     });
   }, [scenarios]);
 
+interface ComparisonDataPoint {
+  month: number;
+  label: string;
+  [key: string]: unknown;
+}
+
   // Overlay Grafik Verisini Hazırla
   const chartData = useMemo(() => {
     if (!scenarioResults.length) return [];
@@ -59,14 +65,14 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
       0
     );
 
-    const data: any[] = [];
+    const data: ComparisonDataPoint[] = [];
 
     for (let month = 1; month <= maxMonths; month++) {
       const sampleRow = scenarioResults[0]?.projection.rows.find((r) => r.month === month);
       const yearIndex = sampleRow ? sampleRow.yearIndex : Math.ceil(month / 12);
       const monthInYear = sampleRow ? sampleRow.monthInYear : ((month - 1) % 12) + 1;
 
-      const dataPoint: any = {
+      const dataPoint: ComparisonDataPoint = {
         month,
         label: `${yearIndex}. Yıl${monthInYear !== 12 ? ` ${monthInYear}. Ay` : ''}`,
       };
@@ -154,7 +160,10 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
                     tickFormatter={(v) => formatTL(v, true)}
                   />
                   <Tooltip
-                    formatter={(val: any, name: any) => [formatTL(Number(val)), name]}
+                    formatter={(val: unknown, name: unknown) => [
+                      formatTL(Number(val)),
+                      String(name),
+                    ]}
                     contentStyle={{
                       backgroundColor: isDark ? '#0f172a' : '#ffffff',
                       borderColor: gridColor,

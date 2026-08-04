@@ -88,7 +88,7 @@ export function exportToCSV(
  * @param data Dışa aktarılacak veri nesnesi
  * @param filename İndirilecek dosya adı (varsayılan: MoneyTrace_Data.json)
  */
-export function exportToJson(data: any, filename = 'MoneyTrace_Data.json'): void {
+export function exportToJson<T = unknown>(data: T, filename = 'MoneyTrace_Data.json'): void {
   const jsonContent = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonContent], {
     type: 'application/json;charset=utf-8;',
@@ -102,7 +102,7 @@ export function exportToJson(data: any, filename = 'MoneyTrace_Data.json'): void
  * 
  * @param file Kullanıcının seçtiği .json dosyası
  */
-export function importFromJson<T = any>(file: File): Promise<T> {
+export function importFromJson<T = unknown>(file: File): Promise<T> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -111,7 +111,7 @@ export function importFromJson<T = any>(file: File): Promise<T> {
         const text = event.target?.result as string;
         const parsed = JSON.parse(text);
         resolve(parsed);
-      } catch (err) {
+      } catch {
         reject(new Error('Geçersiz JSON dosyası formatı.'));
       }
     };

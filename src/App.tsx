@@ -1,15 +1,12 @@
-import { useState } from "react"
+import { useState, lazy, Suspense } from "react"
 import { useTranslation } from "react-i18next"
 import { Layout } from "@/components/layout/Layout"
 import { useTheme } from "@/hooks/useTheme"
 import { PortfolioForm } from "@/components/portfolio/PortfolioForm"
 import { ProjectionTable } from "@/components/projection/ProjectionTable"
-import { ProjectionChart } from "@/components/projection/ProjectionChart"
-import { InflationImpactChart } from "@/components/projection/InflationImpactChart"
 import { ProjectionSummaryCards } from "@/components/projection/ProjectionSummaryCards"
 import { ScenarioManager } from "@/components/scenarios/ScenarioManager"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { TrendingUp, Flame } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -18,6 +15,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+
+// Lazy loaded integrated chart section
+const ChartSection = lazy(() =>
+  import("@/components/projection/ChartSection").then((module) => ({
+    default: module.ChartSection,
+  }))
+)
+
+function ChartFallback() {
+  return (
+    <div className="h-[400px] flex flex-col items-center justify-center border rounded-xl bg-card text-muted-foreground gap-2">
+      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <span className="text-sm font-medium">Grafikler Yükleniyor...</span>
+    </div>
+  )
+}
 
 function App() {
   const { t } = useTranslation()
@@ -43,28 +56,10 @@ function App() {
 
           {/* Sağ Kolon: Grafik ve Tablo */}
           <div className="space-y-6 lg:col-span-2">
-            {/* Grafikler (Tabs ile Çizgi & Alan Grafikleri) */}
-            <Tabs defaultValue="growth" className="w-full space-y-3">
-              <div className="flex items-center justify-between">
-                <TabsList className="bg-muted p-1">
-                  <TabsTrigger value="growth" className="flex items-center gap-1.5 text-xs sm:text-sm">
-                    <TrendingUp className="w-4 h-4 text-blue-500" />
-                    <span>Büyüme Grafiği</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="inflation" className="flex items-center gap-1.5 text-xs sm:text-sm">
-                    <Flame className="w-4 h-4 text-rose-500" />
-                    <span>Enflasyon Etkisi</span>
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="growth" className="mt-0">
-                <ProjectionChart />
-              </TabsContent>
-              <TabsContent value="inflation" className="mt-0">
-                <InflationImpactChart />
-              </TabsContent>
-            </Tabs>
+            {/* Büyüme & Enflasyon Grafikleri (Entegre Kart) */}
+            <Suspense fallback={<ChartFallback />}>
+              <ChartSection />
+            </Suspense>
 
             {/* Projeksiyon Tablosu */}
             <ProjectionTable />
@@ -78,15 +73,21 @@ function App() {
           <DialogHeader>
             <DialogTitle>{t("settings.title")}</DialogTitle>
             <DialogDescription>
-              Uygulama ayarlarını buradan yönetebilirsiniz.
+              Uygulama tercihlerini ve sistem bilgilerini buradan görüntüleyebilirsiniz.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Ayarlar parametreleri (EVDS API Anahtarı vb.) Adım 12'de eklenecektir.
-            </p>
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>Aktif Tema: <span className="font-semibold uppercase">{theme}</span></p>
+          <div className="py-4 space-y-3 text-sm">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+              <span className="text-muted-foreground font-medium">Uygulama Sürümü</span>
+              <span className="font-semibold text-foreground">v0.1.0</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+              <span className="text-muted-foreground font-medium">Aktif Tema</span>
+              <span className="font-semibold uppercase text-primary">{theme}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+              <span className="text-muted-foreground font-medium">Varsayılan Dil</span>
+              <span className="font-semibold text-foreground">Türkçe (tr)</span>
             </div>
           </div>
           <div className="flex justify-end">
