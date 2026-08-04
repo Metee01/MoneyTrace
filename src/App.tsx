@@ -2,12 +2,14 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Layout } from "@/components/layout/Layout"
 import { useTheme } from "@/hooks/useTheme"
+import { PortfolioForm } from "@/components/portfolio/PortfolioForm"
+import { ProjectionTable } from "@/components/projection/ProjectionTable"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card"
 import {
   Dialog,
@@ -53,18 +55,8 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Sol Kolon: Portföy Girişi & Senaryolar */}
           <div className="space-y-6 lg:col-span-1">
-            {/* Portföy Girişi */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t("portfolio.title")}</CardTitle>
-                <CardDescription>{t("portfolio.subtitle")}</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px] flex items-center justify-center border border-dashed rounded-lg m-4 mt-0 bg-muted/20">
-                <span className="text-sm text-muted-foreground text-center">
-                  Portföy Parametreleri Formu (Adım 6)
-                </span>
-              </CardContent>
-            </Card>
+            {/* Portföy Giriş Formu */}
+            <PortfolioForm />
 
             {/* Senaryo Yönetimi */}
             <Card>
@@ -93,17 +85,8 @@ function App() {
               </CardContent>
             </Card>
 
-            {/* Tablo Kartı */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t("projection.tableTitle")}</CardTitle>
-              </CardHeader>
-              <CardContent className="h-[250px] flex items-center justify-center border border-dashed rounded-lg m-4 mt-0 bg-muted/20">
-                <span className="text-sm text-muted-foreground text-center">
-                  Ay-Ay Detay Tablosu (Adım 7)
-                </span>
-              </CardContent>
-            </Card>
+            {/* Projeksiyon Tablosu */}
+            <ProjectionTable />
           </div>
         </div>
       </div>
