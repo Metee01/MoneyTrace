@@ -7,14 +7,9 @@ import { ProjectionTable } from "@/components/projection/ProjectionTable"
 import { ProjectionChart } from "@/components/projection/ProjectionChart"
 import { InflationImpactChart } from "@/components/projection/InflationImpactChart"
 import { ProjectionSummaryCards } from "@/components/projection/ProjectionSummaryCards"
+import { ScenarioManager } from "@/components/scenarios/ScenarioManager"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TrendingUp, Flame } from "lucide-react"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -43,16 +38,7 @@ function App() {
             <PortfolioForm />
 
             {/* Senaryo Yönetimi */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t("scenarios.title")}</CardTitle>
-              </CardHeader>
-              <CardContent className="h-[150px] flex items-center justify-center border border-dashed rounded-lg m-4 mt-0 bg-muted/20">
-                <span className="text-sm text-muted-foreground text-center">
-                  Senaryolar Listesi (Adım 10)
-                </span>
-              </CardContent>
-            </Card>
+            <ScenarioManager />
           </div>
 
           {/* Sağ Kolon: Grafik ve Tablo */}

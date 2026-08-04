@@ -41,6 +41,8 @@ export interface PortfolioState {
 
   // Actions - Scenarios
   addScenario: (name: string, color: string, params?: ProjectionParams) => Scenario;
+  duplicateScenario: (id: string) => Scenario | null;
+  applyScenarioToCurrent: (id: string) => void;
   updateScenario: (id: string, updates: Partial<Omit<Scenario, 'id'>>) => void;
   deleteScenario: (id: string) => void;
   setBaselineScenario: (id: string | null) => void;
@@ -155,6 +157,34 @@ export const usePortfolioStore = create<PortfolioState>()(
         }));
 
         return newScenario;
+      },
+
+      duplicateScenario: (id) => {
+        const scenario = get().scenarios.find((s) => s.id === id);
+        if (!scenario) return null;
+
+        const newScenario: Scenario = {
+          id: generateId(),
+          name: `${scenario.name} (Kopya)`,
+          color: scenario.color,
+          params: { ...scenario.params },
+          isBaseline: false,
+        };
+
+        set((state) => ({
+          scenarios: [...state.scenarios, newScenario],
+        }));
+
+        return newScenario;
+      },
+
+      applyScenarioToCurrent: (id) => {
+        const scenario = get().scenarios.find((s) => s.id === id);
+        if (scenario) {
+          set({
+            currentParams: { ...scenario.params },
+          });
+        }
       },
 
       updateScenario: (id, updates) =>
