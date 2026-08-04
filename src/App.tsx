@@ -4,6 +4,10 @@ import { Layout } from "@/components/layout/Layout"
 import { useTheme } from "@/hooks/useTheme"
 import { PortfolioForm } from "@/components/portfolio/PortfolioForm"
 import { ProjectionTable } from "@/components/projection/ProjectionTable"
+import { ProjectionChart } from "@/components/projection/ProjectionChart"
+import { InflationImpactChart } from "@/components/projection/InflationImpactChart"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TrendingUp, Flame } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -73,17 +77,28 @@ function App() {
 
           {/* Sağ Kolon: Grafik ve Tablo */}
           <div className="space-y-6 lg:col-span-2">
-            {/* Grafik Kartı */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t("projection.chartTitle")}</CardTitle>
-              </CardHeader>
-              <CardContent className="h-[280px] flex items-center justify-center border border-dashed rounded-lg m-4 mt-0 bg-muted/20">
-                <span className="text-sm text-muted-foreground text-center">
-                  Recharts Performans Grafiği (Adım 8)
-                </span>
-              </CardContent>
-            </Card>
+            {/* Grafikler (Tabs ile Çizgi & Alan Grafikleri) */}
+            <Tabs defaultValue="growth" className="w-full space-y-3">
+              <div className="flex items-center justify-between">
+                <TabsList className="bg-muted p-1">
+                  <TabsTrigger value="growth" className="flex items-center gap-1.5 text-xs sm:text-sm">
+                    <TrendingUp className="w-4 h-4 text-blue-500" />
+                    <span>Büyüme Grafiği</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="inflation" className="flex items-center gap-1.5 text-xs sm:text-sm">
+                    <Flame className="w-4 h-4 text-rose-500" />
+                    <span>Enflasyon Etkisi</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="growth" className="mt-0">
+                <ProjectionChart />
+              </TabsContent>
+              <TabsContent value="inflation" className="mt-0">
+                <InflationImpactChart />
+              </TabsContent>
+            </Tabs>
 
             {/* Projeksiyon Tablosu */}
             <ProjectionTable />
