@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useMemo } from "react"
+import { useTranslation } from "react-i18next"
 import {
   ResponsiveContainer,
   LineChart,
@@ -9,96 +9,99 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-} from 'recharts';
+} from "recharts"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import { usePortfolioStore, useSettingsStore } from '../../store';
-import { calculateProjection } from '../../engine';
-import { useTheme } from '../../hooks/useTheme';
-import { formatLocalCurrency, formatPercent } from '../../lib/formatters';
-import type { ProjectionResult, Scenario } from '../../types';
+} from "../ui/dialog"
+import { Button } from "../ui/button"
+import { usePortfolioStore, useSettingsStore } from "../../store"
+import { calculateProjection } from "../../engine"
+import { useTheme } from "../../hooks/useTheme"
+import { formatLocalCurrency, formatPercent } from "../../lib/formatters"
+import type { ProjectionResult, Scenario } from "../../types"
 
 interface ScenarioComparisonDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 interface ScenarioResultItem {
-  scenario: Scenario;
-  projection: ProjectionResult;
+  scenario: Scenario
+  projection: ProjectionResult
 }
 
 interface ComparisonDataPoint {
-  month: number;
-  label: string;
-  [key: string]: unknown;
+  month: number
+  label: string
+  [key: string]: unknown
 }
 
-export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> = ({
-  open,
-  onOpenChange,
-}) => {
-  const { t, i18n } = useTranslation();
-  const { scenarios } = usePortfolioStore();
-  const { currencyCode } = useSettingsStore();
-  const { theme } = useTheme();
+export const ScenarioComparisonDialog: React.FC<
+  ScenarioComparisonDialogProps
+> = ({ open, onOpenChange }) => {
+  const { t, i18n } = useTranslation()
+  const { scenarios } = usePortfolioStore()
+  const { currencyCode } = useSettingsStore()
+  const { theme } = useTheme()
 
-  const [valueType, setValueType] = useState<'real' | 'nominal'>('real');
+  const [valueType, setValueType] = useState<"real" | "nominal">("real")
 
-  const locale = i18n.language === 'tr' ? 'tr-TR' : 'en-US';
+  const locale = i18n.language === "tr" ? "tr-TR" : "en-US"
 
   // Calculate projections for each scenario
   const scenarioResults: ScenarioResultItem[] = useMemo(() => {
     return scenarios.map((s) => ({
       scenario: s,
       projection: calculateProjection(s.params),
-    }));
-  }, [scenarios]);
+    }))
+  }, [scenarios])
 
   // Overlay Chart Data
   const chartData = useMemo(() => {
-    if (!scenarioResults.length) return [];
+    if (!scenarioResults.length) return []
 
     const maxMonths = Math.max(
       ...scenarioResults.map((sr) => sr.projection.summary.totalMonths),
-      0
-    );
+      0,
+    )
 
-    const data: ComparisonDataPoint[] = [];
+    const data: ComparisonDataPoint[] = []
 
     for (let month = 1; month <= maxMonths; month++) {
-      const sampleRow = scenarioResults[0]?.projection.rows.find((r) => r.month === month);
-      const yearIndex = sampleRow ? sampleRow.yearIndex : Math.ceil(month / 12);
-      const monthInYear = sampleRow ? sampleRow.monthInYear : ((month - 1) % 12) + 1;
+      const sampleRow = scenarioResults[0]?.projection.rows.find(
+        (r) => r.month === month,
+      )
+      const yearIndex = sampleRow ? sampleRow.yearIndex : Math.ceil(month / 12)
+      const monthInYear = sampleRow
+        ? sampleRow.monthInYear
+        : ((month - 1) % 12) + 1
 
       const dataPoint: ComparisonDataPoint = {
         month,
-        label: `${yearIndex}Y${monthInYear !== 12 ? ` ${monthInYear}M` : ''}`,
-      };
+        label: `${yearIndex}Y${monthInYear !== 12 ? ` ${monthInYear}M` : ""}`,
+      }
 
       scenarioResults.forEach(({ scenario, projection }) => {
-        const row = projection.rows.find((r) => r.month === month);
+        const row = projection.rows.find((r) => r.month === month)
         if (row) {
           dataPoint[scenario.id] =
-            valueType === 'real' ? row.realValue : row.nominalValue;
+            valueType === "real" ? row.realValue : row.nominalValue
         }
-      });
+      })
 
-      data.push(dataPoint);
+      data.push(dataPoint)
     }
 
-    return data.filter((d) => d.month % 3 === 0 || d.month === 1);
-  }, [scenarioResults, valueType]);
+    return data.filter((d) => d.month % 3 === 0 || d.month === 1)
+  }, [scenarioResults, valueType])
 
-  const isDark = theme === 'dark';
-  const gridColor = isDark ? '#334155' : '#e2e8f0';
-  const axisColor = isDark ? '#94a3b8' : '#64748b';
+  const isDark = theme === "dark"
+  const gridColor = isDark ? "#334155" : "#e2e8f0"
+  const axisColor = isDark ? "#94a3b8" : "#64748b"
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -107,7 +110,7 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <DialogTitle className="text-xl font-bold">
-                {t('scenarios.compareScenarios')}
+                {t("scenarios.compareScenarios")}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-1">
                 Comparing {scenarios.length} scenarios side-by-side
@@ -117,20 +120,20 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
             {/* Value Type Toggle (Real / Nominal) */}
             <div className="inline-flex items-center rounded-lg border border-border bg-muted p-0.5 text-xs">
               <Button
-                variant={valueType === 'real' ? 'default' : 'ghost'}
+                variant={valueType === "real" ? "default" : "ghost"}
                 size="sm"
                 className="h-7 text-xs px-2.5"
-                onClick={() => setValueType('real')}
+                onClick={() => setValueType("real")}
               >
-                {t('projection.realValue')}
+                {t("projection.realValue")}
               </Button>
               <Button
-                variant={valueType === 'nominal' ? 'default' : 'ghost'}
+                variant={valueType === "nominal" ? "default" : "ghost"}
                 size="sm"
                 className="h-7 text-xs px-2.5"
-                onClick={() => setValueType('nominal')}
+                onClick={() => setValueType("nominal")}
               >
-                {t('projection.nominalBalance')}
+                {t("projection.nominalBalance")}
               </Button>
             </div>
           </div>
@@ -138,7 +141,7 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
 
         {scenarios.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground text-sm">
-            {t('scenarios.noScenarios')}
+            {t("scenarios.noScenarios")}
           </div>
         ) : (
           <div className="space-y-6 pt-2">
@@ -149,7 +152,11 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
                   data={chartData}
                   margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={gridColor}
+                    vertical={false}
+                  />
                   <XAxis
                     dataKey="label"
                     stroke={axisColor}
@@ -163,7 +170,9 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(v) => formatLocalCurrency(v, currencyCode, locale, true)}
+                    tickFormatter={(v) =>
+                      formatLocalCurrency(v, currencyCode, locale, true)
+                    }
                   />
                   <Tooltip
                     formatter={(val: unknown, name: unknown) => [
@@ -171,10 +180,10 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
                       String(name),
                     ]}
                     contentStyle={{
-                      backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                      backgroundColor: isDark ? "#0f172a" : "#ffffff",
                       borderColor: gridColor,
-                      borderRadius: '8px',
-                      fontSize: '12px',
+                      borderRadius: "8px",
+                      fontSize: "12px",
                     }}
                   />
                   <Legend />
@@ -211,15 +220,21 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
                 </thead>
                 <tbody className="divide-y divide-border/40 font-mono">
                   {scenarioResults.map(({ scenario, projection }) => {
-                    const isRealProfitPos = projection.summary.totalRealProfit >= 0;
+                    const isRealProfitPos =
+                      projection.summary.totalRealProfit >= 0
                     return (
-                      <tr key={scenario.id} className="hover:bg-muted/30 transition-colors">
+                      <tr
+                        key={scenario.id}
+                        className="hover:bg-muted/30 transition-colors"
+                      >
                         <td className="py-2.5 px-3 font-sans font-semibold flex items-center gap-2">
                           <span
                             className="w-3 h-3 rounded-full inline-block"
                             style={{ backgroundColor: scenario.color }}
                           />
-                          <span className="text-foreground">{scenario.name}</span>
+                          <span className="text-foreground">
+                            {scenario.name}
+                          </span>
                           {scenario.isBaseline && (
                             <span className="px-1.5 py-0.2 rounded text-[10px] bg-primary/10 text-primary font-normal">
                               Baseline
@@ -233,25 +248,41 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
                           %{scenario.params.expectedInflationRate}
                         </td>
                         <td className="py-2.5 px-3 text-right font-medium text-blue-600 dark:text-blue-400">
-                          {formatLocalCurrency(projection.summary.finalNominalValue, currencyCode, locale)}
+                          {formatLocalCurrency(
+                            projection.summary.finalNominalValue,
+                            currencyCode,
+                            locale,
+                          )}
                         </td>
                         <td className="py-2.5 px-3 text-right font-medium text-emerald-600 dark:text-emerald-400">
-                          {formatLocalCurrency(projection.summary.finalRealValue, currencyCode, locale)}
+                          {formatLocalCurrency(
+                            projection.summary.finalRealValue,
+                            currencyCode,
+                            locale,
+                          )}
                         </td>
                         <td className="py-2.5 px-3 text-right font-semibold">
-                          {formatPercent(projection.summary.realRoi, true, locale)}
+                          {formatPercent(
+                            projection.summary.realRoi,
+                            true,
+                            locale,
+                          )}
                         </td>
                         <td
                           className={`py-2.5 px-3 text-right font-semibold ${
                             isRealProfitPos
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-rose-600 dark:text-rose-400'
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-rose-600 dark:text-rose-400"
                           }`}
                         >
-                          {formatLocalCurrency(projection.summary.totalRealProfit, currencyCode, locale)}
+                          {formatLocalCurrency(
+                            projection.summary.totalRealProfit,
+                            currencyCode,
+                            locale,
+                          )}
                         </td>
                       </tr>
-                    );
+                    )
                   })}
                 </tbody>
               </table>
@@ -260,5 +291,5 @@ export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> =
         )}
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}

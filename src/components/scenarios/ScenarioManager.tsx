@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useRef } from "react"
+import { useTranslation } from "react-i18next"
 import {
   Plus,
   Layers,
@@ -10,11 +10,11 @@ import {
   Download,
   Upload,
   BarChart2,
-} from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+} from "lucide-react"
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card"
+import { Button } from "../ui/button"
+import { Input } from "../ui/input"
+import { Label } from "../ui/label"
 import {
   Dialog,
   DialogContent,
@@ -22,25 +22,25 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../ui/dialog';
-import { usePortfolioStore } from '../../store';
-import { exportToJson, importFromJson } from '../../lib/export';
-import { ScenarioComparisonDialog } from './ScenarioComparisonDialog';
-import type { Scenario } from '../../types';
+} from "../ui/dialog"
+import { usePortfolioStore } from "../../store"
+import { exportToJson, importFromJson } from "../../lib/export"
+import { ScenarioComparisonDialog } from "./ScenarioComparisonDialog"
+import type { Scenario } from "../../types"
 
 const PRESET_COLORS = [
-  '#3b82f6', // Blue
-  '#10b981', // Emerald
-  '#f59e0b', // Amber
-  '#ef4444', // Red
-  '#8b5cf6', // Purple
-  '#ec4899', // Pink
-  '#06b6d4', // Cyan
-  '#84cc16', // Lime
-];
+  "#3b82f6", // Blue
+  "#10b981", // Emerald
+  "#f59e0b", // Amber
+  "#ef4444", // Red
+  "#8b5cf6", // Purple
+  "#ec4899", // Pink
+  "#06b6d4", // Cyan
+  "#84cc16", // Lime
+]
 
 export const ScenarioManager: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
   const {
     scenarios,
     baselineScenarioId,
@@ -49,25 +49,27 @@ export const ScenarioManager: React.FC = () => {
     applyScenarioToCurrent,
     deleteScenario,
     setBaselineScenario,
-  } = usePortfolioStore();
+  } = usePortfolioStore()
 
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [compareDialogOpen, setCompareDialogOpen] = useState(false);
-  const [newScenarioName, setNewScenarioName] = useState('');
-  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [compareDialogOpen, setCompareDialogOpen] = useState(false)
+  const [newScenarioName, setNewScenarioName] = useState("")
+  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0])
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleCreateScenario = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newScenarioName.trim()) return;
+    e.preventDefault()
+    if (!newScenarioName.trim()) return
 
-    addScenario(newScenarioName.trim(), selectedColor);
-    setNewScenarioName('');
-    setSelectedColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
-    setAddDialogOpen(false);
-  };
+    addScenario(newScenarioName.trim(), selectedColor)
+    setNewScenarioName("")
+    setSelectedColor(
+      PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)],
+    )
+    setAddDialogOpen(false)
+  }
 
   const handleExportJSON = () => {
     exportToJson(
@@ -75,35 +77,35 @@ export const ScenarioManager: React.FC = () => {
         exportedAt: new Date().toISOString(),
         scenarios,
       },
-      'MoneyTrace_Scenarios.json'
-    );
-  };
+      "MoneyTrace_Scenarios.json",
+    )
+  }
 
   const handleImportJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]
+    if (!file) return
 
     try {
-      const imported = await importFromJson<unknown>(file);
+      const imported = await importFromJson<unknown>(file)
       const scenarioList: Scenario[] = Array.isArray(imported)
         ? imported
-        : (imported as { scenarios?: Scenario[] })?.scenarios || [];
+        : (imported as { scenarios?: Scenario[] })?.scenarios || []
 
       if (scenarioList.length > 0) {
         scenarioList.forEach((s) => {
           if (s.name && s.params) {
-            addScenario(s.name, s.color || '#3b82f6', s.params);
+            addScenario(s.name, s.color || "#3b82f6", s.params)
           }
-        });
+        })
       }
     } catch {
-      alert(t('common.error') + ': Invalid JSON file.');
+      alert(t("common.error") + ": Invalid JSON file.")
     } finally {
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = ""
       }
     }
-  };
+  }
 
   return (
     <Card className="w-full shadow-sm border border-border bg-card">
@@ -112,7 +114,7 @@ export const ScenarioManager: React.FC = () => {
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-primary" />
             <CardTitle className="text-xl font-bold text-foreground">
-              {t('scenarios.title')}
+              {t("scenarios.title")}
             </CardTitle>
           </div>
 
@@ -125,7 +127,7 @@ export const ScenarioManager: React.FC = () => {
               className="text-xs gap-1.5"
             >
               <BarChart2 className="w-3.5 h-3.5 text-blue-500" />
-              {t('scenarios.compareScenarios')}
+              {t("scenarios.compareScenarios")}
             </Button>
             <Button
               variant="default"
@@ -134,7 +136,7 @@ export const ScenarioManager: React.FC = () => {
               className="text-xs gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
-              {t('scenarios.newScenario')}
+              {t("scenarios.newScenario")}
             </Button>
           </div>
         </div>
@@ -160,7 +162,7 @@ export const ScenarioManager: React.FC = () => {
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="w-3 h-3" />
-              {t('scenarios.importJson')}
+              {t("scenarios.importJson")}
             </Button>
             <Button
               type="button"
@@ -171,7 +173,7 @@ export const ScenarioManager: React.FC = () => {
               disabled={scenarios.length === 0}
             >
               <Download className="w-3 h-3" />
-              {t('scenarios.exportJson')}
+              {t("scenarios.exportJson")}
             </Button>
           </div>
         </div>
@@ -181,13 +183,13 @@ export const ScenarioManager: React.FC = () => {
         {scenarios.length === 0 ? (
           <div className="p-6 text-center border border-dashed rounded-lg bg-muted/30">
             <p className="text-xs text-muted-foreground">
-              {t('scenarios.noScenarios')}
+              {t("scenarios.noScenarios")}
             </p>
           </div>
         ) : (
           <div className="space-y-2">
             {scenarios.map((scenario) => {
-              const isBaseline = scenario.id === baselineScenarioId;
+              const isBaseline = scenario.id === baselineScenarioId
 
               return (
                 <div
@@ -212,7 +214,8 @@ export const ScenarioManager: React.FC = () => {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Return: %{scenario.params.expectedReturnRate} | Infl: %{scenario.params.expectedInflationRate}
+                        Return: %{scenario.params.expectedReturnRate} | Infl: %
+                        {scenario.params.expectedInflationRate}
                       </p>
                     </div>
                   </div>
@@ -255,7 +258,7 @@ export const ScenarioManager: React.FC = () => {
                     </Button>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         )}
@@ -266,7 +269,7 @@ export const ScenarioManager: React.FC = () => {
         <DialogContent className="sm:max-w-[425px]">
           <form onSubmit={handleCreateScenario}>
             <DialogHeader>
-              <DialogTitle>{t('scenarios.newScenario')}</DialogTitle>
+              <DialogTitle>{t("scenarios.newScenario")}</DialogTitle>
               <DialogDescription>
                 Save current parameters as a new scenario
               </DialogDescription>
@@ -274,12 +277,12 @@ export const ScenarioManager: React.FC = () => {
 
             <div className="py-4 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="scName">{t('scenarios.scenarioName')}</Label>
+                <Label htmlFor="scName">{t("scenarios.scenarioName")}</Label>
                 <Input
                   id="scName"
                   value={newScenarioName}
                   onChange={(e) => setNewScenarioName(e.target.value)}
-                  placeholder={t('scenarios.scenarioNamePlaceholder')}
+                  placeholder={t("scenarios.scenarioNamePlaceholder")}
                   required
                 />
               </div>
@@ -294,8 +297,8 @@ export const ScenarioManager: React.FC = () => {
                       onClick={() => setSelectedColor(color)}
                       className={`w-7 h-7 rounded-full border-2 transition-transform ${
                         selectedColor === color
-                          ? 'border-foreground scale-110'
-                          : 'border-transparent hover:scale-105'
+                          ? "border-foreground scale-110"
+                          : "border-transparent hover:scale-105"
                       }`}
                       style={{ backgroundColor: color }}
                     />
@@ -310,9 +313,9 @@ export const ScenarioManager: React.FC = () => {
                 variant="outline"
                 onClick={() => setAddDialogOpen(false)}
               >
-                {t('common.cancel')}
+                {t("common.cancel")}
               </Button>
-              <Button type="submit">{t('common.save')}</Button>
+              <Button type="submit">{t("common.save")}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -325,29 +328,27 @@ export const ScenarioManager: React.FC = () => {
       >
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>{t('common.delete')} Scenario</DialogTitle>
+            <DialogTitle>{t("common.delete")} Scenario</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this scenario? This action cannot be undone.
+              Are you sure you want to delete this scenario? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
 
           <DialogFooter className="mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteTargetId(null)}
-            >
-              {t('common.cancel')}
+            <Button variant="outline" onClick={() => setDeleteTargetId(null)}>
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={() => {
                 if (deleteTargetId) {
-                  deleteScenario(deleteTargetId);
-                  setDeleteTargetId(null);
+                  deleteScenario(deleteTargetId)
+                  setDeleteTargetId(null)
                 }
               }}
             >
-              {t('common.delete')}
+              {t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -359,5 +360,5 @@ export const ScenarioManager: React.FC = () => {
         onOpenChange={setCompareDialogOpen}
       />
     </Card>
-  );
-};
+  )
+}

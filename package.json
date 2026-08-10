@@ -1,11 +1,14 @@
 {
   "name": "moneytrace",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
-  "description": "Enflasyondan arindirilmis portfoy projeksiyon ve simulasyon araci / Inflation-adjusted portfolio projection tool for Turkey",
+  "description": "A personal finance management application built with React, TypeScript, and Tailwind CSS.",
   "license": "MIT",
   "author": "",
+  "engines": {
+    "node": ">=20.19"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Metee01/MoneyTrace"
@@ -16,7 +19,10 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "test:engine": "tsx src/engine/engine.test.ts",
+    "test:store": "tsx src/store/store.test.ts",
+    "test": "npm run test:engine && npm run test:store"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -44,6 +50,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "prettier": "^3.9.6",
+    "tsx": "^4.20.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.66.0",
     "vite": "^8.2.0"

@@ -8,9 +8,8 @@ MoneyTrace: client-only Vite + React 19 + TypeScript app for inflation-adjusted 
 - `npm run build` — `tsc -b && vite build`; this is the typecheck step (no standalone typecheck script)
 - `npm run lint` / `npm run lint:fix` — ESLint (flat config `eslint.config.js`)
 - `npm run format` — Prettier over `src/**/*.{ts,tsx,css,json}`
-- Tests are plain `console.assert` scripts, run manually with tsx (not installed as a dependency; npx fetches it):
-  - `npx tsx src/engine/engine.test.ts`
-  - `npx tsx src/store/store.test.ts`
+- Tests are plain `console.assert` scripts run with tsx (a devDependency):
+  - `npm run test:engine` / `npm run test:store` / `npm run test` (runs both)
   - When changing `src/engine/*` or the stores, update and run these — they are the only regression checks.
 
 ## Architecture

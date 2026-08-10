@@ -18,7 +18,6 @@ coverage
 .vercel
 graphify-out/
 
-
 # Environment & Local
 *.local
 .env
@@ -28,7 +27,7 @@ graphify-out/
 # AI Agents & Session Logs
 .claude/
 .gemini/
-session-*.md
+graphify-out/
 
 # Editor directories and files
 .vscode/*

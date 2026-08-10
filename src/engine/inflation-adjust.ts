@@ -5,47 +5,47 @@
 /**
  * Calculates cumulative inflation multiplier for month t.
  * Formula: (1 + monthlyInflationRate)^monthIndex
- * 
+ *
  * @param monthlyInflationRate Monthly inflation rate (decimal)
  * @param monthIndex Month sequence index (1-based)
  * @returns Cumulative inflation factor
  */
 export function calculateCumulativeInflationFactor(
   monthlyInflationRate: number,
-  monthIndex: number
+  monthIndex: number,
 ): number {
-  if (monthIndex <= 0 || monthlyInflationRate <= 0) return 1;
-  return Math.pow(1 + monthlyInflationRate, monthIndex);
+  if (monthIndex <= 0 || monthlyInflationRate <= 0) return 1
+  return Math.pow(1 + monthlyInflationRate, monthIndex)
 }
 
 /**
  * Calculates inflation-adjusted purchasing power (Real Value).
  * Formula: RealValue = NominalValue / CumulativeInflationFactor
- * 
+ *
  * @param nominalAmount Nominal value
  * @param cumulativeInflationFactor Cumulative inflation multiplier at month t
  * @returns Real value (purchasing power in t0 terms)
  */
 export function adjustForInflation(
   nominalAmount: number,
-  cumulativeInflationFactor: number
+  cumulativeInflationFactor: number,
 ): number {
-  if (cumulativeInflationFactor <= 0) return nominalAmount;
-  return nominalAmount / cumulativeInflationFactor;
+  if (cumulativeInflationFactor <= 0) return nominalAmount
+  return nominalAmount / cumulativeInflationFactor
 }
 
 /**
  * Calculates purchasing power erosion percentage due to inflation.
  * Formula: ((Nominal - Real) / Nominal) * 100
- * 
+ *
  * @param nominalValue Final nominal value
  * @param realValue Final real value
  * @returns Purchasing power loss percentage
  */
 export function calculatePurchasingPowerLossRate(
   nominalValue: number,
-  realValue: number
+  realValue: number,
 ): number {
-  if (nominalValue <= 0 || realValue >= nominalValue) return 0;
-  return ((nominalValue - realValue) / nominalValue) * 100;
+  if (nominalValue <= 0 || realValue >= nominalValue) return 0
+  return ((nominalValue - realValue) / nominalValue) * 100
 }

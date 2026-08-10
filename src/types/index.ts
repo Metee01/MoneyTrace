@@ -7,21 +7,23 @@
  */
 export interface ProjectionParams {
   /** Initial Capital Amount */
-  initialCapital: number;
+  initialCapital: number
   /** Monthly Regular Investment (DCA) */
-  monthlyDca: number;
+  monthlyDca: number
   /** Annual DCA Increase Rate (%) - e.g., 5 for 5% annual increase */
-  dcaIncreaseRate: number;
+  dcaIncreaseRate: number
   /** Expected Annual Portfolio Return Rate (%) */
-  expectedReturnRate: number;
+  expectedReturnRate: number
   /** Expected Annual Inflation Rate (%) */
-  expectedInflationRate: number;
+  expectedInflationRate: number
   /** Initial Exchange Rate to Reference Currency (e.g. USD) */
-  usdRate: number;
+  usdRate: number
   /** Expected Annual Exchange Rate Growth Rate (%) */
-  expectedUsdGrowthRate: number;
+  expectedUsdGrowthRate: number
   /** Projection Horizon (in Years) */
-  targetYears: number;
+  targetYears: number
+  /** Input Period for Rates & DCA ('annual' | 'monthly') */
+  rateInputPeriod?: "annual" | "monthly"
 }
 
 /**
@@ -29,31 +31,31 @@ export interface ProjectionParams {
  */
 export interface ProjectionRow {
   /** Total Month Index (1, 2, 3... N) */
-  month: number;
+  month: number
   /** Year Index (1, 2... Y) */
-  yearIndex: number;
+  yearIndex: number
   /** Month in Current Year (1 - 12) */
-  monthInYear: number;
+  monthInYear: number
   /** DCA Investment Amount for this Month */
-  monthlyDca: number;
+  monthlyDca: number
   /** Total Nominal Capital Invested Up to this Month */
-  totalInvested: number;
+  totalInvested: number
   /** Real Value of Total Invested Capital in t0 Terms */
-  realTotalInvested: number;
+  realTotalInvested: number
   /** Portfolio Nominal Value at End of Month */
-  nominalValue: number;
+  nominalValue: number
   /** Portfolio Inflation-Adjusted Real Value at End of Month */
-  realValue: number;
+  realValue: number
   /** Portfolio Value in Reference Currency (USD) */
-  usdValue: number;
+  usdValue: number
   /** Cumulative Inflation Factor Up to this Month */
-  cumulativeInflationFactor: number;
+  cumulativeInflationFactor: number
   /** Estimated Exchange Rate for this Month */
-  usdRate: number;
+  usdRate: number
   /** Nominal Profit/Loss Amount for this Month */
-  nominalProfit: number;
+  nominalProfit: number
   /** Real Profit/Loss Amount for this Month */
-  realProfit: number;
+  realProfit: number
 }
 
 /**
@@ -61,29 +63,29 @@ export interface ProjectionRow {
  */
 export interface ProjectionSummary {
   /** Total Duration (in Months) */
-  totalMonths: number;
+  totalMonths: number
   /** Total Nominal Capital Invested */
-  totalInvested: number;
+  totalInvested: number
   /** Real Value of Total Invested Capital in t0 Terms */
-  realTotalInvested: number;
+  realTotalInvested: number
   /** Portfolio Final Nominal Value */
-  finalNominalValue: number;
+  finalNominalValue: number
   /** Portfolio Final Real Value */
-  finalRealValue: number;
+  finalRealValue: number
   /** Portfolio Final Reference Currency (USD) Value */
-  finalUsdValue: number;
+  finalUsdValue: number
   /** Total Nominal Profit/Loss */
-  totalNominalProfit: number;
+  totalNominalProfit: number
   /** Total Real Profit/Loss */
-  totalRealProfit: number;
+  totalRealProfit: number
   /** Percentage Nominal Return Rate (%) (Nominal ROI) */
-  nominalRoi: number;
+  nominalRoi: number
   /** Percentage Real Return Rate (%) (Real ROI) */
-  realRoi: number;
+  realRoi: number
   /** Purchasing Power Loss Rate (%) due to Inflation */
-  purchasingPowerLossRate: number;
+  purchasingPowerLossRate: number
   /** Estimated Final Exchange Rate */
-  finalUsdRate: number;
+  finalUsdRate: number
 }
 
 /**
@@ -91,49 +93,76 @@ export interface ProjectionSummary {
  */
 export interface ProjectionResult {
   /** Monthly detailed rows */
-  rows: ProjectionRow[];
+  rows: ProjectionRow[]
   /** Summary metrics */
-  summary: ProjectionSummary;
+  summary: ProjectionSummary
 }
 
 /**
  * User Portfolio Model
  */
 export interface Portfolio {
-  id: string;
-  name: string;
-  description?: string;
-  params: ProjectionParams;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  name: string
+  description?: string
+  params: ProjectionParams
+  createdAt: string
+  updatedAt: string
 }
 
 /**
  * Comparative Scenario Model
  */
 export interface Scenario {
-  id: string;
-  name: string;
-  color: string;
-  params: ProjectionParams;
-  isBaseline?: boolean;
+  id: string
+  name: string
+  color: string
+  params: ProjectionParams
+  isBaseline?: boolean
 }
 
 /**
  * Currency Info
  */
 export interface CurrencyInfo {
-  code: string;
-  symbol: string;
-  name: string;
+  code: string
+  symbol: string
+  name: string
+}
+
+/**
+ * AI Model Provider
+ */
+export type AiModelProvider = "gemini" | "openai" | "custom"
+
+/**
+ * AI Economic Forecast Result (annual basis)
+ */
+export interface AiForecastResult {
+  /** Expected Annual Inflation Rate (%) */
+  expectedInflationRate: number
+  /** Expected Annual Exchange Rate Growth Rate (%) */
+  expectedUsdGrowthRate: number
+  /** Expected Annual Portfolio Return Rate (%) */
+  expectedReturnRate: number
+  /** Current Exchange Rate to Reference Currency */
+  usdRate: number
+  /** Short economic rationale summary */
+  rationale: string
 }
 
 /**
  * Application Global Settings
  */
 export interface Settings {
-  theme: 'light' | 'dark' | 'system';
-  language: 'en' | 'tr';
-  currencyCode: string;
-  currencySymbol: string;
+  theme: "light" | "dark" | "system"
+  language: string
+  currencyCode: string
+  currencySymbol: string
+  aiApiKey?: string
+  aiModelProvider?: AiModelProvider
+  aiModel?: string
+  aiBaseUrl?: string
+  aiCorsProxy?: string
+  aiCorsProxyEnabled?: boolean
 }

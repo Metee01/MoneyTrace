@@ -11,9 +11,7 @@ export function Layout({ children, onOpenSettings }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header onOpenSettings={onOpenSettings} />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
       <Footer />
     </div>
   )

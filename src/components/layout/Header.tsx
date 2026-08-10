@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { useTheme } from "@/hooks/useTheme"
 import { Button } from "@/components/ui/button"
+import { APP_VERSION } from "@/lib/version"
 import { Sun, Moon, Laptop, TrendingUp, Settings } from "lucide-react"
 
 interface HeaderProps {
@@ -22,7 +23,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
           <div>
             <span className="font-bold text-xl tracking-tight">MoneyTrace</span>
             <span className="hidden md:inline-block ml-2 text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded-full font-medium">
-              v0.1.0-alpha
+              v{APP_VERSION}
             </span>
           </div>
         </div>
@@ -34,7 +35,11 @@ export function Header({ onOpenSettings }: HeaderProps) {
             <Button
               variant="ghost"
               size="icon-xs"
-              className={theme === "light" ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"}
+              className={
+                theme === "light"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }
               onClick={() => setTheme("light")}
               title={t("common.light")}
             >
@@ -43,7 +48,11 @@ export function Header({ onOpenSettings }: HeaderProps) {
             <Button
               variant="ghost"
               size="icon-xs"
-              className={theme === "dark" ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"}
+              className={
+                theme === "dark"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }
               onClick={() => setTheme("dark")}
               title={t("common.dark")}
             >
@@ -52,7 +61,11 @@ export function Header({ onOpenSettings }: HeaderProps) {
             <Button
               variant="ghost"
               size="icon-xs"
-              className={theme === "system" ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"}
+              className={
+                theme === "system"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }
               onClick={() => setTheme("system")}
               title={t("common.system")}
             >

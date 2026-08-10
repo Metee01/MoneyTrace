@@ -1,6 +1,8 @@
-import { Globe } from "lucide-react"
+import { Globe, User } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export function Footer() {
+  const { t } = useTranslation()
   const currentYear = new Date().getFullYear()
 
   return (
@@ -14,12 +16,22 @@ export function Footer() {
         </div>
 
         {/* Right Side */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-5 text-sm text-muted-foreground">
+          <a
+            href="https://metee.com.tr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 hover:text-foreground transition-colors font-medium"
+          >
+            <User className="h-4 w-4 text-primary" />
+            <span>{t("common.website")}</span>
+          </a>
+
           <a
             href="https://github.com/Metee01/MoneyTrace"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 hover:text-foreground transition-colors font-medium"
           >
             <Globe className="h-4 w-4" />
             <span>GitHub</span>

@@ -7,84 +7,96 @@ import type {
   ProjectionResult,
   ProjectionRow,
   ProjectionSummary,
-} from '../types';
+} from "../types"
 import {
   calculateMonthlyRate,
   calculateDcaForMonth,
   calculateCompoundStep,
-} from './compound-growth';
+} from "./compound-growth"
 import {
   calculateCumulativeInflationFactor,
   adjustForInflation,
   calculatePurchasingPowerLossRate,
-} from './inflation-adjust';
-import { predictUsdRate, convertToUsd } from './currency-convert';
+} from "./inflation-adjust"
+import { predictUsdRate, convertToUsd } from "./currency-convert"
 
-export * from './compound-growth';
-export * from './inflation-adjust';
-export * from './currency-convert';
+export * from "./compound-growth"
+export * from "./inflation-adjust"
+export * from "./currency-convert"
 
 /**
  * Calculates monthly projection table and summary metrics based on portfolio parameters.
- * 
+ *
  * @param params Projection input parameters
  * @returns Projection result object (rows + summary)
  */
-export function calculateProjection(params: ProjectionParams): ProjectionResult {
-  const targetYears = Math.max(1, Math.min(50, params.targetYears || 1));
-  const totalMonths = targetYears * 12;
+export function calculateProjection(
+  params: ProjectionParams,
+): ProjectionResult {
+  const targetYears = Math.max(1, Math.min(50, params.targetYears || 1))
+  const totalMonths = targetYears * 12
 
-  const monthlyReturnRate = calculateMonthlyRate(params.expectedReturnRate || 0);
-  const monthlyInflationRate = calculateMonthlyRate(params.expectedInflationRate || 0);
-  const monthlyUsdGrowthRate = calculateMonthlyRate(params.expectedUsdGrowthRate || 0);
+  // Rates are entered either as annual percentages (converted to effective
+  // monthly rates) or as monthly percentages (used directly - lossless).
+  const isMonthlyInput = params.rateInputPeriod === "monthly"
+  const toMonthlyRate = (annualRate: number) =>
+    isMonthlyInput ? annualRate / 100 : calculateMonthlyRate(annualRate)
 
-  let currentNominalValue = Math.max(0, params.initialCapital || 0);
-  let totalInvested = Math.max(0, params.initialCapital || 0);
-  let realTotalInvested = Math.max(0, params.initialCapital || 0);
+  const monthlyReturnRate = toMonthlyRate(params.expectedReturnRate || 0)
+  const monthlyInflationRate = toMonthlyRate(params.expectedInflationRate || 0)
+  const monthlyUsdGrowthRate = toMonthlyRate(params.expectedUsdGrowthRate || 0)
 
-  const rows: ProjectionRow[] = [];
+  let currentNominalValue = Math.max(0, params.initialCapital || 0)
+  let totalInvested = Math.max(0, params.initialCapital || 0)
+  let realTotalInvested = Math.max(0, params.initialCapital || 0)
+
+  const rows: ProjectionRow[] = []
 
   for (let month = 1; month <= totalMonths; month++) {
-    const yearIndex = Math.ceil(month / 12);
-    const monthInYear = ((month - 1) % 12) + 1;
+    const yearIndex = Math.ceil(month / 12)
+    const monthInYear = ((month - 1) % 12) + 1
 
     // Monthly DCA contribution for this period
     const monthlyDca = calculateDcaForMonth(
       params.monthlyDca || 0,
       params.dcaIncreaseRate || 0,
-      month
-    );
+      month,
+    )
 
     // Cumulative inflation factor at month t
-    const cumInflation = calculateCumulativeInflationFactor(monthlyInflationRate, month);
+    const cumInflation = calculateCumulativeInflationFactor(
+      monthlyInflationRate,
+      month,
+    )
 
     // Cumulative nominal invested capital
-    totalInvested += monthlyDca;
+    totalInvested += monthlyDca
 
     // Cumulative real invested capital (DCA contribution converted to t0 purchasing power)
-    realTotalInvested += cumInflation > 0 ? monthlyDca / cumInflation : monthlyDca;
+    realTotalInvested +=
+      cumInflation > 0 ? monthlyDca / cumInflation : monthlyDca
 
     // Portfolio compound growth step
     currentNominalValue = calculateCompoundStep(
       currentNominalValue,
       monthlyDca,
-      monthlyReturnRate
-    );
+      monthlyReturnRate,
+    )
 
     // Real purchasing power calculation
-    const realValue = adjustForInflation(currentNominalValue, cumInflation);
+    const realValue = adjustForInflation(currentNominalValue, cumInflation)
 
     // Reference currency exchange rate and value calculation
     const currentUsdRate = predictUsdRate(
       params.usdRate || 1,
       monthlyUsdGrowthRate,
-      month
-    );
-    const usdValue = convertToUsd(currentNominalValue, currentUsdRate);
+      month,
+    )
+    const usdValue = convertToUsd(currentNominalValue, currentUsdRate)
 
     // Profit / Loss calculations
-    const nominalProfit = currentNominalValue - totalInvested;
-    const realProfit = realValue - realTotalInvested;
+    const nominalProfit = currentNominalValue - totalInvested
+    const realProfit = realValue - realTotalInvested
 
     rows.push({
       month,
@@ -100,29 +112,31 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
       usdRate: Math.round(currentUsdRate * 100) / 100,
       nominalProfit: Math.round(nominalProfit * 100) / 100,
       realProfit: Math.round(realProfit * 100) / 100,
-    });
+    })
   }
 
-  const finalRow = rows[rows.length - 1];
-  const finalNominalValue = finalRow ? finalRow.nominalValue : params.initialCapital;
-  const finalRealValue = finalRow ? finalRow.realValue : params.initialCapital;
+  const finalRow = rows[rows.length - 1]
+  const finalNominalValue = finalRow
+    ? finalRow.nominalValue
+    : params.initialCapital
+  const finalRealValue = finalRow ? finalRow.realValue : params.initialCapital
   const finalUsdValue = finalRow
     ? finalRow.usdValue
-    : convertToUsd(params.initialCapital, params.usdRate);
+    : convertToUsd(params.initialCapital, params.usdRate)
 
-  const totalNominalProfit = finalNominalValue - totalInvested;
-  const totalRealProfit = finalRealValue - realTotalInvested;
+  const totalNominalProfit = finalNominalValue - totalInvested
+  const totalRealProfit = finalRealValue - realTotalInvested
 
   const nominalRoi =
-    totalInvested > 0 ? (totalNominalProfit / totalInvested) * 100 : 0;
+    totalInvested > 0 ? (totalNominalProfit / totalInvested) * 100 : 0
   const realRoi =
-    realTotalInvested > 0 ? (totalRealProfit / realTotalInvested) * 100 : 0;
+    realTotalInvested > 0 ? (totalRealProfit / realTotalInvested) * 100 : 0
 
   const purchasingPowerLossRate = calculatePurchasingPowerLossRate(
     finalNominalValue,
-    finalRealValue
-  );
-  const finalUsdRate = finalRow ? finalRow.usdRate : params.usdRate;
+    finalRealValue,
+  )
+  const finalUsdRate = finalRow ? finalRow.usdRate : params.usdRate
 
   const summary: ProjectionSummary = {
     totalMonths,
@@ -137,10 +151,10 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
     realRoi: Math.round(realRoi * 100) / 100,
     purchasingPowerLossRate: Math.round(purchasingPowerLossRate * 100) / 100,
     finalUsdRate: Math.round(finalUsdRate * 100) / 100,
-  };
+  }
 
   return {
     rows,
     summary,
-  };
+  }
 }

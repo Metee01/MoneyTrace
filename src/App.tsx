@@ -7,7 +7,9 @@ import { ProjectionTable } from "@/components/projection/ProjectionTable"
 import { ProjectionSummaryCards } from "@/components/projection/ProjectionSummaryCards"
 import { ScenarioManager } from "@/components/scenarios/ScenarioManager"
 import { useSettingsStore } from "@/store"
+import { SUPPORTED_LANGUAGES } from "@/lib/i18n"
 import { POPULAR_CURRENCIES } from "@/lib/formatters"
+import { APP_VERSION } from "@/lib/version"
 import { Loader2, Globe, DollarSign } from "lucide-react"
 import {
   Dialog,
@@ -22,7 +24,7 @@ import { Button } from "@/components/ui/button"
 const ChartSection = lazy(() =>
   import("@/components/projection/ChartSection").then((module) => ({
     default: module.ChartSection,
-  }))
+  })),
 )
 
 function ChartFallback() {
@@ -40,7 +42,7 @@ function App() {
   const { currencyCode, setCurrency, setLanguage } = useSettingsStore()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
-  const handleLanguageChange = (lang: 'en' | 'tr') => {
+  const handleLanguageChange = (lang: string) => {
     i18n.changeLanguage(lang)
     setLanguage(lang)
   }
@@ -99,26 +101,17 @@ function App() {
                 <Globe className="w-3.5 h-3.5" />
                 {t("settings.languageSelect")}
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant={i18n.language === 'en' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleLanguageChange('en')}
-                  className="text-xs"
-                >
-                  English (EN)
-                </Button>
-                <Button
-                  type="button"
-                  variant={i18n.language === 'tr' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleLanguageChange('tr')}
-                  className="text-xs"
-                >
-                  Türkçe (TR)
-                </Button>
-              </div>
+              <select
+                value={i18n.language}
+                onChange={(e) => handleLanguageChange(e.target.value)}
+                className="w-full bg-muted border border-border rounded-lg p-2 text-xs font-medium text-foreground focus:outline-none"
+              >
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Currency Selection */}
@@ -143,19 +136,27 @@ function App() {
             {/* App Info */}
             <div className="pt-2 border-t border-border/50 space-y-2 text-xs">
               <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 border">
-                <span className="text-muted-foreground font-medium">{t("settings.appVersion")}</span>
-                <span className="font-semibold text-foreground">v0.1.0</span>
+                <span className="text-muted-foreground font-medium">
+                  {t("settings.appVersion")}
+                </span>
+                <span className="font-semibold text-foreground">
+                  v{APP_VERSION}
+                </span>
               </div>
               <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 border">
-                <span className="text-muted-foreground font-medium">{t("common.theme")}</span>
-                <span className="font-semibold uppercase text-primary">{theme}</span>
+                <span className="text-muted-foreground font-medium">
+                  {t("common.theme")}
+                </span>
+                <span className="font-semibold uppercase text-primary">
+                  {theme}
+                </span>
               </div>
             </div>
           </div>
 
           <div className="flex justify-end">
             <Button onClick={() => setIsSettingsOpen(false)}>
-              {t("common.cancel") === 'İptal' ? 'Kapat' : 'Close'}
+              {t("common.cancel") === "İptal" ? "Kapat" : "Close"}
             </Button>
           </div>
         </DialogContent>
