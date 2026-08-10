@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer,
   LineChart,
@@ -13,10 +14,10 @@ import {
 } from 'recharts';
 import { Card, CardHeader, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { usePortfolioStore } from '../../store';
+import { usePortfolioStore, useSettingsStore } from '../../store';
 import { calculateProjection } from '../../engine';
 import { useTheme } from '../../hooks/useTheme';
-import { formatTL, formatUSD } from '../../lib/formatters';
+import { formatLocalCurrency, formatUSD } from '../../lib/formatters';
 import { TrendingUp, Flame } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -32,7 +33,9 @@ interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayloadItem[];
   label?: string;
-  currencyMode?: 'TRY' | 'USD';
+  currencyMode?: 'LOCAL' | 'USD';
+  currencyCode: string;
+  locale: string;
   isInflationView?: boolean;
 }
 
@@ -40,7 +43,9 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
   active,
   payload,
   label,
-  currencyMode = 'TRY',
+  currencyMode = 'LOCAL',
+  currencyCode,
+  locale,
   isInflationView = false,
 }) => {
   if (!active || !payload || !payload.length) return null;
@@ -60,9 +65,9 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
           {label}
         </p>
         <div className="flex justify-between items-center gap-4">
-          <span className="text-muted-foreground">Nominal Portföy:</span>
+          <span className="text-muted-foreground">Nominal Portfolio:</span>
           <span className="font-semibold font-mono text-blue-500">
-            {formatTL(Number(data.nominalValue || 0))}
+            {formatLocalCurrency(Number(data.nominalValue || 0), currencyCode, locale)}
           </span>
         </div>
         {payload.map((entry, index) => (
@@ -75,7 +80,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
               <span className="text-muted-foreground">{entry.name}:</span>
             </div>
             <span className="font-semibold font-mono">
-              {formatTL(Number(entry.value || 0))}
+              {formatLocalCurrency(Number(entry.value || 0), currencyCode, locale)}
             </span>
           </div>
         ))}
@@ -89,7 +94,10 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
         {label}
       </p>
       {payload.map((entry: TooltipPayloadItem, index: number) => {
-        const valueFormatter = currencyMode === 'USD' ? formatUSD : formatTL;
+        const valueFormatter = (val: number) =>
+          currencyMode === 'USD'
+            ? formatUSD(val)
+            : formatLocalCurrency(val, currencyCode, locale);
         return (
           <div key={`item-${index}`} className="flex justify-between items-center gap-4">
             <div className="flex items-center gap-1.5">
@@ -110,12 +118,16 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
 };
 
 export const ChartSection: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const { currentParams } = usePortfolioStore();
+  const { currencyCode, currencySymbol } = useSettingsStore();
   const { theme } = useTheme();
 
   const [activeTab, setActiveTab] = useState<'growth' | 'inflation'>('growth');
-  const [currencyMode, setCurrencyMode] = useState<'TRY' | 'USD'>('TRY');
+  const [currencyMode, setCurrencyMode] = useState<'LOCAL' | 'USD'>('LOCAL');
   const [filterMode, setFilterMode] = useState<'all' | 'yearly'>('all');
+
+  const locale = i18n.language === 'tr' ? 'tr-TR' : 'en-US';
 
   const projectionResult = useMemo(() => {
     return calculateProjection(currentParams);
@@ -141,10 +153,10 @@ export const ChartSection: React.FC = () => {
         : projectionResult.rows;
 
     return rows.map((r) => {
-      const yearLabel = `${r.yearIndex}. Yıl${r.monthInYear !== 12 ? ` ${r.monthInYear}. Ay` : ''}`;
+      const yearLabel = `${r.yearIndex}Y${r.monthInYear !== 12 ? ` ${r.monthInYear}M` : ''}`;
       return {
         month: r.month,
-        label: filterMode === 'yearly' ? `${r.yearIndex}. Yıl` : yearLabel,
+        label: filterMode === 'yearly' ? `${r.yearIndex}Y` : yearLabel,
         nominalValue: r.nominalValue,
         realValue: r.realValue,
         totalInvested: r.totalInvested,
@@ -163,12 +175,12 @@ export const ChartSection: React.FC = () => {
         : projectionResult.rows;
 
     return rows.map((r) => {
-      const yearLabel = `${r.yearIndex}. Yıl${r.monthInYear !== 12 ? ` ${r.monthInYear}. Ay` : ''}`;
+      const yearLabel = `${r.yearIndex}Y${r.monthInYear !== 12 ? ` ${r.monthInYear}M` : ''}`;
       const inflationLoss = Math.max(0, r.nominalValue - r.realValue);
 
       return {
         month: r.month,
-        label: filterMode === 'yearly' ? `${r.yearIndex}. Yıl` : yearLabel,
+        label: filterMode === 'yearly' ? `${r.yearIndex}Y` : yearLabel,
         nominalValue: r.nominalValue,
         realValue: r.realValue,
         inflationLoss: Math.round(inflationLoss * 100) / 100,
@@ -181,7 +193,7 @@ export const ChartSection: React.FC = () => {
     if (activeTab === 'growth' && currencyMode === 'USD') {
       return formatUSD(val, true);
     }
-    return formatTL(val, true);
+    return formatLocalCurrency(val, currencyCode, locale, true);
   };
 
   return (
@@ -202,7 +214,7 @@ export const ChartSection: React.FC = () => {
                 )}
               >
                 <TrendingUp className="w-4 h-4 text-blue-500" />
-                <span>Büyüme Grafiği</span>
+                <span>{t('projection.chartTitle')}</span>
               </button>
               <button
                 type="button"
@@ -215,22 +227,22 @@ export const ChartSection: React.FC = () => {
                 )}
               >
                 <Flame className="w-4 h-4 text-rose-500" />
-                <span>Enflasyon Etkisi</span>
+                <span>{t('projection.inflationImpactTitle')}</span>
               </button>
             </div>
 
             <p className="text-xs text-muted-foreground px-0.5">
               {activeTab === 'growth'
-                ? currencyMode === 'TRY'
-                  ? 'Nominal Değer, Enflasyondan Arındırılmış Reel Değer ve Anapara Gelişimi'
-                  : 'Dolar ($) Bazında Portföy Büyümesi'
-                : 'Enflasyon Sebebiyle Nominal Kazancın Ne Kadarının Eridiğini Gösterir'}
+                ? currencyMode === 'LOCAL'
+                  ? t('projection.chartGrowthSub')
+                  : t('projection.chartUsdSub')
+                : t('projection.chartInflationSub')}
             </p>
           </div>
 
-          {/* Right: Controls (Aylık/Yıllık & ₺ TL / $ USD) */}
+          {/* Right: Controls */}
           <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
-            {/* Filter Mode (Aylık / Yıllık) */}
+            {/* Filter Mode */}
             <div className="inline-flex items-center rounded-lg border border-border bg-muted p-0.5 text-xs">
               <Button
                 variant={filterMode === 'all' ? 'default' : 'ghost'}
@@ -238,7 +250,7 @@ export const ChartSection: React.FC = () => {
                 className="h-7 text-xs px-2.5"
                 onClick={() => setFilterMode('all')}
               >
-                Aylık
+                {t('table.allMonths')}
               </Button>
               <Button
                 variant={filterMode === 'yearly' ? 'default' : 'ghost'}
@@ -246,20 +258,20 @@ export const ChartSection: React.FC = () => {
                 className="h-7 text-xs px-2.5"
                 onClick={() => setFilterMode('yearly')}
               >
-                Yıllık
+                {t('table.yearlySummary')}
               </Button>
             </div>
 
-            {/* Currency Mode (₺ TL / $ USD) - Only visible on Growth tab */}
+            {/* Currency Mode Switcher - Only visible on Growth tab */}
             {activeTab === 'growth' && (
               <div className="inline-flex items-center rounded-lg border border-border bg-muted p-0.5 text-xs">
                 <Button
-                  variant={currencyMode === 'TRY' ? 'default' : 'ghost'}
+                  variant={currencyMode === 'LOCAL' ? 'default' : 'ghost'}
                   size="sm"
                   className="h-7 text-xs px-2.5"
-                  onClick={() => setCurrencyMode('TRY')}
+                  onClick={() => setCurrencyMode('LOCAL')}
                 >
-                  ₺ TL
+                  {currencySymbol} {currencyCode}
                 </Button>
                 <Button
                   variant={currencyMode === 'USD' ? 'default' : 'ghost'}
@@ -300,19 +312,27 @@ export const ChartSection: React.FC = () => {
                   tickFormatter={formatYAxis}
                   dx={-8}
                 />
-                <Tooltip content={<CustomTooltip currencyMode={currencyMode} />} />
+                <Tooltip
+                  content={
+                    <CustomTooltip
+                      currencyMode={currencyMode}
+                      currencyCode={currencyCode}
+                      locale={locale}
+                    />
+                  }
+                />
                 <Legend
                   verticalAlign="top"
                   align="right"
                   wrapperStyle={{ paddingBottom: '12px', fontSize: '12px' }}
                 />
 
-                {currencyMode === 'TRY' ? (
+                {currencyMode === 'LOCAL' ? (
                   <>
                     <Line
                       type="monotone"
                       dataKey="nominalValue"
-                      name="Nominal Değer (TL)"
+                      name={`${t('projection.nominalBalance')} (${currencySymbol})`}
                       stroke={colors.nominal}
                       strokeWidth={2.5}
                       dot={false}
@@ -321,7 +341,7 @@ export const ChartSection: React.FC = () => {
                     <Line
                       type="monotone"
                       dataKey="realValue"
-                      name="Reel Satın Alma Gücü (TL)"
+                      name={`${t('projection.realValue')} (${currencySymbol})`}
                       stroke={colors.real}
                       strokeWidth={2.5}
                       dot={false}
@@ -330,7 +350,7 @@ export const ChartSection: React.FC = () => {
                     <Line
                       type="monotone"
                       dataKey="totalInvested"
-                      name="Yatırılan Anapara (TL)"
+                      name={`${t('projection.totalContribution')} (${currencySymbol})`}
                       stroke={colors.invested}
                       strokeWidth={2}
                       strokeDasharray="4 4"
@@ -342,7 +362,7 @@ export const ChartSection: React.FC = () => {
                     <Line
                       type="monotone"
                       dataKey="usdValue"
-                      name="USD Değeri ($)"
+                      name={`${t('projection.usdBalance')} ($)`}
                       stroke={colors.usd}
                       strokeWidth={2.5}
                       dot={false}
@@ -351,7 +371,7 @@ export const ChartSection: React.FC = () => {
                     <Line
                       type="monotone"
                       dataKey="usdInvested"
-                      name="Yatırılan Dolar ($)"
+                      name={`Invested ($)`}
                       stroke={colors.invested}
                       strokeWidth={2}
                       strokeDasharray="4 4"
@@ -393,7 +413,15 @@ export const ChartSection: React.FC = () => {
                   tickFormatter={formatYAxis}
                   dx={-8}
                 />
-                <Tooltip content={<CustomTooltip isInflationView />} />
+                <Tooltip
+                  content={
+                    <CustomTooltip
+                      isInflationView
+                      currencyCode={currencyCode}
+                      locale={locale}
+                    />
+                  }
+                />
                 <Legend
                   verticalAlign="top"
                   align="right"
@@ -403,7 +431,7 @@ export const ChartSection: React.FC = () => {
                 <Area
                   type="monotone"
                   dataKey="realValue"
-                  name="Reel Satın Alma Gücü (TL)"
+                  name={`${t('projection.realValue')} (${currencySymbol})`}
                   stackId="1"
                   stroke={colors.real}
                   fill="url(#realGradient)"
@@ -412,7 +440,7 @@ export const ChartSection: React.FC = () => {
                 <Area
                   type="monotone"
                   dataKey="inflationLoss"
-                  name="Enflasyon Kaybı (TL)"
+                  name={`${t('projection.inflationLoss')} (${currencySymbol})`}
                   stackId="1"
                   stroke={colors.lossArea}
                   fill="url(#lossGradient)"

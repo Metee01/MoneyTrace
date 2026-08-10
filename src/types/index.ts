@@ -1,103 +1,103 @@
 /**
- * MoneyTrace - TypeScript Tip Tanımlamaları
+ * MoneyTrace - TypeScript Type Definitions
  */
 
 /**
- * Hesaplama Motoru Girdi Parametreleri
+ * Calculation Engine Input Parameters
  */
 export interface ProjectionParams {
-  /** Başlangıç Sermayesi (TL) */
+  /** Initial Capital Amount */
   initialCapital: number;
-  /** Aylık Düzenli Yatırım Miktarı (TL) */
+  /** Monthly Regular Investment (DCA) */
   monthlyDca: number;
-  /** Yıllık DCA Artış Oranı (%) - Örn: %30 enflasyon korumalı artış için 30 */
+  /** Annual DCA Increase Rate (%) - e.g., 5 for 5% annual increase */
   dcaIncreaseRate: number;
-  /** Tahmini Yıllık Portföy Getirisi (%) */
+  /** Expected Annual Portfolio Return Rate (%) */
   expectedReturnRate: number;
-  /** Tahmini Yıllık Enflasyon Oranı (%) */
+  /** Expected Annual Inflation Rate (%) */
   expectedInflationRate: number;
-  /** Başlangıç USD/TRY Kuru */
+  /** Initial Exchange Rate to Reference Currency (e.g. USD) */
   usdRate: number;
-  /** Tahmini Yıllık USD Kur Artış Oranı (%) */
+  /** Expected Annual Exchange Rate Growth Rate (%) */
   expectedUsdGrowthRate: number;
-  /** Projeksiyon Vadesi (Yıl Cinsinden) */
+  /** Projection Horizon (in Years) */
   targetYears: number;
 }
 
 /**
- * Aylık Projeksiyon Satır Verisi
+ * Monthly Projection Data Row
  */
 export interface ProjectionRow {
-  /** Toplam Ay Sırası (1, 2, 3... N) */
+  /** Total Month Index (1, 2, 3... N) */
   month: number;
-  /** Kaçıncı Yıl (1, 2... Y) */
+  /** Year Index (1, 2... Y) */
   yearIndex: number;
-  /** Yıl İçindeki Ay (1 - 12) */
+  /** Month in Current Year (1 - 12) */
   monthInYear: number;
-  /** O Ay Yapılan DCA Yatırım Miktarı (TL) */
+  /** DCA Investment Amount for this Month */
   monthlyDca: number;
-  /** O Aya Kadar Yatırılan Toplam Nominal Anapara (TL) */
+  /** Total Nominal Capital Invested Up to this Month */
   totalInvested: number;
-  /** O Aya Kadar Yatırılan Anaparanın t0 Bazındaki Reel Karşılığı (TL) */
+  /** Real Value of Total Invested Capital in t0 Terms */
   realTotalInvested: number;
-  /** O Ay Sonundaki Portföy Nominal Değeri (TL) */
+  /** Portfolio Nominal Value at End of Month */
   nominalValue: number;
-  /** O Ay Sonundaki Portföy Enflasyondan Arındırılmış Reel Değeri (TL) */
+  /** Portfolio Inflation-Adjusted Real Value at End of Month */
   realValue: number;
-  /** O Ay Sonundaki Portföy USD Değeri ($) */
+  /** Portfolio Value in Reference Currency (USD) */
   usdValue: number;
-  /** O Aya Kadarki Kümülatif Enflasyon Katsayısı */
+  /** Cumulative Inflation Factor Up to this Month */
   cumulativeInflationFactor: number;
-  /** O Aydaki Tahmini USD/TRY Kuru */
+  /** Estimated Exchange Rate for this Month */
   usdRate: number;
-  /** O Aydaki Nominal Kar/Zarar Miktarı (TL) */
+  /** Nominal Profit/Loss Amount for this Month */
   nominalProfit: number;
-  /** O Aydaki Reel Kar/Zarar Miktarı (TL) */
+  /** Real Profit/Loss Amount for this Month */
   realProfit: number;
 }
 
 /**
- * Projeksiyon Sonuç Özet Metrikleri
+ * Projection Summary Metrics
  */
 export interface ProjectionSummary {
-  /** Toplam Süre (Ay Cinsinden) */
+  /** Total Duration (in Months) */
   totalMonths: number;
-  /** Toplam Yatırılan Nominal Anapara (TL) */
+  /** Total Nominal Capital Invested */
   totalInvested: number;
-  /** Toplam Yatırılan Anaparanın t0 Bazındaki Reel Karşılığı (TL) */
+  /** Real Value of Total Invested Capital in t0 Terms */
   realTotalInvested: number;
-  /** Vade Sonundaki Portföy Nominal Değeri (TL) */
+  /** Portfolio Final Nominal Value */
   finalNominalValue: number;
-  /** Vade Sonundaki Portföy Reel Değeri (TL) */
+  /** Portfolio Final Real Value */
   finalRealValue: number;
-  /** Vade Sonundaki Portföy USD Değeri ($) */
+  /** Portfolio Final Reference Currency (USD) Value */
   finalUsdValue: number;
-  /** Toplam Nominal Kar/Zarar (TL) */
+  /** Total Nominal Profit/Loss */
   totalNominalProfit: number;
-  /** Toplam Reel Kar/Zarar (TL) */
+  /** Total Real Profit/Loss */
   totalRealProfit: number;
-  /** Yüzdesel Nominal Getiri Oranı (%) (Nominal ROI) */
+  /** Percentage Nominal Return Rate (%) (Nominal ROI) */
   nominalRoi: number;
-  /** Yüzdesel Reel Getiri Oranı (%) (Reel ROI) */
+  /** Percentage Real Return Rate (%) (Real ROI) */
   realRoi: number;
-  /** Enflasyon Sebebiyle Erüyen Satın Alma Gücü Oranı (%) */
+  /** Purchasing Power Loss Rate (%) due to Inflation */
   purchasingPowerLossRate: number;
-  /** Vade Sonundaki Tahmini USD Kuru */
+  /** Estimated Final Exchange Rate */
   finalUsdRate: number;
 }
 
 /**
- * Tam Projeksiyon Hesaplama Çıktısı
+ * Complete Projection Calculation Result
  */
 export interface ProjectionResult {
-  /** Ay-ay detay satırları */
+  /** Monthly detailed rows */
   rows: ProjectionRow[];
-  /** Genel özet bilgileri */
+  /** Summary metrics */
   summary: ProjectionSummary;
 }
 
 /**
- * Kullanıcı Portföy Modeli
+ * User Portfolio Model
  */
 export interface Portfolio {
   id: string;
@@ -109,7 +109,7 @@ export interface Portfolio {
 }
 
 /**
- * Karşılaştırmalı Senaryo Modeli
+ * Comparative Scenario Model
  */
 export interface Scenario {
   id: string;
@@ -120,11 +120,20 @@ export interface Scenario {
 }
 
 /**
- * Uygulama Genel Ayarları
+ * Currency Info
+ */
+export interface CurrencyInfo {
+  code: string;
+  symbol: string;
+  name: string;
+}
+
+/**
+ * Application Global Settings
  */
 export interface Settings {
   theme: 'light' | 'dark' | 'system';
-  language: 'tr' | 'en';
-  evdsApiKey?: string;
-  defaultCurrency: 'TRY' | 'USD';
+  language: 'en' | 'tr';
+  currencyCode: string;
+  currencySymbol: string;
 }

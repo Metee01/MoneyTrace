@@ -1,113 +1,107 @@
 # MoneyTrace 💸📈
 
-**Türkiye'ye Özel Enflasyondan Arındırılmış Portföy Projeksiyon ve Simülasyon Aracı**
+**Inflation-Adjusted Portfolio Projection & Simulation Tool**
 
-MoneyTrace, Türkiye'deki yüksek enflasyon, döviz dalgalanmaları ve bileşik getiri dinamiklerini dikkate alarak yatırımlarınızın reel satın alma gücünü ve gelecekteki değerini simüle eden modern bir web uygulamasıdır.
+MoneyTrace is a modern, currency-agnostic web application designed to project investment growth, compound interest, Dollar-Cost Averaging (DCA), and real purchasing power erosion caused by inflation worldwide.
 
 ![MoneyTrace Dashboard](public/favicon.svg)
 
 ---
 
-## 🚀 Özellikler
+## 🚀 Features
 
-- **Reel vs. Nominal Bakiye:** Enflasyonun paranız üzerindeki erime etkisini anlık olarak görün.
-- **Bileşik Büyüme & DCA Simülasyonu:** Aylık düzenli ek yatırımlar (DCA) ve yıllık DCA artış oranları ile uzun vadeli birikiminizi hesaplayın.
-- **USD / Dolar Bazlı Getiri:** TL varlıklarınızın döviz karşısındaki performansını ve kur artış senaryolarını takip edin.
-- **Dinamik Senaryo Yönetimi:** İyimser, Kötümser ve Dengeli gibi farklı senaryolar oluşturun, senaryoları birbiriyle karşılaştırın ve baseline olarak atayın.
-- **Etkileşimli Grafikler:** Recharts tabanlı dinamik büyüme çizgisi ve enflasyon erime alanı grafikleri.
-- **JSON & CSV Aktarımı:** Tüm projeksiyon verilerinizi Excel uyumlu CSV olarak veya senaryolarınızı yedeklemek için JSON formatında indirin/yükleyin.
-- **Çoklu Dil & Koyu/Açık Tema:** Türkçe ve İngilizce altyapı desteği (i18n), sistem uyumlu karanlık mod.
-- **Kişisel Veri Gizliliği:** Tüm verileriniz tarayıcınızın yerel depolamasında (localStorage) saklanır, hiçbir veri sunucuya gönderilmez.
+- **Real vs. Nominal Balance:** Instantly see the erosion effect of inflation on your investment's purchasing power.
+- **Global Currency Support:** Select any local currency (USD, EUR, GBP, JPY, CAD, AUD, TRY, BRL, INR, etc.) and format amounts automatically.
+- **Compound Growth & DCA Simulation:** Model monthly Dollar-Cost Averaging with optional annual contribution increase rates.
+- **Reference Currency Tracking:** Track your local portfolio against a reference currency (USD) with customizable exchange rate growth projections.
+- **Dynamic Scenario Management:** Create, compare side-by-side, clone, and set baseline scenarios (e.g., Optimistic, Conservative, Market Growth).
+- **Interactive Visualizations:** Built-in Recharts performance growth lines and inflation purchasing power loss area charts.
+- **Data Export & Import:** Export full projection tables to Excel-compatible CSV files or backup/restore scenarios in JSON format.
+- **Multi-Language (i18n):** Native support for English and Turkish, with extensible internationalization.
+- **100% Client-Side & Private:** All data remains strictly in your browser's `localStorage`. No server uploads or tracking.
 
 ---
 
-## 🛠️ Teknoloji Yığını
+## 🛠️ Tech Stack
 
 - **Core:** React 19, TypeScript, Vite
 - **Styling:** Tailwind CSS v4, Lucide Icons, shadcn/ui
-- **State & Storage:** Zustand (`persist` middleware)
+- **State & Persistence:** Zustand with `persist` middleware
 - **Visualization:** Recharts
 - **Internationalization:** i18next, react-i18next
 
 ---
 
-## 📦 Kurulum ve Çalıştırma
+## 📦 Getting Started
 
-Projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyin:
+### Prerequisites
 
-### Gereksinimler
-- Node.js (v18.0.0 veya üzeri)
-- npm veya yarn / pnpm / bun
+- Node.js (v18.0.0 or higher)
+- npm or yarn / pnpm / bun
 
-### Adımlar
+### Installation & Local Run
 
-1. **Repoyu klonlayın:**
+1. **Clone the repository:**
    ```bash
-   git clone https://github.com/user/MoneyTrace.git
+   git clone https://github.com/Metee01/MoneyTrace.git
    cd MoneyTrace
    ```
 
-2. **Bağımlılıkları yükleyin:**
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. **Geliştirici sunucusunu başlatın:**
+3. **Start local dev server:**
    ```bash
    npm run dev
    ```
-   Tarayıcınızda `http://localhost:5173` adresine giderek uygulamayı görüntüleyin.
+   Open `http://localhost:5173` in your browser.
 
-4. **Üretim için build alın:**
+4. **Build for production:**
    ```bash
    npm run build
    ```
 
-5. **Linting & Kod Kontrolü:**
+5. **Lint & Code Audit:**
    ```bash
    npm run lint
    ```
 
 ---
 
-## 📁 Proje Yapısı
+## 📁 Project Structure
 
 ```
 MoneyTrace/
-├── public/                 # Statik varlıklar ve favicon
+├── public/                 # Static assets & favicon
 ├── src/
-│   ├── components/         # UI bileşenleri
-│   │   ├── layout/         # Header, Footer, Layout
-│   │   ├── portfolio/      # Portföy parametre giriş formu
-│   │   ├── projection/     # Özet kartları, grafikler, ay-ay tablo
-│   │   ├── scenarios/      # Senaryo yönetim ve karşılaştırma dialogları
-│   │   └── ui/             # shadcn/ui temel bileşenleri
-│   ├── engine/             # Finansal hesaplama motorları (büyüme, enflasyon, kur)
-│   ├── hooks/              # Custom React hook'ları (useTheme)
-│   ├── locales/            # i18n dil çevirileri (tr, en)
-│   ├── store/              # Zustand store'ları (portfolio-store, settings-store)
-│   ├── types/              # TypeScript tip tanımları
-│   ├── App.tsx             # Ana uygulama bileşeni
-│   └── main.tsx            # Giriş noktası
-├── ROADMAP.md              # Proje yol haritası ve ilerleme kaydı
-├── vercel.json             # Vercel deployment konfigürasyonu
-└── package.json            # Proje bağımlılıkları ve script'ler
+│   ├── components/         # React UI components
+│   │   ├── layout/         # Header, Footer, Layout wrapper
+│   │   ├── portfolio/      # Input parameters form & presets
+│   │   ├── projection/     # Summary cards, charts, monthly detail table
+│   │   ├── scenarios/      # Scenario manager & comparison dialogs
+│   │   └── ui/             # Reusable UI elements (buttons, cards, inputs, dialogs)
+│   ├── engine/             # Financial engines (compounding, inflation adjustment, FX)
+│   ├── hooks/              # Custom React hooks (useTheme)
+│   ├── lib/                # Formatters, export helpers, i18n setup, utilities
+│   ├── locales/            # Translation JSON files (en, tr)
+│   ├── store/              # Zustand state stores (portfolio, settings)
+│   ├── types/              # TypeScript interfaces & types
+│   ├── App.tsx             # Main dashboard layout
+│   └── main.tsx            # Application entry point
+├── vercel.json             # Vercel deployment configuration
+└── package.json            # Dependencies and scripts
 ```
 
 ---
 
-## 🤝 Katkıda Bulunma
+## 🤝 Contributing
 
-MoneyTrace açık kaynaklı bir projedir! Katkıda bulunmak isterseniz lütfen [CONTRIBUTING.md](CONTRIBUTING.md) dosyasını inceleyin.
-
-1. Bu depoyu Fork'layın
-2. Yeni bir Feature Branch oluşturun (`git checkout -b feature/YeniOzellik`)
-3. Değişikliklerinizi commit edin (`git commit -m 'feat: Yeni özellik eklendi'`)
-4. Branch'inizi Push edin (`git push origin feature/YeniOzellik`)
-5. Bir Pull Request (PR) açın
+Contributions are welcome! Please check out [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on code style, Pull Requests, and adding new language translations.
 
 ---
 
-## 📄 Lisans
+## 📄 License
 
-Bu proje [MIT Lisansı](LICENSE) altında lisanslanmıştır.
+This project is licensed under the [MIT License](LICENSE).

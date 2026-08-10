@@ -1,48 +1,56 @@
-/**
- * MoneyTrace - CSV ve JSON Dışa / İçe Aktarım Yardımcı Modülü
- */
-
 import type { ProjectionRow, ProjectionSummary } from '../types';
 
 /**
- * Projeksiyon tablosunu Türkiye Excel standartlarına uygun (semicolon ayırıcı ve UTF-8 BOM) CSV olarak indirir.
- * 
- * @param rows Ay-ay projeksiyon satırları
- * @param summary Genel projeksiyon özeti
- * @param filename İndirilecek dosya adı (varsayılan: MoneyTrace_Projeksiyon.csv)
+ * Downloads a string as a CSV file.
+ * UTF-8 BOM is added for Excel compatibility.
  */
-export function exportToCSV(
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Exports projection rows and summary data to a CSV file.
+ */
+export function exportToCsv(
   rows: ProjectionRow[],
   summary: ProjectionSummary,
-  filename = 'MoneyTrace_Projeksiyon.csv'
+  filename = 'MoneyTrace_Projection.csv'
 ): void {
-  if (!rows || rows.length === 0) return;
-
   const delimiter = ';';
   const lines: string[] = [];
 
-  // Başlıklar
-  const headers = [
-    'Donem / Ay',
-    'Yil',
-    'Ay (Yil Ici)',
-    'Aylik DCA (TL)',
-    'Yatirlan Anapara (TL)',
-    'Reel Yatirlan Anapara (TL)',
-    'Nominal Portfoy Degeri (TL)',
-    'Reel Satin Alma Gucu (TL)',
-    'USD Degeri ($)',
-    'USD Kuru (TRY)',
-    'Nominal Kar/Zarar (TL)',
-    'Reel Kar/Zarar (TL)',
-    'Kumulatif Enflasyon Katsayisi',
-  ];
+  // Metadata / Summary Header
+  lines.push(`MoneyTrace - Portfolio Projection Export`);
+  lines.push(`Exported At${delimiter}${new Date().toISOString()}`);
+  lines.push('');
 
+  // Table Headers
+  const headers = [
+    'Month',
+    'Year Index',
+    'Month in Year',
+    'Monthly DCA',
+    'Total Invested Capital',
+    'Real Invested Capital',
+    'Nominal Value',
+    'Real Value (Today Money)',
+    'Ref. Currency Value ($)',
+    'Exchange Rate',
+    'Nominal Profit/Loss',
+    'Real Profit/Loss',
+  ];
   lines.push(headers.join(delimiter));
 
-  // Satırlar
+  // Table Rows
   rows.forEach((r) => {
-    const line = [
+    const rowValues = [
       r.month,
       r.yearIndex,
       r.monthInYear,
@@ -55,27 +63,27 @@ export function exportToCSV(
       r.usdRate.toFixed(2),
       r.nominalProfit.toFixed(2),
       r.realProfit.toFixed(2),
-      r.cumulativeInflationFactor.toFixed(4),
     ];
-    lines.push(line.join(delimiter));
+    lines.push(rowValues.join(delimiter));
   });
 
-  // Ozet Satırı
   lines.push('');
-  lines.push('--- GENEL OZET METRIKLERI ---');
-  lines.push(`Toplam Sure (Ay)${delimiter}${summary.totalMonths}`);
-  lines.push(`Toplam Yatirilan Anapara (TL)${delimiter}${summary.totalInvested.toFixed(2)}`);
-  lines.push(`Reel Yatirilan Anapara (TL)${delimiter}${summary.realTotalInvested.toFixed(2)}`);
-  lines.push(`Vade Sonu Nominal Değer (TL)${delimiter}${summary.finalNominalValue.toFixed(2)}`);
-  lines.push(`Vade Sonu Reel Değer (TL)${delimiter}${summary.finalRealValue.toFixed(2)}`);
-  lines.push(`Vade Sonu USD Değeri ($)${delimiter}${summary.finalUsdValue.toFixed(2)}`);
-  lines.push(`Net Reel Kar/Zarar (TL)${delimiter}${summary.totalRealProfit.toFixed(2)}`);
-  lines.push(`Reel ROI (%)${delimiter}%${summary.realRoi.toFixed(2)}`);
-  lines.push(`Enflasyon Kayip Orani (%)${delimiter}%${summary.purchasingPowerLossRate.toFixed(2)}`);
+  lines.push('--- SUMMARY ---');
+  lines.push(`Total Duration (Months)${delimiter}${summary.totalMonths}`);
+  lines.push(`Total Invested Capital${delimiter}${summary.totalInvested.toFixed(2)}`);
+  lines.push(`Real Invested Capital${delimiter}${summary.realTotalInvested.toFixed(2)}`);
+  lines.push(`Final Nominal Value${delimiter}${summary.finalNominalValue.toFixed(2)}`);
+  lines.push(`Final Real Value${delimiter}${summary.finalRealValue.toFixed(2)}`);
+  lines.push(`Final Ref. Currency Value ($)${delimiter}${summary.finalUsdValue.toFixed(2)}`);
+  lines.push(`Total Nominal Profit/Loss${delimiter}${summary.totalNominalProfit.toFixed(2)}`);
+  lines.push(`Total Real Profit/Loss${delimiter}${summary.totalRealProfit.toFixed(2)}`);
+  lines.push(`Nominal ROI (%)${delimiter}${summary.nominalRoi.toFixed(2)}`);
+  lines.push(`Real ROI (%)${delimiter}${summary.realRoi.toFixed(2)}`);
+  lines.push(`Purchasing Power Loss Rate (%)${delimiter}${summary.purchasingPowerLossRate.toFixed(2)}`);
 
-  const csvContent = lines.join('\r\n');
-  // UTF-8 BOM eklentisi (\uFEFF) Excel'in karakter kodlamasını otomatik algılamasını sağlar
-  const blob = new Blob(['\uFEFF' + csvContent], {
+  // UTF-8 BOM (\uFEFF) ensures Excel reads UTF-8 correctly
+  const csvContent = '\uFEFF' + lines.join('\n');
+  const blob = new Blob([csvContent], {
     type: 'text/csv;charset=utf-8;',
   });
 
@@ -83,10 +91,7 @@ export function exportToCSV(
 }
 
 /**
- * Herhangi bir nesneyi (Senaryolar, Portföy ayarları) okunaklı JSON dosyası olarak indirir.
- * 
- * @param data Dışa aktarılacak veri nesnesi
- * @param filename İndirilecek dosya adı (varsayılan: MoneyTrace_Data.json)
+ * Downloads object as a JSON file.
  */
 export function exportToJson<T = unknown>(data: T, filename = 'MoneyTrace_Data.json'): void {
   const jsonContent = JSON.stringify(data, null, 2);
@@ -98,9 +103,7 @@ export function exportToJson<T = unknown>(data: T, filename = 'MoneyTrace_Data.j
 }
 
 /**
- * Kullanıcı tarafından seçilen JSON dosyasını okur ve JS nesnesi olarak döndürür.
- * 
- * @param file Kullanıcının seçtiği .json dosyası
+ * Reads a JSON file selected by the user.
  */
 export function importFromJson<T = unknown>(file: File): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -112,28 +115,14 @@ export function importFromJson<T = unknown>(file: File): Promise<T> {
         const parsed = JSON.parse(text);
         resolve(parsed);
       } catch {
-        reject(new Error('Geçersiz JSON dosyası formatı.'));
+        reject(new Error('Invalid JSON file format.'));
       }
     };
 
     reader.onerror = () => {
-      reject(new Error('Dosya okuma hatası oluştu.'));
+      reject(new Error('Error reading file.'));
     };
 
     reader.readAsText(file);
   });
-}
-
-/**
- * Yardımcı dosya indirme mekanizması (DOM ikincil linki oluşturup tetikler)
- */
-function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', filename);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 }

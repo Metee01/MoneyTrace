@@ -1,4 +1,4 @@
-import { Globe, Heart } from "lucide-react"
+import { Globe } from "lucide-react"
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -10,18 +10,13 @@ export function Footer() {
         <div className="text-sm text-muted-foreground text-center md:text-left">
           <span>&copy; {currentYear} </span>
           <span className="font-semibold text-foreground">MoneyTrace</span>
-          <span>. MIT Lisansı ile açık kaynak olarak sunulmuştur.</span>
+          <span>. Open source under MIT License.</span>
         </div>
 
         {/* Right Side */}
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <span>Türkiye için</span>
-            <Heart className="h-3.5 w-3.5 text-destructive fill-destructive" />
-            <span>ile geliştirildi</span>
-          </div>
           <a
-            href="https://github.com/user/MoneyTrace"
+            href="https://github.com/Metee01/MoneyTrace"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 hover:text-foreground transition-colors"

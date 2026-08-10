@@ -21,12 +21,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from '../ui/dialog';
-import { usePortfolioStore } from '../../store';
+import { usePortfolioStore, useSettingsStore } from '../../store';
 import type { ProjectionParams } from '../../types';
 
 export const PortfolioForm: React.FC = () => {
   const { t } = useTranslation();
   const { currentParams, setParams, resetParams, savePortfolio } = usePortfolioStore();
+  const { currencySymbol } = useSettingsStore();
 
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [portfolioName, setPortfolioName] = useState('');
@@ -46,7 +47,7 @@ export const PortfolioForm: React.FC = () => {
       const clamped = Math.max(1, Math.min(50, Math.floor(num)));
       setParams({ [field]: clamped });
     } else if (field === 'usdRate') {
-      setParams({ [field]: Math.max(0.1, num) });
+      setParams({ [field]: Math.max(0.01, num) });
     } else if (field === 'initialCapital' || field === 'monthlyDca') {
       setParams({ [field]: Math.max(0, num) });
     } else {
@@ -54,25 +55,25 @@ export const PortfolioForm: React.FC = () => {
     }
   };
 
-  // Presets
+  // Global Presets
   const applyPreset = (type: 'balanced' | 'conservative' | 'growth') => {
     if (type === 'conservative') {
       setParams({
-        expectedReturnRate: 35,
-        expectedInflationRate: 35,
-        expectedUsdGrowthRate: 25,
+        expectedReturnRate: 5,
+        expectedInflationRate: 2.5,
+        expectedUsdGrowthRate: 0,
       });
     } else if (type === 'balanced') {
       setParams({
-        expectedReturnRate: 50,
-        expectedInflationRate: 35,
-        expectedUsdGrowthRate: 25,
+        expectedReturnRate: 8,
+        expectedInflationRate: 3,
+        expectedUsdGrowthRate: 0,
       });
     } else if (type === 'growth') {
       setParams({
-        expectedReturnRate: 70,
-        expectedInflationRate: 35,
-        expectedUsdGrowthRate: 30,
+        expectedReturnRate: 12,
+        expectedInflationRate: 3,
+        expectedUsdGrowthRate: 0,
       });
     }
   };
@@ -165,7 +166,7 @@ export const PortfolioForm: React.FC = () => {
 
         {saveSuccessMsg && (
           <div className="mt-3 p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs rounded-md border border-emerald-500/20">
-            {t('common.success')} - Portföy kaydedildi!
+            {t('common.success')} - {t('portfolio.savedSuccess')}
           </div>
         )}
       </CardHeader>
@@ -173,11 +174,11 @@ export const PortfolioForm: React.FC = () => {
       <CardContent className="space-y-5">
         <TooltipProvider>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 1. Başlangıç Sermayesi */}
+            {/* 1. Initial Capital */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label htmlFor="initialCapital" className="text-sm font-medium">
-                  {t('portfolio.initialCapital')}
+                  {t('portfolio.initialCapital', { currency: currencySymbol })}
                 </Label>
                 <Tooltip>
                   <TooltipTrigger>
@@ -192,14 +193,14 @@ export const PortfolioForm: React.FC = () => {
                 id="initialCapital"
                 type="number"
                 min="0"
-                step="1000"
+                step="100"
                 value={currentParams.initialCapital || ''}
                 onChange={(e) => handleChange('initialCapital', e.target.value)}
-                placeholder="100000"
+                placeholder="10000"
               />
             </div>
 
-            {/* 2. Projeksiyon Vadesi */}
+            {/* 2. Target Horizon */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label htmlFor="targetYears" className="text-sm font-medium">
@@ -221,15 +222,15 @@ export const PortfolioForm: React.FC = () => {
                 max="50"
                 value={currentParams.targetYears || ''}
                 onChange={(e) => handleChange('targetYears', e.target.value)}
-                placeholder="5"
+                placeholder="10"
               />
             </div>
 
-            {/* 3. Aylık DCA Yatırımı */}
+            {/* 3. Monthly DCA */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label htmlFor="monthlyDca" className="text-sm font-medium">
-                  {t('portfolio.monthlyDca')}
+                  {t('portfolio.monthlyDca', { currency: currencySymbol })}
                 </Label>
                 <Tooltip>
                   <TooltipTrigger>
@@ -244,14 +245,14 @@ export const PortfolioForm: React.FC = () => {
                 id="monthlyDca"
                 type="number"
                 min="0"
-                step="500"
+                step="50"
                 value={currentParams.monthlyDca || ''}
                 onChange={(e) => handleChange('monthlyDca', e.target.value)}
-                placeholder="10000"
+                placeholder="500"
               />
             </div>
 
-            {/* 4. Yıllık DCA Artış Oranı */}
+            {/* 4. DCA Increase Rate */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label htmlFor="dcaIncreaseRate" className="text-sm font-medium">
@@ -269,15 +270,14 @@ export const PortfolioForm: React.FC = () => {
               <Input
                 id="dcaIncreaseRate"
                 type="number"
-                min="0"
-                step="1"
+                step="0.5"
                 value={currentParams.dcaIncreaseRate ?? ''}
                 onChange={(e) => handleChange('dcaIncreaseRate', e.target.value)}
-                placeholder="30"
+                placeholder="5"
               />
             </div>
 
-            {/* 5. Yıllık Getiri Beklentisi */}
+            {/* 5. Expected Return Rate */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label htmlFor="expectedReturnRate" className="text-sm font-medium">
@@ -295,14 +295,14 @@ export const PortfolioForm: React.FC = () => {
               <Input
                 id="expectedReturnRate"
                 type="number"
-                step="1"
+                step="0.5"
                 value={currentParams.expectedReturnRate ?? ''}
                 onChange={(e) => handleChange('expectedReturnRate', e.target.value)}
-                placeholder="50"
+                placeholder="8"
               />
             </div>
 
-            {/* 6. Yıllık Enflasyon Oranı */}
+            {/* 6. Expected Inflation Rate */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label htmlFor="expectedInflationRate" className="text-sm font-medium">
@@ -320,14 +320,14 @@ export const PortfolioForm: React.FC = () => {
               <Input
                 id="expectedInflationRate"
                 type="number"
-                step="1"
+                step="0.5"
                 value={currentParams.expectedInflationRate ?? ''}
                 onChange={(e) => handleChange('expectedInflationRate', e.target.value)}
-                placeholder="35"
+                placeholder="3"
               />
             </div>
 
-            {/* 7. Başlangıç Dolar Kuru */}
+            {/* 7. Exchange Rate to Ref Currency */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label htmlFor="usdRate" className="text-sm font-medium">
@@ -345,15 +345,15 @@ export const PortfolioForm: React.FC = () => {
               <Input
                 id="usdRate"
                 type="number"
-                min="0.1"
-                step="0.1"
-                value={currentParams.usdRate ?? ''}
+                step="0.01"
+                min="0.01"
+                value={currentParams.usdRate || ''}
                 onChange={(e) => handleChange('usdRate', e.target.value)}
-                placeholder="36.5"
+                placeholder="1.0"
               />
             </div>
 
-            {/* 8. Yıllık USD Kur Artışı */}
+            {/* 8. Annual Ref Currency Growth */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label htmlFor="expectedUsdGrowthRate" className="text-sm font-medium">
@@ -371,45 +371,46 @@ export const PortfolioForm: React.FC = () => {
               <Input
                 id="expectedUsdGrowthRate"
                 type="number"
-                step="1"
+                step="0.5"
                 value={currentParams.expectedUsdGrowthRate ?? ''}
                 onChange={(e) => handleChange('expectedUsdGrowthRate', e.target.value)}
-                placeholder="25"
+                placeholder="0"
               />
             </div>
           </div>
         </TooltipProvider>
       </CardContent>
 
-      {/* Portföy Kaydetme Dialog */}
+      {/* Save Portfolio Dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <form onSubmit={handleSavePortfolio}>
             <DialogHeader>
               <DialogTitle>{t('portfolio.saveAsPortfolio')}</DialogTitle>
               <DialogDescription>
-                Mevcut hesaplama parametrelerinizi isim vererek portföylerinize kaydedin.
+                {t('portfolio.subtitle')}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
+            <div className="py-4 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="portName">{t('portfolio.portfolioName')}</Label>
+                <Label htmlFor="pName">{t('portfolio.portfolioName')}</Label>
                 <Input
-                  id="portName"
+                  id="pName"
                   value={portfolioName}
                   onChange={(e) => setPortfolioName(e.target.value)}
                   placeholder={t('portfolio.portfolioNamePlaceholder')}
                   required
                 />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="portDesc">{t('portfolio.portfolioDesc')}</Label>
+                <Label htmlFor="pDesc">{t('portfolio.portfolioDesc')}</Label>
                 <Input
-                  id="portDesc"
+                  id="pDesc"
                   value={portfolioDesc}
                   onChange={(e) => setPortfolioDesc(e.target.value)}
-                  placeholder="Portföy stratejiniz veya notlarınız..."
+                  placeholder="Optional details..."
                 />
               </div>
             </div>

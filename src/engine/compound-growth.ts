@@ -1,54 +1,55 @@
 /**
- * Bileşik Büyüme ve Düzenli Yatırım (DCA) Hesaplama Modülü
+ * Compound Interest and DCA Calculation Engine
  */
 
 /**
- * Yıllık yüzde oranı efektif aylık bileşik orana çevirir.
- * Formül: r_aylik = (1 + r_yillik / 100)^(1/12) - 1
+ * Converts an annual interest/return rate (%) to an effective monthly rate.
+ * Formula: (1 + annualRate/100)^(1/12) - 1
  * 
- * @param annualRatePercentage Yıllık oran (%) - Örn: 50 (%50 için)
- * @returns Aylık ondalık oran - Örn: 0.0343
+ * @param annualRate Expected annual return rate (%)
+ * @returns Monthly rate as decimal (e.g., 0.035 for 3.5%)
  */
-export function calculateMonthlyRate(annualRatePercentage: number): number {
-  if (annualRatePercentage <= -100) return -1;
-  return Math.pow(1 + annualRatePercentage / 100, 1 / 12) - 1;
+export function calculateMonthlyRate(annualRate: number): number {
+  if (annualRate <= 0) return 0;
+  return Math.pow(1 + annualRate / 100, 1 / 12) - 1;
 }
 
 /**
- * Belirli bir aydaki DCA (Düzenli Yatırım) miktarını hesaplar.
- * DCA tutarı her 12 ayda bir (her yeni yıl başında) verilen yıllık artış oranında güncellenir.
+ * Calculates Dollar-Cost Averaging (DCA) contribution amount for month t.
+ * Compounds annual increase rate every 12 months.
  * 
- * @param initialDca Başlangıçtaki aylık DCA miktarı (TL)
- * @param dcaIncreaseRatePercentage Yıllık DCA artış oranı (%) - Örn: 30
- * @param monthIndex Ay sırası (1'den başlayan t değeri)
- * @returns O ay yatırılacak DCA miktarı (TL)
+ * @param initialDca Initial monthly DCA amount
+ * @param annualDcaIncreaseRate Annual DCA increase rate (%)
+ * @param monthIndex Month sequence index (1-based)
+ * @returns DCA amount to contribute for that month
  */
 export function calculateDcaForMonth(
   initialDca: number,
-  dcaIncreaseRatePercentage: number,
+  annualDcaIncreaseRate: number,
   monthIndex: number
 ): number {
-  if (monthIndex < 1) return initialDca;
-  const yearOffset = Math.floor((monthIndex - 1) / 12);
-  const factor = Math.pow(1 + dcaIncreaseRatePercentage / 100, yearOffset);
-  return Math.round(initialDca * factor * 100) / 100;
+  if (initialDca <= 0 || monthIndex <= 0) return initialDca;
+
+  const yearIndex = Math.floor((monthIndex - 1) / 12);
+  if (yearIndex === 0 || annualDcaIncreaseRate === 0) return initialDca;
+
+  return initialDca * Math.pow(1 + annualDcaIncreaseRate / 100, yearIndex);
 }
 
 /**
- * Tek bir ay için bileşik büyüme adımını hesaplar.
- * Ay başı DCA katkısı eklenip ay sonundaki getiri ile değer hesaplanır.
+ * Step-wise monthly compound growth calculation.
+ * Formula: (currentBalance + monthlyDca) * (1 + monthlyReturnRate)
  * 
- * @param currentNominalValue Ay başındaki portföy değeri
- * @param monthlyDca O ay eklenen DCA miktarı
- * @param monthlyReturnRate Aylık getiri oranı (ondalık)
- * @returns Ay sonundaki yeni nominal portföy değeri
+ * @param currentBalance Portfolio balance at start of month
+ * @param monthlyDca Additional contribution added at start/during month
+ * @param monthlyReturnRate Monthly return rate (decimal)
+ * @returns Compounded portfolio balance at end of month
  */
 export function calculateCompoundStep(
-  currentNominalValue: number,
+  currentBalance: number,
   monthlyDca: number,
   monthlyReturnRate: number
 ): number {
-  const startOfMonthValue = currentNominalValue + monthlyDca;
-  const endOfMonthValue = startOfMonthValue * (1 + monthlyReturnRate);
-  return Math.max(0, endOfMonthValue);
+  const base = Math.max(0, currentBalance) + Math.max(0, monthlyDca);
+  return base * (1 + monthlyReturnRate);
 }

@@ -2,14 +2,14 @@ import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
+  Layers,
   Copy,
   Trash2,
-  SlidersHorizontal,
-  ArrowUpRight,
-  Check,
-  AlertCircle,
+  CheckCircle2,
+  Sparkles,
   Download,
   Upload,
+  BarChart2,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -18,9 +18,9 @@ import { Label } from '../ui/label';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '../ui/dialog';
 import { usePortfolioStore } from '../../store';
@@ -31,52 +31,52 @@ import type { Scenario } from '../../types';
 const PRESET_COLORS = [
   '#3b82f6', // Blue
   '#10b981', // Emerald
-  '#8b5cf6', // Purple
   '#f59e0b', // Amber
   '#ef4444', // Red
-  '#06b6d4', // Cyan
+  '#8b5cf6', // Purple
   '#ec4899', // Pink
+  '#06b6d4', // Cyan
+  '#84cc16', // Lime
 ];
 
 export const ScenarioManager: React.FC = () => {
   const { t } = useTranslation();
   const {
     scenarios,
+    baselineScenarioId,
     addScenario,
     duplicateScenario,
-    deleteScenario,
     applyScenarioToCurrent,
+    deleteScenario,
+    setBaselineScenario,
   } = usePortfolioStore();
 
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [compareDialogOpen, setCompareDialogOpen] = useState(false);
   const [newScenarioName, setNewScenarioName] = useState('');
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Silme Onay Dialog State
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const targetScenario = scenarios.find((s) => s.id === deleteTargetId);
-
-  const handleAddScenario = (e: React.FormEvent) => {
+  const handleCreateScenario = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newScenarioName.trim()) return;
 
     addScenario(newScenarioName.trim(), selectedColor);
     setNewScenarioName('');
-    setIsAddOpen(false);
-  };
-
-  const handleConfirmDelete = () => {
-    if (deleteTargetId) {
-      deleteScenario(deleteTargetId);
-      setDeleteTargetId(null);
-    }
+    setSelectedColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
+    setAddDialogOpen(false);
   };
 
   const handleExportJSON = () => {
-    exportToJson(scenarios, 'MoneyTrace_Senaryolar.json');
+    exportToJson(
+      {
+        exportedAt: new Date().toISOString(),
+        scenarios,
+      },
+      'MoneyTrace_Scenarios.json'
+    );
   };
 
   const handleImportJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +97,7 @@ export const ScenarioManager: React.FC = () => {
         });
       }
     } catch {
-      alert(t('common.error') + ': Geçersiz JSON dosyası.');
+      alert(t('common.error') + ': Invalid JSON file.');
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -106,247 +106,258 @@ export const ScenarioManager: React.FC = () => {
   };
 
   return (
-    <>
-      <Card className="w-full shadow-sm border border-border bg-card">
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-              <SlidersHorizontal className="w-5 h-5 text-primary" />
-              <span>{t('scenarios.title')}</span>
+    <Card className="w-full shadow-sm border border-border bg-card">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Layers className="w-5 h-5 text-primary" />
+            <CardTitle className="text-xl font-bold text-foreground">
+              {t('scenarios.title')}
             </CardTitle>
-
-            <div className="flex flex-wrap items-center gap-1.5">
-              {scenarios.length > 0 && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs font-medium"
-                    onClick={() => setIsCompareOpen(true)}
-                  >
-                    {t('scenarios.compareScenarios')}
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    title={t('scenarios.exportJson')}
-                    onClick={handleExportJSON}
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                </>
-              )}
-
-              {/* JSON İthal Et Butonu & Gizli Input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json"
-                className="hidden"
-                onChange={handleImportJSON}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                title={t('scenarios.importJson')}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="w-4 h-4" />
-              </Button>
-
-              <Button
-                size="sm"
-                className="h-8 text-xs gap-1"
-                onClick={() => setIsAddOpen(true)}
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{t('scenarios.newScenario')}</span>
-              </Button>
-            </div>
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-3 pt-0">
-          {scenarios.length === 0 ? (
-            <div className="h-[120px] flex flex-col items-center justify-center border border-dashed border-border rounded-lg bg-muted/20 text-center p-4">
-              <p className="text-xs text-muted-foreground max-w-xs">
-                {t('scenarios.noScenarios')}
-              </p>
-              <Button
-                variant="link"
-                size="sm"
-                className="text-xs mt-1 h-auto p-0"
-                onClick={() => setIsAddOpen(true)}
-              >
-                + İlk Senaryoyu Kaydet
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-              {scenarios.map((scenario) => (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCompareDialogOpen(true)}
+              disabled={scenarios.length === 0}
+              className="text-xs gap-1.5"
+            >
+              <BarChart2 className="w-3.5 h-3.5 text-blue-500" />
+              {t('scenarios.compareScenarios')}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setAddDialogOpen(true)}
+              className="text-xs gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {t('scenarios.newScenario')}
+            </Button>
+          </div>
+        </div>
+
+        {/* JSON Import/Export Bar */}
+        <div className="flex items-center justify-between pt-3 border-t border-border/60 mt-3">
+          <span className="text-xs text-muted-foreground">
+            {scenarios.length} Scenarios
+          </span>
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportJSON}
+              accept=".json"
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground gap-1"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-3 h-3" />
+              {t('scenarios.importJson')}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground gap-1"
+              onClick={handleExportJSON}
+              disabled={scenarios.length === 0}
+            >
+              <Download className="w-3 h-3" />
+              {t('scenarios.exportJson')}
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-3">
+        {scenarios.length === 0 ? (
+          <div className="p-6 text-center border border-dashed rounded-lg bg-muted/30">
+            <p className="text-xs text-muted-foreground">
+              {t('scenarios.noScenarios')}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {scenarios.map((scenario) => {
+              const isBaseline = scenario.id === baselineScenarioId;
+
+              return (
                 <div
                   key={scenario.id}
-                  className="flex items-center justify-between p-3 border border-border rounded-lg bg-card hover:bg-muted/30 transition-colors gap-3"
+                  className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-3">
                     <span
-                      className="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm"
+                      className="w-3.5 h-3.5 rounded-full shrink-0"
                       style={{ backgroundColor: scenario.color }}
                     />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-xs text-foreground truncate">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-foreground">
                           {scenario.name}
                         </span>
-                        {scenario.isBaseline && (
-                          <span className="text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.2 rounded">
-                            Baz
+                        {isBaseline && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Baseline
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        Getiri: %{scenario.params.expectedReturnRate} | Enflasyon: %
-                        {scenario.params.expectedInflationRate} | Vade: {scenario.params.targetYears}y
+                      <p className="text-xs text-muted-foreground">
+                        Return: %{scenario.params.expectedReturnRate} | Infl: %{scenario.params.expectedInflationRate}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0">
-                    {/* Form'a Yükle Butonu */}
+                  <div className="flex items-center gap-1">
+                    {!isBaseline && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-[11px] px-2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setBaselineScenario(scenario.id)}
+                      >
+                        Make Baseline
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                      title="Forma Yükle"
+                      size="sm"
+                      className="h-7 text-[11px] px-2 text-primary hover:bg-primary/10"
                       onClick={() => applyScenarioToCurrent(scenario.id)}
                     >
-                      <ArrowUpRight className="w-3.5 h-3.5" />
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Apply
                     </Button>
-
-                    {/* Kopyala Butonu */}
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                      title={t('common.copy')}
                       onClick={() => duplicateScenario(scenario.id)}
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </Button>
-
-                    {/* Sil Butonu */}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-rose-600"
-                      title={t('common.delete')}
+                      className="h-7 w-7 text-muted-foreground hover:text-rose-500"
                       onClick={() => setDeleteTargetId(scenario.id)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
 
-      {/* Yeni Senaryo Ekleme Dialogu */}
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>{t('scenarios.newScenario')}</DialogTitle>
-            <DialogDescription>
-              Mevcut form parametrelerini karşılaştırmak üzere yeni bir senaryo olarak kaydet.
-            </DialogDescription>
-          </DialogHeader>
+      {/* Add Scenario Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleCreateScenario}>
+            <DialogHeader>
+              <DialogTitle>{t('scenarios.newScenario')}</DialogTitle>
+              <DialogDescription>
+                Save current parameters as a new scenario
+              </DialogDescription>
+            </DialogHeader>
 
-          <form onSubmit={handleAddScenario} className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="scenarioName">{t('scenarios.scenarioName')}</Label>
-              <Input
-                id="scenarioName"
-                placeholder={t('scenarios.scenarioNamePlaceholder')}
-                value={newScenarioName}
-                onChange={(e) => setNewScenarioName(e.target.value)}
-                autoFocus
-              />
-            </div>
+            <div className="py-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="scName">{t('scenarios.scenarioName')}</Label>
+                <Input
+                  id="scName"
+                  value={newScenarioName}
+                  onChange={(e) => setNewScenarioName(e.target.value)}
+                  placeholder={t('scenarios.scenarioNamePlaceholder')}
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label>Senaryo Rengi</Label>
-              <div className="flex items-center gap-2 pt-1">
-                {PRESET_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    className={`w-7 h-7 rounded-full flex items-center justify-center transition-transform ${
-                      selectedColor === color ? 'ring-2 ring-ring scale-110' : 'hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: color }}
-                    onClick={() => setSelectedColor(color)}
-                  >
-                    {selectedColor === color && (
-                      <Check className="w-4 h-4 text-white drop-shadow" />
-                    )}
-                  </button>
-                ))}
+              <div className="space-y-2">
+                <Label>Scenario Color</Label>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {PRESET_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setSelectedColor(color)}
+                      className={`w-7 h-7 rounded-full border-2 transition-transform ${
+                        selectedColor === color
+                          ? 'border-foreground scale-110'
+                          : 'border-transparent hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
-            <DialogFooter className="pt-4">
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsAddOpen(false)}
+                onClick={() => setAddDialogOpen(false)}
               >
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" disabled={!newScenarioName.trim()}>
-                {t('common.save')}
-              </Button>
+              <Button type="submit">{t('common.save')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Silme Onay Dialogu */}
+      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteTargetId !== null}
         onOpenChange={(open) => !open && setDeleteTargetId(null)}
       >
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-rose-600">
-              <AlertCircle className="w-5 h-5" />
-              <span>Senaryoyu Sil</span>
-            </DialogTitle>
+            <DialogTitle>{t('common.delete')} Scenario</DialogTitle>
             <DialogDescription>
-              {targetScenario &&
-                t('scenarios.deleteConfirm', { name: targetScenario.name })}
+              Are you sure you want to delete this scenario? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="pt-4">
-            <Button variant="outline" onClick={() => setDeleteTargetId(null)}>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTargetId(null)}
+            >
               {t('common.cancel')}
             </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete}>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deleteTargetId) {
+                  deleteScenario(deleteTargetId);
+                  setDeleteTargetId(null);
+                }
+              }}
+            >
               {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Senaryo Karşılaştırma Modali */}
+      {/* Comparison Overlay Dialog */}
       <ScenarioComparisonDialog
-        open={isCompareOpen}
-        onOpenChange={setIsCompareOpen}
+        open={compareDialogOpen}
+        onOpenChange={setCompareDialogOpen}
       />
-    </>
+    </Card>
   );
 };

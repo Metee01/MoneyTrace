@@ -1,5 +1,5 @@
 /**
- * MoneyTrace - Ana Projeksiyon Hesaplama Motoru
+ * MoneyTrace - Main Projection Calculation Engine
  */
 
 import type {
@@ -25,10 +25,10 @@ export * from './inflation-adjust';
 export * from './currency-convert';
 
 /**
- * Verilen portföy girdi parametrelerine göre ay-ay projeksiyon tablosu ve özet metrikleri hesaplar.
+ * Calculates monthly projection table and summary metrics based on portfolio parameters.
  * 
- * @param params Projeksiyon girdi parametreleri
- * @returns Projeksiyon sonuç nesnesi (rows + summary)
+ * @param params Projection input parameters
+ * @returns Projection result object (rows + summary)
  */
 export function calculateProjection(params: ProjectionParams): ProjectionResult {
   const targetYears = Math.max(1, Math.min(50, params.targetYears || 1));
@@ -48,33 +48,33 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
     const yearIndex = Math.ceil(month / 12);
     const monthInYear = ((month - 1) % 12) + 1;
 
-    // O ayki DCA miktarını hesapla (yıllık artış kurallarına göre)
+    // Monthly DCA contribution for this period
     const monthlyDca = calculateDcaForMonth(
       params.monthlyDca || 0,
       params.dcaIncreaseRate || 0,
       month
     );
 
-    // Kümülatif enflasyon katsayısı (t. aydaki kümülatif enflasyon)
+    // Cumulative inflation factor at month t
     const cumInflation = calculateCumulativeInflationFactor(monthlyInflationRate, month);
 
-    // Anaparaya DCA ekle (Nominal)
+    // Cumulative nominal invested capital
     totalInvested += monthlyDca;
 
-    // Anaparaya DCA ekle (Reel: O aydaki katkının t0 satın alma gücü cinsinden karşılığı)
+    // Cumulative real invested capital (DCA contribution converted to t0 purchasing power)
     realTotalInvested += cumInflation > 0 ? monthlyDca / cumInflation : monthlyDca;
 
-    // Portföyün bileşik büyümesi
+    // Portfolio compound growth step
     currentNominalValue = calculateCompoundStep(
       currentNominalValue,
       monthlyDca,
       monthlyReturnRate
     );
 
-    // Reel değer hesabı (Nominal değer / kümülatif enflasyon)
+    // Real purchasing power calculation
     const realValue = adjustForInflation(currentNominalValue, cumInflation);
 
-    // USD kuru ve USD değer hesabı
+    // Reference currency exchange rate and value calculation
     const currentUsdRate = predictUsdRate(
       params.usdRate || 1,
       monthlyUsdGrowthRate,
@@ -82,9 +82,8 @@ export function calculateProjection(params: ProjectionParams): ProjectionResult 
     );
     const usdValue = convertToUsd(currentNominalValue, currentUsdRate);
 
-    // Kar / Zarar hesaplamaları
+    // Profit / Loss calculations
     const nominalProfit = currentNominalValue - totalInvested;
-    // Reel Kar: Reel Portföy Değeri - Yatırılan Anaparanın Reel Karşılığı
     const realProfit = realValue - realTotalInvested;
 
     rows.push({

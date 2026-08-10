@@ -1,89 +1,131 @@
 /**
- * MoneyTrace - Formatlama Yardımcı Fonksiyonları
+ * MoneyTrace - Formatting Helpers
  */
+
+/** Popular currencies list for quick selection */
+export const POPULAR_CURRENCIES = [
+  { code: 'USD', symbol: '$', name: 'US Dollar (USD)' },
+  { code: 'EUR', symbol: '€', name: 'Euro (EUR)' },
+  { code: 'GBP', symbol: '£', name: 'British Pound (GBP)' },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen (JPY)' },
+  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar (CAD)' },
+  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar (AUD)' },
+  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc (CHF)' },
+  { code: 'CNY', symbol: 'CN¥', name: 'Chinese Yuan (CNY)' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee (INR)' },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real (BRL)' },
+  { code: 'TRY', symbol: '₺', name: 'Turkish Lira (TRY)' },
+  { code: 'MXN', symbol: 'MX$', name: 'Mexican Peso (MXN)' },
+  { code: 'KRW', symbol: '₩', name: 'South Korean Won (KRW)' },
+  { code: 'SEK', symbol: 'kr', name: 'Swedish Krona (SEK)' },
+  { code: 'NOK', symbol: 'kr', name: 'Norwegian Krone (NOK)' },
+];
 
 /**
- * Sayıyı Türkçe Para Birimi (TL) formatında biçimlendirir.
- * Örn: 1163702.65 -> "₺1.163.702,65" veya "1.163.703 ₺"
+ * Formats a number into a user's selected local currency format.
+ * E.g., 1163702.65 with USD -> "$1,163,702.65" or compact "$1.16M"
  */
-export function formatTL(amount: number, compact = false): string {
-  if (isNaN(amount)) return '₺0,00';
-
-  if (compact && Math.abs(amount) >= 1_000_000) {
-    return `₺${(amount / 1_000_000).toLocaleString('tr-TR', {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 2,
-    })}M`;
-  }
-  if (compact && Math.abs(amount) >= 10_000) {
-    return `₺${(amount / 1_000).toLocaleString('tr-TR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 1,
-    })}B`;
-  }
-
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
-
-/**
- * Sayıyı Amerikan Doları ($) formatında biçimlendirir.
- * Örn: 17023.31 -> "$17,023.31"
- */
-export function formatUSD(amount: number, compact = false): string {
+export function formatLocalCurrency(
+  amount: number,
+  currencyCode = 'USD',
+  locale = 'en-US',
+  compact = false
+): string {
   if (isNaN(amount)) return '$0.00';
 
-  if (compact && Math.abs(amount) >= 1_000_000) {
-    return `$${(amount / 1_000_000).toLocaleString('en-US', {
+  const absAmount = Math.abs(amount);
+  const sign = amount < 0 ? '-' : '';
+
+  if (compact && absAmount >= 1_000_000) {
+    const formatted = (absAmount / 1_000_000).toLocaleString(locale, {
       minimumFractionDigits: 1,
       maximumFractionDigits: 2,
-    })}M`;
+    });
+    return `${sign}${getCurrencySymbol(currencyCode)}${formatted}M`;
   }
-  if (compact && Math.abs(amount) >= 10_000) {
-    return `$${(amount / 1_000).toLocaleString('en-US', {
+  if (compact && absAmount >= 10_000) {
+    const formatted = (absAmount / 1_000).toLocaleString(locale, {
       minimumFractionDigits: 0,
       maximumFractionDigits: 1,
-    })}K`;
+    });
+    return `${sign}${getCurrencySymbol(currencyCode)}${formatted}K`;
   }
 
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    // Fallback if currency code or locale is invalid
+    return `${getCurrencySymbol(currencyCode)}${amount.toLocaleString(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
 }
 
 /**
- * Yüzdesel oranı biçimlendirir.
- * Örn: 116.79 -> "%116,79" veya showPlus=true için "+%116,79"
+ * Helper to get symbol for currency code
  */
-export function formatPercent(rate: number, showPlus = false): string {
-  if (isNaN(rate)) return '%0,00';
+export function getCurrencySymbol(currencyCode: string): string {
+  const found = POPULAR_CURRENCIES.find((c) => c.code.toUpperCase() === currencyCode.toUpperCase());
+  if (found) return found.symbol;
 
-  const formatted = Math.abs(rate).toLocaleString('tr-TR', {
+  try {
+    const parts = new Intl.NumberFormat('en', {
+      style: 'currency',
+      currency: currencyCode,
+    }).formatToParts(1);
+    const symbolPart = parts.find((p) => p.type === 'currency');
+    return symbolPart ? symbolPart.value : currencyCode;
+  } catch {
+    return currencyCode;
+  }
+}
+
+/**
+ * Backward compatibility alias for formatLocalCurrency
+ */
+export function formatTL(amount: number, compact = false): string {
+  return formatLocalCurrency(amount, 'USD', 'en-US', compact);
+}
+
+/**
+ * Formats amount in Reference Currency (USD)
+ */
+export function formatUSD(amount: number, compact = false): string {
+  return formatLocalCurrency(amount, 'USD', 'en-US', compact);
+}
+
+/**
+ * Formats percentage rate.
+ * E.g., 12.5 -> "12.50%" or "+12.50%"
+ */
+export function formatPercent(rate: number, showPlus = false, locale = 'en-US'): string {
+  if (isNaN(rate)) return '0.00%';
+
+  const formatted = Math.abs(rate).toLocaleString(locale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 
   if (rate > 0) {
-    return showPlus ? `+%${formatted}` : `%${formatted}`;
+    return showPlus ? `+${formatted}%` : `${formatted}%`;
   } else if (rate < 0) {
-    return `-%${formatted}`;
+    return `-${formatted}%`;
   }
-  return `%${formatted}`;
+  return `${formatted}%`;
 }
 
 /**
- * Standart sayı biçimlendirmesi (binlik ayırıcı noktalı)
+ * Standard number formatting
  */
-export function formatNumber(num: number, decimals = 2): string {
+export function formatNumber(num: number, decimals = 2, locale = 'en-US'): string {
   if (isNaN(num)) return '0';
-  return num.toLocaleString('tr-TR', {
+  return num.toLocaleString(locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });

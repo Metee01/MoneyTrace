@@ -1,266 +1,264 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Download,
+  Search,
   ChevronLeft,
   ChevronRight,
   TrendingUp,
   TrendingDown,
-  Calendar,
-  Download,
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { usePortfolioStore } from '../../store';
+import { Input } from '../ui/input';
+import { usePortfolioStore, useSettingsStore } from '../../store';
 import { calculateProjection } from '../../engine';
-import { formatTL, formatUSD, formatPercent, formatNumber } from '../../lib/formatters';
-import { exportToCSV } from '../../lib/export';
-import type { ProjectionRow } from '../../types';
+import {
+  formatLocalCurrency,
+  formatUSD,
+  formatNumber,
+} from '../../lib/formatters';
+import { exportToCsv } from '../../lib/export';
 
 export const ProjectionTable: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { currentParams } = usePortfolioStore();
+  const { currencyCode } = useSettingsStore();
 
-  // Mode: 'all' (Tüm Aylar) veya 'yearly' (Yıl Sonları)
-  const [viewMode, setViewMode] = useState<'all' | 'yearly'>('all');
+  const [filterMode, setFilterMode] = useState<'all' | 'yearly'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 12;
+  const [pageSize, setPageSize] = useState(12);
 
-  // Projeksiyon verilerini anlık hesapla
+  const locale = i18n.language === 'tr' ? 'tr-TR' : 'en-US';
+
   const projectionResult = useMemo(() => {
     return calculateProjection(currentParams);
   }, [currentParams]);
 
-  // Filtrelenmiş satırlar
+  // Filter & Search Logic
   const filteredRows = useMemo(() => {
-    if (viewMode === 'yearly') {
-      return projectionResult.rows.filter((row) => row.monthInYear === 12);
+    let rows = projectionResult.rows;
+
+    if (filterMode === 'yearly') {
+      rows = rows.filter((r) => r.monthInYear === 12);
     }
-    return projectionResult.rows;
-  }, [projectionResult.rows, viewMode]);
 
-  // Sayfalama hesabı
-  const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
-  const safePage = Math.min(currentPage, totalPages);
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      rows = rows.filter(
+        (r) =>
+          r.month.toString().includes(term) ||
+          r.yearIndex.toString().includes(term)
+      );
+    }
 
+    return rows;
+  }, [projectionResult.rows, filterMode, searchTerm]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredRows.length / pageSize) || 1;
   const paginatedRows = useMemo(() => {
-    const start = (safePage - 1) * rowsPerPage;
-    return filteredRows.slice(start, start + rowsPerPage);
-  }, [filteredRows, safePage, rowsPerPage]);
+    const start = (currentPage - 1) * pageSize;
+    return filteredRows.slice(start, start + pageSize);
+  }, [filteredRows, currentPage, pageSize]);
 
-  const handleModeChange = (mode: 'all' | 'yearly') => {
-    setViewMode(mode);
-    setCurrentPage(1);
-  };
-
-  const handleExportCSV = () => {
-    exportToCSV(
-      projectionResult.rows,
-      projectionResult.summary,
-      `MoneyTrace_Projeksiyon_${currentParams.targetYears}Yil.csv`
-    );
+  const handleExportCsv = () => {
+    exportToCsv(projectionResult.rows, projectionResult.summary, 'MoneyTrace_Projection.csv');
   };
 
   return (
     <Card className="w-full shadow-sm border border-border bg-card">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 border-b border-border/40">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <CardTitle className="text-xl font-bold text-foreground">
               {t('projection.tableTitle')}
             </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {t('table.totalRows', { count: filteredRows.length })}
-            </CardDescription>
+            </p>
           </div>
 
-          {/* Filtre ve Görünüm Butonları */}
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs h-8 gap-1.5 font-medium"
-              onClick={handleExportCSV}
-              title="Tabloyu Excel / CSV formatında indir"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>{t('projection.exportCsv')}</span>
-            </Button>
-
-            <div className="inline-flex rounded-lg border border-border p-1 bg-muted/40">
+            {/* Filter Toggle (All / Yearly) */}
+            <div className="inline-flex items-center rounded-lg border border-border bg-muted p-0.5 text-xs">
               <Button
-                variant={viewMode === 'all' ? 'secondary' : 'ghost'}
+                variant={filterMode === 'all' ? 'default' : 'ghost'}
                 size="sm"
-                className="text-xs h-7 px-2.5 font-medium"
-                onClick={() => handleModeChange('all')}
+                className="h-7 text-xs px-2.5"
+                onClick={() => {
+                  setFilterMode('all');
+                  setCurrentPage(1);
+                }}
               >
                 {t('table.allMonths')}
               </Button>
               <Button
-                variant={viewMode === 'yearly' ? 'secondary' : 'ghost'}
+                variant={filterMode === 'yearly' ? 'default' : 'ghost'}
                 size="sm"
-                className="text-xs h-7 px-2.5 font-medium gap-1"
-                onClick={() => handleModeChange('yearly')}
+                className="h-7 text-xs px-2.5"
+                onClick={() => {
+                  setFilterMode('yearly');
+                  setCurrentPage(1);
+                }}
               >
-                <Calendar className="w-3 h-3" />
                 {t('table.yearlySummary')}
               </Button>
             </div>
+
+            {/* Search Input */}
+            <div className="relative w-32 sm:w-40">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={t('table.searchMonth')}
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="h-7 text-xs pl-8 py-0"
+              />
+            </div>
+
+            {/* CSV Export */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              className="h-7 text-xs gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {t('projection.exportCsv')}
+            </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-0 sm:p-6 sm:pt-0">
-        {/* Responsive Scroll Table */}
-        <div className="overflow-x-auto border-y sm:border sm:rounded-lg border-border">
-          <table className="w-full text-xs text-left border-collapse">
-            <thead className="bg-muted/60 text-muted-foreground font-semibold uppercase tracking-wider border-b border-border sticky top-0 backdrop-blur-md">
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border">
               <tr>
-                <th className="py-3 px-3 min-w-[90px]">{t('table.monthCol')}</th>
-                <th className="py-3 px-3 text-right">{t('table.monthlyDcaCol')}</th>
-                <th className="py-3 px-3 text-right">{t('table.totalInvestedCol')}</th>
-                <th className="py-3 px-3 text-right">{t('table.nominalValueCol')}</th>
-                <th className="py-3 px-3 text-right">{t('table.realValueCol')}</th>
-                <th className="py-3 px-3 text-right">{t('table.usdValueCol')}</th>
-                <th className="py-3 px-3 text-right">{t('table.nominalProfitCol')}</th>
-                <th className="py-3 px-3 text-right">{t('table.realProfitCol')}</th>
-                <th className="py-3 px-3 text-right">{t('table.usdRateCol')}</th>
+                <th className="py-2.5 px-3">{t('table.monthCol')}</th>
+                <th className="py-2.5 px-3 text-right">{t('table.monthlyDcaCol')}</th>
+                <th className="py-2.5 px-3 text-right">{t('table.totalInvestedCol')}</th>
+                <th className="py-2.5 px-3 text-right">{t('table.nominalValueCol')}</th>
+                <th className="py-2.5 px-3 text-right">{t('table.realValueCol')}</th>
+                <th className="py-2.5 px-3 text-right">{t('table.usdValueCol')}</th>
+                <th className="py-2.5 px-3 text-right">{t('table.realProfitCol')}</th>
+                <th className="py-2.5 px-3 text-right">{t('table.usdRateCol')}</th>
               </tr>
             </thead>
-
-            <tbody className="divide-y divide-border/60">
-              {paginatedRows.map((row: ProjectionRow) => {
-                const isYearEnd = row.monthInYear === 12;
-                const nominalRoi =
-                  row.totalInvested > 0
-                    ? (row.nominalProfit / row.totalInvested) * 100
-                    : 0;
-                const realRoi =
-                  row.totalInvested > 0
-                    ? (row.realProfit / row.totalInvested) * 100
-                    : 0;
-
-                return (
-                  <tr
-                    key={row.month}
-                    className={`hover:bg-muted/40 transition-colors ${
-                      isYearEnd ? 'bg-primary/5 font-medium' : ''
-                    }`}
-                  >
-                    {/* Dönem / Ay */}
-                    <td className="py-2.5 px-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-foreground">
-                          {row.month}. Ay
+            <tbody className="divide-y divide-border/40">
+              {paginatedRows.length > 0 ? (
+                paginatedRows.map((row) => {
+                  const isRealProfitPos = row.realProfit >= 0;
+                  return (
+                    <tr
+                      key={row.month}
+                      className="hover:bg-muted/30 transition-colors font-mono"
+                    >
+                      <td className="py-2 px-3 font-sans font-medium text-foreground">
+                        {row.yearIndex}Y {row.monthInYear}M{' '}
+                        <span className="text-muted-foreground text-[10px]">
+                          (#{row.month})
                         </span>
-                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                          Yıl {row.yearIndex}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Aylık DCA */}
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap text-muted-foreground">
-                      {formatTL(row.monthlyDca)}
-                    </td>
-
-                    {/* Toplam Anapara */}
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap font-medium text-foreground">
-                      {formatTL(row.totalInvested)}
-                    </td>
-
-                    {/* Nominal Değer */}
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap font-semibold text-foreground">
-                      {formatTL(row.nominalValue)}
-                    </td>
-
-                    {/* Reel Değer */}
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap font-semibold text-blue-600 dark:text-blue-400">
-                      {formatTL(row.realValue)}
-                    </td>
-
-                    {/* USD Değeri */}
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap font-medium text-emerald-600 dark:text-emerald-400">
-                      {formatUSD(row.usdValue)}
-                    </td>
-
-                    {/* Nominal Kar/Zarar */}
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                      <div className="flex flex-col items-end">
-                        <span
-                          className={`font-semibold ${
-                            row.nominalProfit >= 0
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-rose-600 dark:text-rose-400'
-                          }`}
-                        >
-                          {formatTL(row.nominalProfit)}
-                        </span>
-                        <span className="text-[10px] opacity-80 text-muted-foreground">
-                          {formatPercent(nominalRoi, true)}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Reel Kar/Zarar */}
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                      <div className="flex flex-col items-end">
-                        <span
-                          className={`inline-flex items-center gap-0.5 font-semibold ${
-                            row.realProfit >= 0
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-rose-600 dark:text-rose-400'
-                          }`}
-                        >
-                          {row.realProfit >= 0 ? (
-                            <TrendingUp className="w-3 h-3 shrink-0" />
+                      </td>
+                      <td className="py-2 px-3 text-right text-muted-foreground">
+                        {formatLocalCurrency(row.monthlyDca, currencyCode, locale)}
+                      </td>
+                      <td className="py-2 px-3 text-right text-muted-foreground">
+                        {formatLocalCurrency(row.totalInvested, currencyCode, locale)}
+                      </td>
+                      <td className="py-2 px-3 text-right font-medium text-blue-600 dark:text-blue-400">
+                        {formatLocalCurrency(row.nominalValue, currencyCode, locale)}
+                      </td>
+                      <td className="py-2 px-3 text-right font-medium text-emerald-600 dark:text-emerald-400">
+                        {formatLocalCurrency(row.realValue, currencyCode, locale)}
+                      </td>
+                      <td className="py-2 px-3 text-right text-amber-600 dark:text-amber-400">
+                        {formatUSD(row.usdValue)}
+                      </td>
+                      <td
+                        className={`py-2 px-3 text-right font-medium ${
+                          isRealProfitPos
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-rose-600 dark:text-rose-400'
+                        }`}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          {isRealProfitPos ? (
+                            <TrendingUp className="w-3 h-3 text-emerald-500" />
                           ) : (
-                            <TrendingDown className="w-3 h-3 shrink-0" />
+                            <TrendingDown className="w-3 h-3 text-rose-500" />
                           )}
-                          {formatTL(row.realProfit)}
-                        </span>
-                        <span className="text-[10px] opacity-80 text-muted-foreground">
-                          {formatPercent(realRoi, true)}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* USD Kuru */}
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap text-muted-foreground">
-                      ₺{formatNumber(row.usdRate, 2)}
-                    </td>
-                  </tr>
-                );
-              })}
+                          {formatLocalCurrency(row.realProfit, currencyCode, locale)}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 text-right text-muted-foreground">
+                        {formatNumber(row.usdRate, 2, locale)}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="py-6 text-center text-muted-foreground font-sans"
+                  >
+                    No matching records found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination Footer */}
-        <div className="flex items-center justify-between mt-4 px-2 sm:px-0">
-          <div className="text-xs text-muted-foreground">
-            {t('table.page')} <span className="font-semibold">{safePage}</span> {t('table.of')}{' '}
-            <span className="font-semibold">{totalPages}</span>
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border/40 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span>{t('table.rowsPerPage')}</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="bg-muted border border-border rounded px-1.5 py-0.5 text-xs text-foreground focus:outline-none"
+            >
+              <option value={12}>12</option>
+              <option value={24}>24</option>
+              <option value={60}>60</option>
+            </select>
           </div>
 
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0"
-              disabled={safePage <= 1}
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0"
-              disabled={safePage >= totalPages}
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+          <div className="flex items-center gap-4">
+            <span>
+              {t('table.page')} {currentPage} {t('table.of')} {totalPages}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

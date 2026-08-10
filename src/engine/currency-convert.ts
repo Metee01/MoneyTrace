@@ -1,15 +1,15 @@
 /**
- * Döviz Dönüşümü ve Dolar Kuru Projeksiyon Modülü
+ * Currency Conversion and Exchange Rate Projection Module
  */
 
 /**
- * t. aydaki tahmini USD/TRY kurunu hesaplar.
- * Formül: UsdRate_t = UsdRate_0 * (1 + r_usd_aylik)^monthIndex
+ * Predicts the exchange rate for month t.
+ * Formula: Rate_t = Rate_0 * (1 + monthlyGrowthRate)^monthIndex
  * 
- * @param initialUsdRate Başlangıçtaki USD/TRY kuru (TL)
- * @param monthlyUsdGrowthRate Aylık USD kur artış oranı (ondalık)
- * @param monthIndex Ay sırası (1'den başlayan t değeri)
- * @returns t. aydaki tahmini USD kuru
+ * @param initialUsdRate Starting exchange rate to reference currency
+ * @param monthlyUsdGrowthRate Monthly exchange rate growth rate (decimal)
+ * @param monthIndex Month sequence index (1-based)
+ * @returns Estimated exchange rate at month t
  */
 export function predictUsdRate(
   initialUsdRate: number,
@@ -21,11 +21,11 @@ export function predictUsdRate(
 }
 
 /**
- * Nominal TL tutarını verilen USD kuruna bölerek Amerikan Doları cinsinden karşılığını hesaplar.
+ * Converts nominal local currency amount into reference currency (USD) equivalent.
  * 
- * @param nominalTryAmount TL cinsinden tutar
- * @param usdRate O aydaki USD/TRY kuru
- * @returns USD cinsinden tutar ($)
+ * @param nominalTryAmount Local currency amount
+ * @param usdRate Exchange rate for that month
+ * @returns Amount in reference currency ($)
  */
 export function convertToUsd(nominalTryAmount: number, usdRate: number): number {
   if (usdRate <= 0) return 0;

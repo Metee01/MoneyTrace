@@ -12,10 +12,10 @@ import {
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { usePortfolioStore } from '../../store';
+import { usePortfolioStore, useSettingsStore } from '../../store';
 import { calculateProjection } from '../../engine';
 import { useTheme } from '../../hooks/useTheme';
-import { formatTL, formatPercent } from '../../lib/formatters';
+import { formatLocalCurrency, formatPercent } from '../../lib/formatters';
 
 interface TooltipPayloadItem {
   payload: {
@@ -32,12 +32,12 @@ interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayloadItem[];
   label?: string;
+  currencyCode?: string;
 }
 
-const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, currencyCode = 'USD' }) => {
   if (!active || !payload || !payload.length) return null;
 
-  // Raw data point attached to payload items
   const data = payload[0]?.payload;
   if (!data) return null;
 
@@ -51,21 +51,21 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
         {label}
       </p>
       <div className="flex justify-between items-center gap-4">
-        <span className="text-muted-foreground">Nominal Portföy:</span>
+        <span className="text-muted-foreground">Nominal:</span>
         <span className="font-semibold font-mono text-blue-500">
-          {formatTL(data.nominalValue)}
+          {formatLocalCurrency(data.nominalValue, currencyCode)}
         </span>
       </div>
       <div className="flex justify-between items-center gap-4">
-        <span className="text-muted-foreground">Reel Satın Alma Gücü:</span>
+        <span className="text-muted-foreground">Real Power:</span>
         <span className="font-semibold font-mono text-emerald-500">
-          {formatTL(data.realValue)}
+          {formatLocalCurrency(data.realValue, currencyCode)}
         </span>
       </div>
       <div className="flex justify-between items-center gap-4 border-t border-border pt-1 mt-1">
-        <span className="text-rose-500 font-medium">Enflasyon Kaybı:</span>
+        <span className="text-rose-500 font-medium">Inflation Loss:</span>
         <span className="font-semibold font-mono text-rose-500">
-          {formatTL(data.inflationLoss)} ({formatPercent(lossPercent)})
+          {formatLocalCurrency(data.inflationLoss, currencyCode)} ({formatPercent(lossPercent)})
         </span>
       </div>
     </div>
@@ -75,6 +75,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
 export const InflationImpactChart: React.FC = () => {
   const { t } = useTranslation();
   const { currentParams } = usePortfolioStore();
+  const { currencyCode, currencySymbol } = useSettingsStore();
   const { theme } = useTheme();
 
   const [filterMode, setFilterMode] = useState<'all' | 'yearly'>('all');
@@ -90,25 +91,25 @@ export const InflationImpactChart: React.FC = () => {
         : projectionResult.rows;
 
     return rows.map((r) => {
-      const yearLabel = `${r.yearIndex}. Yıl${r.monthInYear !== 12 ? ` ${r.monthInYear}. Ay` : ''}`;
+      const yearLabel = `${t('projection.month')} ${r.month}`;
       const inflationLoss = Math.max(0, r.nominalValue - r.realValue);
 
       return {
         month: r.month,
-        label: filterMode === 'yearly' ? `${r.yearIndex}. Yıl` : yearLabel,
+        label: filterMode === 'yearly' ? `${r.yearIndex}` : yearLabel,
         nominalValue: r.nominalValue,
         realValue: r.realValue,
         inflationLoss: Math.round(inflationLoss * 100) / 100,
         totalInvested: r.totalInvested,
       };
     });
-  }, [projectionResult.rows, filterMode]);
+  }, [projectionResult.rows, filterMode, t]);
 
   const isDark = theme === 'dark';
 
   const colors = {
-    realArea: isDark ? '#10b981' : '#059669', // Emerald
-    lossArea: isDark ? '#f43f5e' : '#e11d48', // Rose / Red
+    realArea: isDark ? '#10b981' : '#059669',
+    lossArea: isDark ? '#f43f5e' : '#e11d48',
     grid: isDark ? '#334155' : '#e2e8f0',
     axisText: isDark ? '#94a3b8' : '#64748b',
   };
@@ -122,11 +123,10 @@ export const InflationImpactChart: React.FC = () => {
               {t('projection.inflationImpactTitle')}
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Enflasyon Sebebiyle Nominal Kazancın Ne Kadarının Eridiğini Gösterir
+              {t('projection.chartInflationSub')}
             </p>
           </div>
 
-          {/* Filtre Modu (Tüm Aylar / Yıllık) */}
           <div className="inline-flex items-center rounded-lg border border-border bg-muted p-0.5 text-xs">
             <Button
               variant={filterMode === 'all' ? 'default' : 'ghost'}
@@ -134,7 +134,7 @@ export const InflationImpactChart: React.FC = () => {
               className="h-7 text-xs px-2.5"
               onClick={() => setFilterMode('all')}
             >
-              Aylık
+              {t('table.allMonths')}
             </Button>
             <Button
               variant={filterMode === 'yearly' ? 'default' : 'ghost'}
@@ -142,7 +142,7 @@ export const InflationImpactChart: React.FC = () => {
               className="h-7 text-xs px-2.5"
               onClick={() => setFilterMode('yearly')}
             >
-              Yıllık
+              {t('table.yearlySummary')}
             </Button>
           </div>
         </div>
@@ -180,10 +180,10 @@ export const InflationImpactChart: React.FC = () => {
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(val) => formatTL(val, true)}
+                tickFormatter={(val) => formatLocalCurrency(val, currencyCode, 'en-US', true)}
                 dx={-8}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip currencyCode={currencyCode} />} />
               <Legend
                 verticalAlign="top"
                 align="right"
@@ -193,7 +193,7 @@ export const InflationImpactChart: React.FC = () => {
               <Area
                 type="monotone"
                 dataKey="realValue"
-                name="Reel Satın Alma Gücü (TL)"
+                name={`${t('projection.realValue')} (${currencySymbol})`}
                 stackId="1"
                 stroke={colors.realArea}
                 fill="url(#realGradient)"
@@ -202,7 +202,7 @@ export const InflationImpactChart: React.FC = () => {
               <Area
                 type="monotone"
                 dataKey="inflationLoss"
-                name="Enflasyon Kaybı (TL)"
+                name={`${t('projection.inflationLoss')} (${currencySymbol})`}
                 stackId="1"
                 stroke={colors.lossArea}
                 fill="url(#lossGradient)"

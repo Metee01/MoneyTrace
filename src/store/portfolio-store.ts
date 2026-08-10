@@ -1,5 +1,5 @@
 /**
- * MoneyTrace - Portföy ve Senaryo Yönetimi Store'u (Zustand + Persist)
+ * MoneyTrace - Portfolio & Scenario Management Store (Zustand + Persist)
  */
 
 import { create } from 'zustand';
@@ -7,26 +7,26 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Portfolio, ProjectionParams, Scenario } from '../types';
 
 export const DEFAULT_PROJECTION_PARAMS: ProjectionParams = {
-  initialCapital: 100000,
-  monthlyDca: 10000,
-  dcaIncreaseRate: 30,
-  expectedReturnRate: 50,
-  expectedInflationRate: 35,
-  usdRate: 36.5,
-  expectedUsdGrowthRate: 25,
-  targetYears: 5,
+  initialCapital: 10000,
+  monthlyDca: 500,
+  dcaIncreaseRate: 5,
+  expectedReturnRate: 8,
+  expectedInflationRate: 3,
+  usdRate: 1,
+  expectedUsdGrowthRate: 0,
+  targetYears: 10,
 };
 
 export interface PortfolioState {
-  /** Aktif Hesaplama Parametreleri */
+  /** Current Calculation Parameters */
   currentParams: ProjectionParams;
-  /** Kayıtlı Portföy Listesi */
+  /** Saved Portfolio List */
   portfolios: Portfolio[];
-  /** Seçili Portföy ID */
+  /** Active Selected Portfolio ID */
   activePortfolioId: string | null;
-  /** Karşılaştırma Senaryoları */
+  /** Comparison Scenarios */
   scenarios: Scenario[];
-  /** Baz Alınan Senaryo ID */
+  /** Baseline Scenario ID */
   baselineScenarioId: string | null;
 
   // Actions - Parameters
@@ -55,18 +55,20 @@ const generateId = (): string => {
   return `mt_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 };
 
-const getLocalStorage = () => {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    return window.localStorage;
-  }
-  // Safe fallback for SSR and Node environment testing
-  const dummyMap = new Map<string, string>();
-  return {
-    getItem: (key: string) => dummyMap.get(key) ?? null,
-    setItem: (key: string, value: string) => dummyMap.set(key, value),
-    removeItem: (key: string) => dummyMap.delete(key),
-  };
-};
+const getLocalStorage = () => ({
+  getItem: (key: string) =>
+    typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem(key) : null,
+  setItem: (key: string, value: string) => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  },
+  removeItem: (key: string) => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(key);
+    }
+  },
+});
 
 export const usePortfolioStore = create<PortfolioState>()(
   persist(
@@ -165,7 +167,7 @@ export const usePortfolioStore = create<PortfolioState>()(
 
         const newScenario: Scenario = {
           id: generateId(),
-          name: `${scenario.name} (Kopya)`,
+          name: `${scenario.name} (Copy)`,
           color: scenario.color,
           params: { ...scenario.params },
           isBaseline: false,

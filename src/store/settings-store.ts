@@ -1,5 +1,5 @@
 /**
- * MoneyTrace - Uygulama Ayarları Store'u (Zustand + Persist)
+ * MoneyTrace - Application Settings Store (Zustand + Persist)
  */
 
 import { create } from 'zustand';
@@ -9,30 +9,31 @@ import type { Settings } from '../types';
 export interface SettingsState extends Settings {
   setTheme: (theme: Settings['theme']) => void;
   setLanguage: (language: Settings['language']) => void;
-  setEvdsApiKey: (key: string) => void;
-  setDefaultCurrency: (currency: Settings['defaultCurrency']) => void;
+  setCurrency: (code: string, symbol: string) => void;
   resetSettings: () => void;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
-  language: 'tr',
-  evdsApiKey: '',
-  defaultCurrency: 'TRY',
+  language: 'en',
+  currencyCode: 'USD',
+  currencySymbol: '$',
 };
 
-const getLocalStorage = () => {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    return window.localStorage;
-  }
-  // Safe fallback for SSR and Node environment testing
-  const dummyMap = new Map<string, string>();
-  return {
-    getItem: (key: string) => dummyMap.get(key) ?? null,
-    setItem: (key: string, value: string) => dummyMap.set(key, value),
-    removeItem: (key: string) => dummyMap.delete(key),
-  };
-};
+const getLocalStorage = () => ({
+  getItem: (key: string) =>
+    typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem(key) : null,
+  setItem: (key: string, value: string) => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  },
+  removeItem: (key: string) => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(key);
+    }
+  },
+});
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
@@ -41,8 +42,7 @@ export const useSettingsStore = create<SettingsState>()(
 
       setTheme: (theme) => set({ theme }),
       setLanguage: (language) => set({ language }),
-      setEvdsApiKey: (evdsApiKey) => set({ evdsApiKey }),
-      setDefaultCurrency: (defaultCurrency) => set({ defaultCurrency }),
+      setCurrency: (currencyCode, currencySymbol) => set({ currencyCode, currencySymbol }),
       resetSettings: () => set({ ...DEFAULT_SETTINGS }),
     }),
     {

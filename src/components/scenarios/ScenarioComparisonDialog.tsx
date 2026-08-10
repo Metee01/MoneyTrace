@@ -13,41 +13,26 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '../ui/dialog';
 import { Button } from '../ui/button';
-import { usePortfolioStore } from '../../store';
+import { usePortfolioStore, useSettingsStore } from '../../store';
 import { calculateProjection } from '../../engine';
 import { useTheme } from '../../hooks/useTheme';
-import { formatTL, formatPercent } from '../../lib/formatters';
+import { formatLocalCurrency, formatPercent } from '../../lib/formatters';
+import type { ProjectionResult, Scenario } from '../../types';
 
 interface ScenarioComparisonDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> = ({
-  open,
-  onOpenChange,
-}) => {
-  const { t } = useTranslation();
-  const { scenarios } = usePortfolioStore();
-  const { theme } = useTheme();
-
-  const [valueType, setValueType] = useState<'real' | 'nominal'>('real');
-
-  // Her senaryo için projeksiyon hesabı yap
-  const scenarioResults = useMemo(() => {
-    return scenarios.map((scenario) => {
-      const projection = calculateProjection(scenario.params);
-      return {
-        scenario,
-        projection,
-      };
-    });
-  }, [scenarios]);
+interface ScenarioResultItem {
+  scenario: Scenario;
+  projection: ProjectionResult;
+}
 
 interface ComparisonDataPoint {
   month: number;
@@ -55,11 +40,31 @@ interface ComparisonDataPoint {
   [key: string]: unknown;
 }
 
-  // Overlay Grafik Verisini Hazırla
+export const ScenarioComparisonDialog: React.FC<ScenarioComparisonDialogProps> = ({
+  open,
+  onOpenChange,
+}) => {
+  const { t, i18n } = useTranslation();
+  const { scenarios } = usePortfolioStore();
+  const { currencyCode } = useSettingsStore();
+  const { theme } = useTheme();
+
+  const [valueType, setValueType] = useState<'real' | 'nominal'>('real');
+
+  const locale = i18n.language === 'tr' ? 'tr-TR' : 'en-US';
+
+  // Calculate projections for each scenario
+  const scenarioResults: ScenarioResultItem[] = useMemo(() => {
+    return scenarios.map((s) => ({
+      scenario: s,
+      projection: calculateProjection(s.params),
+    }));
+  }, [scenarios]);
+
+  // Overlay Chart Data
   const chartData = useMemo(() => {
     if (!scenarioResults.length) return [];
 
-    // Maksimum ay sayısını bul
     const maxMonths = Math.max(
       ...scenarioResults.map((sr) => sr.projection.summary.totalMonths),
       0
@@ -74,7 +79,7 @@ interface ComparisonDataPoint {
 
       const dataPoint: ComparisonDataPoint = {
         month,
-        label: `${yearIndex}. Yıl${monthInYear !== 12 ? ` ${monthInYear}. Ay` : ''}`,
+        label: `${yearIndex}Y${monthInYear !== 12 ? ` ${monthInYear}M` : ''}`,
       };
 
       scenarioResults.forEach(({ scenario, projection }) => {
@@ -88,7 +93,6 @@ interface ComparisonDataPoint {
       data.push(dataPoint);
     }
 
-    // Grafik performans ve temizliği için yılda 12 noktayı süz veya yıllık moda ayarla
     return data.filter((d) => d.month % 3 === 0 || d.month === 1);
   }, [scenarioResults, valueType]);
 
@@ -100,51 +104,50 @@ interface ComparisonDataPoint {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            {t('scenarios.compareScenarios')}
-          </DialogTitle>
-          <DialogDescription>
-            Kaydedilmiş senaryolarınızın zaman içindeki büyüme ve satın alma gücü karşılaştırması.
-          </DialogDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <DialogTitle className="text-xl font-bold">
+                {t('scenarios.compareScenarios')}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-1">
+                Comparing {scenarios.length} scenarios side-by-side
+              </DialogDescription>
+            </div>
+
+            {/* Value Type Toggle (Real / Nominal) */}
+            <div className="inline-flex items-center rounded-lg border border-border bg-muted p-0.5 text-xs">
+              <Button
+                variant={valueType === 'real' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 text-xs px-2.5"
+                onClick={() => setValueType('real')}
+              >
+                {t('projection.realValue')}
+              </Button>
+              <Button
+                variant={valueType === 'nominal' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 text-xs px-2.5"
+                onClick={() => setValueType('nominal')}
+              >
+                {t('projection.nominalBalance')}
+              </Button>
+            </div>
+          </div>
         </DialogHeader>
 
         {scenarios.length === 0 ? (
-          <div className="py-12 text-center text-muted-foreground">
+          <div className="py-12 text-center text-muted-foreground text-sm">
             {t('scenarios.noScenarios')}
           </div>
         ) : (
-          <div className="space-y-6 py-2">
-            {/* Görünüm Geçişi (Reel vs Nominal) */}
-            <div className="flex items-center justify-between bg-card p-3 border border-border rounded-lg">
-              <span className="text-sm font-medium text-foreground">
-                Karşılaştırma Modu:
-              </span>
-              <div className="inline-flex items-center rounded-lg border border-border bg-muted p-0.5 text-xs">
-                <Button
-                  variant={valueType === 'real' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="h-7 text-xs px-3"
-                  onClick={() => setValueType('real')}
-                >
-                  Reel Değer (Bugünkü TL)
-                </Button>
-                <Button
-                  variant={valueType === 'nominal' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="h-7 text-xs px-3"
-                  onClick={() => setValueType('nominal')}
-                >
-                  Nominal Değer (TL)
-                </Button>
-              </div>
-            </div>
-
-            {/* Karşılaştırma Çizgi Grafiği */}
-            <div className="h-[300px] w-full border border-border rounded-lg p-4 bg-card">
+          <div className="space-y-6 pt-2">
+            {/* Comparison Overlay Chart */}
+            <div className="h-[320px] w-full border border-border rounded-xl p-4 bg-card">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={chartData}
-                  margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                  margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                   <XAxis
@@ -152,16 +155,19 @@ interface ComparisonDataPoint {
                     stroke={axisColor}
                     fontSize={11}
                     tickLine={false}
+                    axisLine={{ stroke: gridColor }}
+                    dy={8}
                   />
                   <YAxis
                     stroke={axisColor}
                     fontSize={11}
                     tickLine={false}
-                    tickFormatter={(v) => formatTL(v, true)}
+                    axisLine={false}
+                    tickFormatter={(v) => formatLocalCurrency(v, currencyCode, locale, true)}
                   />
                   <Tooltip
                     formatter={(val: unknown, name: unknown) => [
-                      formatTL(Number(val)),
+                      formatLocalCurrency(Number(val), currencyCode, locale),
                       String(name),
                     ]}
                     contentStyle={{
@@ -172,13 +178,14 @@ interface ComparisonDataPoint {
                     }}
                   />
                   <Legend />
+
                   {scenarios.map((s) => (
                     <Line
                       key={s.id}
                       type="monotone"
                       dataKey={s.id}
                       name={s.name}
-                      stroke={s.color || '#3b82f6'}
+                      stroke={s.color}
                       strokeWidth={2.5}
                       dot={false}
                       activeDot={{ r: 5 }}
@@ -188,62 +195,60 @@ interface ComparisonDataPoint {
               </ResponsiveContainer>
             </div>
 
-            {/* Karşılaştırma Tablosu */}
-            <div className="border border-border rounded-lg overflow-x-auto">
+            {/* Scenario Summary Comparison Table */}
+            <div className="overflow-x-auto border border-border rounded-xl">
               <table className="w-full text-xs text-left">
-                <thead className="bg-muted text-muted-foreground font-semibold border-b border-border">
+                <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border">
                   <tr>
-                    <th className="py-2.5 px-3">Senaryo</th>
-                    <th className="py-2.5 px-3">Beklenen Getiri</th>
-                    <th className="py-2.5 px-3">Enflasyon</th>
-                    <th className="py-2.5 px-3">Vade Sonu Nominal</th>
-                    <th className="py-2.5 px-3">Vade Sonu Reel Değer</th>
-                    <th className="py-2.5 px-3">Net Reel Kar</th>
-                    <th className="py-2.5 px-3">Reel ROI</th>
+                    <th className="py-2.5 px-3">Scenario</th>
+                    <th className="py-2.5 px-3 text-right">Return Rate</th>
+                    <th className="py-2.5 px-3 text-right">Inflation Rate</th>
+                    <th className="py-2.5 px-3 text-right">Nominal Value</th>
+                    <th className="py-2.5 px-3 text-right">Real Value</th>
+                    <th className="py-2.5 px-3 text-right">Real ROI</th>
+                    <th className="py-2.5 px-3 text-right">Net Real Profit</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border/40 font-mono">
                   {scenarioResults.map(({ scenario, projection }) => {
-                    const isProfitPos = projection.summary.totalRealProfit >= 0;
+                    const isRealProfitPos = projection.summary.totalRealProfit >= 0;
                     return (
-                      <tr key={scenario.id} className="hover:bg-muted/40 transition-colors">
-                        <td className="py-2.5 px-3 font-semibold flex items-center gap-2">
+                      <tr key={scenario.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="py-2.5 px-3 font-sans font-semibold flex items-center gap-2">
                           <span
-                            className="w-3 h-3 rounded-full shrink-0"
+                            className="w-3 h-3 rounded-full inline-block"
                             style={{ backgroundColor: scenario.color }}
                           />
-                          <span>{scenario.name}</span>
+                          <span className="text-foreground">{scenario.name}</span>
                           {scenario.isBaseline && (
-                            <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-normal">
-                              Baz
+                            <span className="px-1.5 py-0.2 rounded text-[10px] bg-primary/10 text-primary font-normal">
+                              Baseline
                             </span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 font-mono">
+                        <td className="py-2.5 px-3 text-right text-muted-foreground">
                           %{scenario.params.expectedReturnRate}
                         </td>
-                        <td className="py-2.5 px-3 font-mono">
+                        <td className="py-2.5 px-3 text-right text-muted-foreground">
                           %{scenario.params.expectedInflationRate}
                         </td>
-                        <td className="py-2.5 px-3 font-mono font-medium">
-                          {formatTL(projection.summary.finalNominalValue)}
+                        <td className="py-2.5 px-3 text-right font-medium text-blue-600 dark:text-blue-400">
+                          {formatLocalCurrency(projection.summary.finalNominalValue, currencyCode, locale)}
                         </td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-foreground">
-                          {formatTL(projection.summary.finalRealValue)}
+                        <td className="py-2.5 px-3 text-right font-medium text-emerald-600 dark:text-emerald-400">
+                          {formatLocalCurrency(projection.summary.finalRealValue, currencyCode, locale)}
                         </td>
-                        <td
-                          className={`py-2.5 px-3 font-mono font-semibold ${
-                            isProfitPos ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                          }`}
-                        >
-                          {formatTL(projection.summary.totalRealProfit)}
+                        <td className="py-2.5 px-3 text-right font-semibold">
+                          {formatPercent(projection.summary.realRoi, true, locale)}
                         </td>
                         <td
-                          className={`py-2.5 px-3 font-mono font-semibold ${
-                            isProfitPos ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                          className={`py-2.5 px-3 text-right font-semibold ${
+                            isRealProfitPos
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-rose-600 dark:text-rose-400'
                           }`}
                         >
-                          {formatPercent(projection.summary.realRoi, true)}
+                          {formatLocalCurrency(projection.summary.totalRealProfit, currencyCode, locale)}
                         </td>
                       </tr>
                     );
@@ -253,12 +258,6 @@ interface ComparisonDataPoint {
             </div>
           </div>
         )}
-
-        <div className="flex justify-end pt-2">
-          <Button onClick={() => onOpenChange(false)} variant="outline">
-            {t('common.cancel')}
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );

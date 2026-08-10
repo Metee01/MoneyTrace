@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Wallet,
   ShieldCheck,
@@ -9,12 +10,14 @@ import {
   Flame,
 } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
-import { usePortfolioStore } from '../../store';
+import { usePortfolioStore, useSettingsStore } from '../../store';
 import { calculateProjection } from '../../engine';
-import { formatTL, formatUSD, formatPercent, formatNumber } from '../../lib/formatters';
+import { formatLocalCurrency, formatUSD, formatPercent, formatNumber } from '../../lib/formatters';
 
 export const ProjectionSummaryCards: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const { currentParams } = usePortfolioStore();
+  const { currencyCode } = useSettingsStore();
 
   const projectionResult = useMemo(() => {
     return calculateProjection(currentParams);
@@ -24,13 +27,14 @@ export const ProjectionSummaryCards: React.FC = () => {
 
   const isRealProfitPositive = summary.totalRealProfit >= 0;
   const isNominalProfitPositive = summary.totalNominalProfit >= 0;
+  const locale = i18n.language === 'tr' ? 'tr-TR' : 'en-US';
 
   const cardsData = [
     {
       id: 'nominal',
-      title: 'Nominal Portföy Değeri',
-      value: formatTL(summary.finalNominalValue),
-      subtext: `Nominal Getiri: ${formatPercent(summary.nominalRoi, true)}`,
+      title: t('projection.nominalBalance'),
+      value: formatLocalCurrency(summary.finalNominalValue, currencyCode, locale),
+      subtext: `${t('projection.nominalReturn') || 'Nominal ROI'}: ${formatPercent(summary.nominalRoi, true, locale)}`,
       badgeColor: isNominalProfitPositive
         ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
         : 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
@@ -39,9 +43,9 @@ export const ProjectionSummaryCards: React.FC = () => {
     },
     {
       id: 'real',
-      title: 'Reel Satın Alma Gücü',
-      value: formatTL(summary.finalRealValue),
-      subtext: `Reel Getiri: ${formatPercent(summary.realRoi, true)}`,
+      title: t('projection.realValue'),
+      value: formatLocalCurrency(summary.finalRealValue, currencyCode, locale),
+      subtext: `${t('projection.realReturn')}: ${formatPercent(summary.realRoi, true, locale)}`,
       badgeColor: isRealProfitPositive
         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
         : 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
@@ -50,27 +54,27 @@ export const ProjectionSummaryCards: React.FC = () => {
     },
     {
       id: 'usd',
-      title: 'Dolar Bakiye ($)',
+      title: t('projection.usdBalance'),
       value: formatUSD(summary.finalUsdValue),
-      subtext: `Tahmini Kur: ₺${formatNumber(summary.finalUsdRate, 2)}`,
+      subtext: `Exchange Rate: ${formatNumber(summary.finalUsdRate, 2, locale)}`,
       badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
       icon: DollarSign,
       iconColor: 'text-amber-500',
     },
     {
       id: 'invested',
-      title: 'Yatırılan Anapara',
-      value: formatTL(summary.totalInvested),
-      subtext: `Reel Karşılığı: ${formatTL(summary.realTotalInvested)}`,
+      title: t('projection.totalContribution'),
+      value: formatLocalCurrency(summary.totalInvested, currencyCode, locale),
+      subtext: `${t('projection.real')}: ${formatLocalCurrency(summary.realTotalInvested, currencyCode, locale)}`,
       badgeColor: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
       icon: Coins,
       iconColor: 'text-slate-500',
     },
     {
       id: 'realProfit',
-      title: 'Net Reel Kar / Zarar',
-      value: formatTL(summary.totalRealProfit),
-      subtext: `Nominal Kar: ${formatTL(summary.totalNominalProfit)}`,
+      title: `${t('projection.real')} ${t('projection.monthlyReturn') || 'Profit / Loss'}`,
+      value: formatLocalCurrency(summary.totalRealProfit, currencyCode, locale),
+      subtext: `Nominal: ${formatLocalCurrency(summary.totalNominalProfit, currencyCode, locale)}`,
       badgeColor: isRealProfitPositive
         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
         : 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
@@ -80,9 +84,9 @@ export const ProjectionSummaryCards: React.FC = () => {
     },
     {
       id: 'inflationLoss',
-      title: 'Enflasyon Değer Kaybı',
-      value: `%${formatNumber(summary.purchasingPowerLossRate, 1)}`,
-      subtext: 'Satın Alma Gücü Erimesi',
+      title: t('projection.inflationLoss'),
+      value: `${formatNumber(summary.purchasingPowerLossRate, 1, locale)}%`,
+      subtext: t('projection.inflationImpactTitle'),
       badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
       icon: Flame,
       iconColor: 'text-rose-500',

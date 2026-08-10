@@ -20,17 +20,16 @@ const mockStorage = {
   key: (index: number) => Array.from(mockStorageMap.keys())[index] ?? null,
 };
 
-Object.defineProperty(globalThis, 'window', {
-  value: {
-    localStorage: mockStorage,
-  },
-  writable: true,
-});
+// Set window and localStorage on globalThis before module imports
+(globalThis as unknown as Record<string, unknown>).window = {
+  localStorage: mockStorage,
+};
+(globalThis as unknown as Record<string, unknown>).localStorage = mockStorage;
 
 import { usePortfolioStore, DEFAULT_PROJECTION_PARAMS } from './portfolio-store';
 import { useSettingsStore } from './settings-store';
 
-function runStoreTests() {
+async function runStoreTests() {
   console.log('🧪 Starting MoneyTrace Store Verification Tests...\n');
 
   // Test 1: Default Settings Store State
@@ -43,41 +42,41 @@ function runStoreTests() {
   console.log(`Updated Theme: ${useSettingsStore.getState().theme} (Expected: dark)`);
   console.assert(useSettingsStore.getState().theme === 'dark', 'Theme update failed');
 
-  useSettingsStore.getState().setLanguage('tr');
-  console.log(`Updated Language: ${useSettingsStore.getState().language} (Expected: tr)`);
-  console.assert(useSettingsStore.getState().language === 'tr', 'Language update failed');
+  useSettingsStore.getState().setLanguage('en');
+  console.log(`Updated Language: ${useSettingsStore.getState().language} (Expected: en)`);
+  console.assert(useSettingsStore.getState().language === 'en', 'Language update failed');
 
   // Test 2: Portfolio Store Defaults & Parameter Actions
   console.log('\n--- Test 2: Portfolio Store Parameter Actions ---');
   const params = usePortfolioStore.getState().currentParams;
-  console.log(`Default Initial Capital: ${params.initialCapital} TL`);
+  console.log(`Default Initial Capital: ${params.initialCapital}`);
   console.assert(params.initialCapital === DEFAULT_PROJECTION_PARAMS.initialCapital, 'Default params mismatch');
 
-  usePortfolioStore.getState().setParams({ initialCapital: 250000, targetYears: 10 });
+  usePortfolioStore.getState().setParams({ initialCapital: 25000, targetYears: 10 });
   const updatedParams = usePortfolioStore.getState().currentParams;
-  console.log(`Updated Initial Capital: ${updatedParams.initialCapital} TL, Target Years: ${updatedParams.targetYears}`);
-  console.assert(updatedParams.initialCapital === 250000 && updatedParams.targetYears === 10, 'Params update failed');
+  console.log(`Updated Initial Capital: ${updatedParams.initialCapital}, Target Years: ${updatedParams.targetYears}`);
+  console.assert(updatedParams.initialCapital === 25000 && updatedParams.targetYears === 10, 'Params update failed');
 
   // Test 3: Portfolio Save & CRUD Actions
   console.log('\n--- Test 3: Portfolio Save & CRUD Actions ---');
-  const savedP = usePortfolioStore.getState().savePortfolio('Emeklilik Portföyüm', 'Uzun vadeli hedef');
+  const savedP = usePortfolioStore.getState().savePortfolio('Retirement Plan', 'Long term goal');
   console.log(`Saved Portfolio ID: ${savedP.id}, Name: ${savedP.name}`);
   console.assert(usePortfolioStore.getState().portfolios.length === 1, 'Save portfolio failed');
 
-  usePortfolioStore.getState().updatePortfolio(savedP.id, { name: 'Güncellenmiş Portföy' });
+  usePortfolioStore.getState().updatePortfolio(savedP.id, { name: 'Updated Portfolio' });
   const fetchedP = usePortfolioStore.getState().portfolios[0];
   console.log(`Updated Name: ${fetchedP.name}`);
-  console.assert(fetchedP.name === 'Güncellenmiş Portföy', 'Update portfolio failed');
+  console.assert(fetchedP.name === 'Updated Portfolio', 'Update portfolio failed');
 
   // Test 4: Scenarios CRUD & Baseline Actions
   console.log('\n--- Test 4: Scenarios CRUD & Baseline ---');
-  const sc1 = usePortfolioStore.getState().addScenario('İyimser Senaryo', '#10B981', {
+  const sc1 = usePortfolioStore.getState().addScenario('Optimistic Scenario', '#10B981', {
     ...DEFAULT_PROJECTION_PARAMS,
-    expectedReturnRate: 70,
+    expectedReturnRate: 15,
   });
-  const sc2 = usePortfolioStore.getState().addScenario('Kötümser Senaryo', '#EF4444', {
+  const sc2 = usePortfolioStore.getState().addScenario('Pessimistic Scenario', '#EF4444', {
     ...DEFAULT_PROJECTION_PARAMS,
-    expectedReturnRate: 30,
+    expectedReturnRate: 4,
   });
 
   console.log(`Added Scenarios Count: ${usePortfolioStore.getState().scenarios.length}`);
@@ -91,6 +90,7 @@ function runStoreTests() {
 
   // Test 5: LocalStorage Keys
   console.log('\n--- Test 5: Verify LocalStorage Keys ---');
+  await new Promise((resolve) => setTimeout(resolve, 50));
   console.log(`Keys stored in mock localStorage: ${Array.from(mockStorageMap.keys()).join(', ')}`);
   console.assert(mockStorageMap.has('moneytrace-settings-storage'), 'Settings key missing');
   console.assert(mockStorageMap.has('moneytrace-portfolio-storage'), 'Portfolio key missing');

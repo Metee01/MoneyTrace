@@ -1,30 +1,30 @@
 /**
- * Enflasyon Düzeltmesi ve Reel Değer Hesaplama Modülü
+ * Inflation Adjustment and Real Value Calculation Engine
  */
 
 /**
- * t. aya kadarki kümülatif enflasyon katsayısını hesaplar.
- * Formül: (1 + r_enflasyon_aylik)^monthIndex
+ * Calculates cumulative inflation multiplier for month t.
+ * Formula: (1 + monthlyInflationRate)^monthIndex
  * 
- * @param monthlyInflationRate Aylık enflasyon oranı (ondalık)
- * @param monthIndex Ay sırası (1'den başlayan t değeri)
- * @returns Kümülatif enflasyon çarpanı (Örn: 1.025)
+ * @param monthlyInflationRate Monthly inflation rate (decimal)
+ * @param monthIndex Month sequence index (1-based)
+ * @returns Cumulative inflation factor
  */
 export function calculateCumulativeInflationFactor(
   monthlyInflationRate: number,
   monthIndex: number
 ): number {
-  if (monthIndex <= 0) return 1.0;
+  if (monthIndex <= 0 || monthlyInflationRate <= 0) return 1;
   return Math.pow(1 + monthlyInflationRate, monthIndex);
 }
 
 /**
- * Nominal TL değerini kümülatif enflasyona bölerek bugünkü satın alma gücü (Reel Değer) karşılığını hesaplar.
- * Formül: RealValue = NominalValue / KümülatifEnflasyonKatsayısı
+ * Calculates inflation-adjusted purchasing power (Real Value).
+ * Formula: RealValue = NominalValue / CumulativeInflationFactor
  * 
- * @param nominalAmount Nominal TL tutarı
- * @param cumulativeInflationFactor Kümülatif enflasyon çarpanı
- * @returns Reel TL tutarı (t0 bazında satın alma gücü)
+ * @param nominalAmount Nominal value
+ * @param cumulativeInflationFactor Cumulative inflation multiplier at month t
+ * @returns Real value (purchasing power in t0 terms)
  */
 export function adjustForInflation(
   nominalAmount: number,
@@ -35,18 +35,17 @@ export function adjustForInflation(
 }
 
 /**
- * Enflasyon nedeniyle eriyen satın alma gücü kaybı oranını hesaplar (%).
- * Formül: ((Nominal - Reel) / Nominal) * 100
+ * Calculates purchasing power erosion percentage due to inflation.
+ * Formula: ((Nominal - Real) / Nominal) * 100
  * 
- * @param nominalAmount Nominal Değer
- * @param realAmount Reel Değer
- * @returns Satın alma gücü kaybı yüzdesi (%)
+ * @param nominalValue Final nominal value
+ * @param realValue Final real value
+ * @returns Purchasing power loss percentage
  */
 export function calculatePurchasingPowerLossRate(
-  nominalAmount: number,
-  realAmount: number
+  nominalValue: number,
+  realValue: number
 ): number {
-  if (nominalAmount <= 0) return 0;
-  const loss = nominalAmount - realAmount;
-  return Math.max(0, (loss / nominalAmount) * 100);
+  if (nominalValue <= 0 || realValue >= nominalValue) return 0;
+  return ((nominalValue - realValue) / nominalValue) * 100;
 }
