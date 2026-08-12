@@ -81,7 +81,11 @@ export const PortfolioForm: React.FC = () => {
       setParams({ [field]: clamped })
     } else if (field === "usdRate") {
       setParams({ [field]: Math.max(0.01, num) })
-    } else if (field === "initialCapital" || field === "monthlyDca") {
+    } else if (
+      field === "initialCapital" ||
+      field === "monthlyDca" ||
+      field === "monthlyWithdrawal"
+    ) {
       setParams({ [field]: Math.max(0, num) })
     } else {
       setParams({ [field]: num })
@@ -356,6 +360,36 @@ export const PortfolioForm: React.FC = () => {
                 value={currentParams.monthlyDca || ""}
                 onChange={(e) => handleChange("monthlyDca", e.target.value)}
                 placeholder="500"
+              />
+            </div>
+
+            {/* 4. Monthly Cash Withdrawal */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="monthlyWithdrawal" className="text-sm font-medium">
+                  {t("portfolio.monthlyWithdrawal", {
+                    currency: currencySymbol,
+                  })}
+                </Label>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs text-xs">
+                    {t("portfolio.monthlyWithdrawalHelp")}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Input
+                id="monthlyWithdrawal"
+                type="number"
+                min="0"
+                step="50"
+                value={currentParams.monthlyWithdrawal || ""}
+                onChange={(e) =>
+                  handleChange("monthlyWithdrawal", e.target.value)
+                }
+                placeholder="0"
               />
             </div>
 

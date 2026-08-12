@@ -49,3 +49,23 @@ export function calculatePurchasingPowerLossRate(
   if (nominalValue <= 0 || realValue >= nominalValue) return 0
   return ((nominalValue - realValue) / nominalValue) * 100
 }
+
+/**
+ * Calculates the maximum safe withdrawal amount from monthly nominal return
+ * that preserves the principal's real purchasing power against inflation.
+ * Formula: baseCapital * max(0, monthlyReturnRate - monthlyInflationRate)
+ *
+ * @param baseCapital Capital balance before applying return (current balance + DCA)
+ * @param monthlyReturnRate Monthly return rate (decimal)
+ * @param monthlyInflationRate Monthly inflation rate (decimal)
+ * @returns Safe withdrawal amount (Nominal)
+ */
+export function calculateSafeWithdrawal(
+  baseCapital: number,
+  monthlyReturnRate: number,
+  monthlyInflationRate: number,
+): number {
+  if (baseCapital <= 0 || monthlyReturnRate <= monthlyInflationRate) return 0
+  return baseCapital * (monthlyReturnRate - monthlyInflationRate)
+}
+

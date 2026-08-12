@@ -17,6 +17,7 @@ import {
   calculateCumulativeInflationFactor,
   adjustForInflation,
   calculatePurchasingPowerLossRate,
+  calculateSafeWithdrawal,
 } from "./inflation-adjust"
 import { predictUsdRate, convertToUsd } from "./currency-convert"
 
@@ -49,6 +50,12 @@ export function calculateProjection(
   let currentNominalValue = Math.max(0, params.initialCapital || 0)
   let totalInvested = Math.max(0, params.initialCapital || 0)
   let realTotalInvested = Math.max(0, params.initialCapital || 0)
+  let totalSafeWithdrawal = 0
+  let totalRealSafeWithdrawal = 0
+  let totalWithdrawals = 0
+  let totalRealWithdrawals = 0
+
+  const plannedWithdrawal = Math.max(0, params.monthlyWithdrawal || 0)
 
   const rows: ProjectionRow[] = []
 
@@ -69,6 +76,20 @@ export function calculateProjection(
       month,
     )
 
+    // Capital base before return step
+    const capitalBase = currentNominalValue + monthlyDca
+
+    // Inflation-protected safe withdrawal amount for this month
+    const safeWithdrawal = calculateSafeWithdrawal(
+      capitalBase,
+      monthlyReturnRate,
+      monthlyInflationRate,
+    )
+    const realSafeWithdrawal = adjustForInflation(safeWithdrawal, cumInflation)
+
+    totalSafeWithdrawal += safeWithdrawal
+    totalRealSafeWithdrawal += realSafeWithdrawal
+
     // Cumulative nominal invested capital
     totalInvested += monthlyDca
 
@@ -82,6 +103,14 @@ export function calculateProjection(
       monthlyDca,
       monthlyReturnRate,
     )
+
+    // Monthly cash withdrawal step
+    const actualWithdrawal = Math.min(currentNominalValue, plannedWithdrawal)
+    currentNominalValue -= actualWithdrawal
+
+    totalWithdrawals += actualWithdrawal
+    totalRealWithdrawals +=
+      cumInflation > 0 ? actualWithdrawal / cumInflation : actualWithdrawal
 
     // Real purchasing power calculation
     const realValue = adjustForInflation(currentNominalValue, cumInflation)
@@ -112,6 +141,9 @@ export function calculateProjection(
       usdRate: Math.round(currentUsdRate * 100) / 100,
       nominalProfit: Math.round(nominalProfit * 100) / 100,
       realProfit: Math.round(realProfit * 100) / 100,
+      safeWithdrawal: Math.round(safeWithdrawal * 100) / 100,
+      realSafeWithdrawal: Math.round(realSafeWithdrawal * 100) / 100,
+      withdrawal: Math.round(actualWithdrawal * 100) / 100,
     })
   }
 
@@ -151,6 +183,10 @@ export function calculateProjection(
     realRoi: Math.round(realRoi * 100) / 100,
     purchasingPowerLossRate: Math.round(purchasingPowerLossRate * 100) / 100,
     finalUsdRate: Math.round(finalUsdRate * 100) / 100,
+    totalSafeWithdrawal: Math.round(totalSafeWithdrawal * 100) / 100,
+    totalRealSafeWithdrawal: Math.round(totalRealSafeWithdrawal * 100) / 100,
+    totalWithdrawals: Math.round(totalWithdrawals * 100) / 100,
+    totalRealWithdrawals: Math.round(totalRealWithdrawals * 100) / 100,
   }
 
   return {

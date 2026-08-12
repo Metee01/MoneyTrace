@@ -12,6 +12,8 @@ export interface ProjectionParams {
   monthlyDca: number
   /** Annual DCA Increase Rate (%) - e.g., 5 for 5% annual increase */
   dcaIncreaseRate: number
+  /** Planned Monthly Cash Withdrawal Amount */
+  monthlyWithdrawal?: number
   /** Expected Annual Portfolio Return Rate (%) */
   expectedReturnRate: number
   /** Expected Annual Inflation Rate (%) */
@@ -56,6 +58,12 @@ export interface ProjectionRow {
   nominalProfit: number
   /** Real Profit/Loss Amount for this Month */
   realProfit: number
+  /** Inflation-protected safe withdrawal amount for this Month (Nominal) */
+  safeWithdrawal: number
+  /** Inflation-protected safe withdrawal amount for this Month (Real) */
+  realSafeWithdrawal: number
+  /** Actual Cash Withdrawal Amount in this Month */
+  withdrawal: number
 }
 
 /**
@@ -86,6 +94,14 @@ export interface ProjectionSummary {
   purchasingPowerLossRate: number
   /** Estimated Final Exchange Rate */
   finalUsdRate: number
+  /** Cumulative Total Inflation-Protected Safe Withdrawal Amount (Nominal) */
+  totalSafeWithdrawal: number
+  /** Cumulative Total Inflation-Protected Safe Withdrawal Amount (Real) */
+  totalRealSafeWithdrawal: number
+  /** Cumulative Total Actual Cash Withdrawals (Nominal) */
+  totalWithdrawals: number
+  /** Cumulative Total Actual Cash Withdrawals (Real) */
+  totalRealWithdrawals: number
 }
 
 /**

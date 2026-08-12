@@ -11,6 +11,7 @@ import {
   calculateCompoundStep,
   calculateCumulativeInflationFactor,
   adjustForInflation,
+  calculateSafeWithdrawal,
   calculateProjection,
 } from "./index"
 import type { ProjectionParams } from "../types"
@@ -52,9 +53,9 @@ function runTests() {
   console.log(`Initial 100k + 10k DCA @ 50% annual: ${step1.toFixed(2)} TL`)
   console.assert(step1 > 110000, "Compound step failed")
 
-  // Test 4: Inflation Adjust
-  console.log("\n--- Test 4: Inflation Adjust ---")
-  const inflMonthly = calculateMonthlyRate(30) // 30% annual inflation
+  // Test 4: Inflation Adjust & Safe Withdrawal
+  console.log("\n--- Test 4: Inflation Adjust & Safe Withdrawal ---")
+  const inflMonthly = calculateMonthlyRate(30) // 30% annual inflation (~2.2104% monthly)
   const inflFactor12 = calculateCumulativeInflationFactor(inflMonthly, 12)
   console.log(
     `12 Month Cumulative Inflation Factor @ 30%: ${inflFactor12.toFixed(4)} (Expected: 1.3000)`,
@@ -72,6 +73,15 @@ function runTests() {
     Math.abs(realValue - 100000) < 1e-2,
     "Real value adjustment test failed",
   )
+
+  // Safe Withdrawal Test: 3.4366% return vs 2.2104% inflation on 100k capital
+  const safeW = calculateSafeWithdrawal(100000, mRate, inflMonthly)
+  console.log(
+    `Safe withdrawal on 100k @ 50% return vs 30% infl: ${safeW.toFixed(2)} TL`,
+  )
+  console.assert(safeW > 0, "Safe withdrawal should be positive when return > inflation")
+  const zeroSafeW = calculateSafeWithdrawal(100000, 0.01, 0.02)
+  console.assert(zeroSafeW === 0, "Safe withdrawal should be 0 when return <= inflation")
 
   // Test 5: Full Projection Simulation
   console.log("\n--- Test 5: Full Projection Simulation ---")
@@ -98,6 +108,12 @@ function runTests() {
     `Final Real Value: ${result.summary.finalRealValue.toLocaleString("tr-TR")} TL`,
   )
   console.log(
+    `Total Safe Withdrawal (Nominal): ${result.summary.totalSafeWithdrawal.toLocaleString("tr-TR")} TL`,
+  )
+  console.log(
+    `Total Safe Withdrawal (Real): ${result.summary.totalRealSafeWithdrawal.toLocaleString("tr-TR")} TL`,
+  )
+  console.log(
     `Final USD Value: $${result.summary.finalUsdValue.toLocaleString("en-US")}`,
   )
   console.log(`Nominal ROI: ${result.summary.nominalRoi}%`)
@@ -108,6 +124,10 @@ function runTests() {
   console.log(`Final USD Rate: ${result.summary.finalUsdRate} TL`)
 
   console.assert(result.rows.length === 36, "Rows length mismatch")
+  console.assert(
+    result.summary.totalSafeWithdrawal > 0,
+    "Total safe withdrawal should be > 0",
+  )
   console.assert(
     result.summary.finalNominalValue > result.summary.finalRealValue,
     "Nominal should be > Real when inflation > 0",
@@ -194,6 +214,36 @@ function runTests() {
         monthlyResult.summary.finalNominalValue,
     ) < 1,
     "Annual/Monthly mode equivalence failed",
+  )
+
+  // Test 9: Monthly Cash Withdrawal Simulation
+  console.log("\n--- Test 9: Monthly Cash Withdrawal Simulation ---")
+  const withdrawalParams: ProjectionParams = {
+    initialCapital: 10000,
+    monthlyDca: 0,
+    dcaIncreaseRate: 0,
+    monthlyWithdrawal: 200,
+    expectedReturnRate: 0,
+    expectedInflationRate: 0,
+    usdRate: 1,
+    expectedUsdGrowthRate: 0,
+    targetYears: 1,
+    rateInputPeriod: "monthly",
+  }
+  const withdrawalResult = calculateProjection(withdrawalParams)
+  console.log(
+    `Withdrawal result final nominal: ${withdrawalResult.summary.finalNominalValue} (Expected: 7600)`,
+  )
+  console.log(
+    `Total withdrawals: ${withdrawalResult.summary.totalWithdrawals} (Expected: 2400)`,
+  )
+  console.assert(
+    withdrawalResult.summary.finalNominalValue === 7600,
+    "Final nominal after withdrawal mismatch",
+  )
+  console.assert(
+    withdrawalResult.summary.totalWithdrawals === 2400,
+    "Total withdrawals mismatch",
   )
 
   console.log("\n✅ ALL ENGINE TESTS PASSED SUCCESSFULLY!")

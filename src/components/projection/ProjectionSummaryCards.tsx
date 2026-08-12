@@ -83,7 +83,7 @@ export const ProjectionSummaryCards: React.FC = () => {
       id: "realProfit",
       title: `${t("projection.real")} ${t("projection.realProfitLoss")}`,
       value: formatLocalCurrency(summary.totalRealProfit, currencyCode, locale),
-      subtext: `${t("projection.nominal")}: ${formatLocalCurrency(summary.totalNominalProfit, currencyCode, locale)}`,
+      subtext: `${t("projection.safeWithdrawal")}: ${formatLocalCurrency(summary.totalSafeWithdrawal, currencyCode, locale)}`,
       badgeColor: isRealProfitPositive
         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
         : "bg-rose-500/10 text-rose-600 dark:text-rose-400",
