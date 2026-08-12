@@ -156,6 +156,9 @@ export const ProjectionTable: React.FC = () => {
                   {t("table.nominalValueCol")}
                 </th>
                 <th className="py-2.5 px-3 text-right">
+                  {t("table.nominalProfitCol")}
+                </th>
+                <th className="py-2.5 px-3 text-right">
                   {t("table.realValueCol")}
                 </th>
                 <th className="py-2.5 px-3 text-right">
@@ -172,6 +175,7 @@ export const ProjectionTable: React.FC = () => {
             <tbody className="divide-y divide-border/40">
               {paginatedRows.length > 0 ? (
                 paginatedRows.map((row) => {
+                  const isNominalProfitPos = row.nominalProfit >= 0
                   const isRealProfitPos = row.realProfit >= 0
                   return (
                     <tr
@@ -204,6 +208,26 @@ export const ProjectionTable: React.FC = () => {
                           currencyCode,
                           locale,
                         )}
+                      </td>
+                      <td
+                        className={`py-2 px-3 text-right font-medium ${
+                          isNominalProfitPos
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-rose-600 dark:text-rose-400"
+                        }`}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          {isNominalProfitPos ? (
+                            <TrendingUp className="w-3 h-3 text-blue-500" />
+                          ) : (
+                            <TrendingDown className="w-3 h-3 text-rose-500" />
+                          )}
+                          {formatLocalCurrency(
+                            row.nominalProfit,
+                            currencyCode,
+                            locale,
+                          )}
+                        </div>
                       </td>
                       <td className="py-2 px-3 text-right font-medium text-emerald-600 dark:text-emerald-400">
                         {formatLocalCurrency(
@@ -244,7 +268,7 @@ export const ProjectionTable: React.FC = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="py-6 text-center text-muted-foreground font-sans"
                   >
                     No matching records found.
