@@ -10,6 +10,7 @@ export const DEFAULT_PROJECTION_PARAMS: ProjectionParams = {
   initialCapital: 10000,
   monthlyDca: 500,
   dcaIncreaseRate: 5,
+  monthlyWithdrawal: 0,
   expectedReturnRate: 8,
   expectedInflationRate: 3,
   usdRate: 1,

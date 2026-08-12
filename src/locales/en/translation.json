@@ -31,6 +31,8 @@
     "targetYearsHelp": "Number of years you want to project portfolio growth.",
     "monthlyDca": "Monthly Regular Investment / DCA ({{currency}})",
     "monthlyDcaHelp": "Regular monthly savings or Dollar-Cost Averaging added to portfolio.",
+    "monthlyWithdrawal": "Monthly Cash Withdrawal ({{currency}})",
+    "monthlyWithdrawalHelp": "Regular monthly cash amount planned to be withdrawn from the portfolio.",
     "dcaIncreaseRate": "Annual DCA Increase Rate (%)",
     "dcaIncreaseRateHelp": "Annual percentage rate to increase your monthly contribution (inflation adjustment or salary raises).",
     "expectedReturnRate": "Expected Annual Portfolio Return (%)",
@@ -83,6 +85,7 @@
     "nominalProfitCol": "Nominal Profit/Loss",
     "realProfitCol": "Real Profit/Loss",
     "safeWithdrawalCol": "Safe Withdrawal (Inflation-Protected)",
+    "withdrawalCol": "Cash Withdrawal",
     "usdRateCol": "Exchange Rate",
     "totalRows": "Listing {{count}} total periods"
   },

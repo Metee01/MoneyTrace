@@ -31,6 +31,8 @@
     "targetYearsHelp": "Portföyünüzün büyümesini izlemek istediğiniz yıl süresi.",
     "monthlyDca": "Aylık Düzenli Yatırım / DCA ({{currency}})",
     "monthlyDcaHelp": "Her ay portföyünüze ekleyeceğiniz düzenli tasarruf tutarı.",
+    "monthlyWithdrawal": "Aylık Nakit Çekim ({{currency}})",
+    "monthlyWithdrawalHelp": "Her ay portföyünüzden çekmeyi planladığınız düzenli nakit tutarı.",
     "dcaIncreaseRate": "Yıllık DCA Artış Oranı (%)",
     "dcaIncreaseRateHelp": "Her yıl başında gelir artışı/enflasyon koruması ile DCA tutarınıza ekleyeceğiniz artış %'si.",
     "expectedReturnRate": "Tahmini Yıllık Portföy Getirisi (%)",
@@ -83,6 +85,7 @@
     "nominalProfitCol": "Nominal Kar/Zarar",
     "realProfitCol": "Reel Kar/Zarar",
     "safeWithdrawalCol": "Çekilebilir Kar (Enflasyon Korumalı)",
+    "withdrawalCol": "Nakit Çekim",
     "usdRateCol": "Döviz Kuru",
     "totalRows": "Toplam {{count}} dönem listeleniyor"
   },

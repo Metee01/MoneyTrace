@@ -216,6 +216,36 @@ function runTests() {
     "Annual/Monthly mode equivalence failed",
   )
 
+  // Test 9: Monthly Cash Withdrawal Simulation
+  console.log("\n--- Test 9: Monthly Cash Withdrawal Simulation ---")
+  const withdrawalParams: ProjectionParams = {
+    initialCapital: 10000,
+    monthlyDca: 0,
+    dcaIncreaseRate: 0,
+    monthlyWithdrawal: 200,
+    expectedReturnRate: 0,
+    expectedInflationRate: 0,
+    usdRate: 1,
+    expectedUsdGrowthRate: 0,
+    targetYears: 1,
+    rateInputPeriod: "monthly",
+  }
+  const withdrawalResult = calculateProjection(withdrawalParams)
+  console.log(
+    `Withdrawal result final nominal: ${withdrawalResult.summary.finalNominalValue} (Expected: 7600)`,
+  )
+  console.log(
+    `Total withdrawals: ${withdrawalResult.summary.totalWithdrawals} (Expected: 2400)`,
+  )
+  console.assert(
+    withdrawalResult.summary.finalNominalValue === 7600,
+    "Final nominal after withdrawal mismatch",
+  )
+  console.assert(
+    withdrawalResult.summary.totalWithdrawals === 2400,
+    "Total withdrawals mismatch",
+  )
+
   console.log("\n✅ ALL ENGINE TESTS PASSED SUCCESSFULLY!")
 }
 

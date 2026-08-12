@@ -52,6 +52,10 @@ export function calculateProjection(
   let realTotalInvested = Math.max(0, params.initialCapital || 0)
   let totalSafeWithdrawal = 0
   let totalRealSafeWithdrawal = 0
+  let totalWithdrawals = 0
+  let totalRealWithdrawals = 0
+
+  const plannedWithdrawal = Math.max(0, params.monthlyWithdrawal || 0)
 
   const rows: ProjectionRow[] = []
 
@@ -100,6 +104,14 @@ export function calculateProjection(
       monthlyReturnRate,
     )
 
+    // Monthly cash withdrawal step
+    const actualWithdrawal = Math.min(currentNominalValue, plannedWithdrawal)
+    currentNominalValue -= actualWithdrawal
+
+    totalWithdrawals += actualWithdrawal
+    totalRealWithdrawals +=
+      cumInflation > 0 ? actualWithdrawal / cumInflation : actualWithdrawal
+
     // Real purchasing power calculation
     const realValue = adjustForInflation(currentNominalValue, cumInflation)
 
@@ -131,6 +143,7 @@ export function calculateProjection(
       realProfit: Math.round(realProfit * 100) / 100,
       safeWithdrawal: Math.round(safeWithdrawal * 100) / 100,
       realSafeWithdrawal: Math.round(realSafeWithdrawal * 100) / 100,
+      withdrawal: Math.round(actualWithdrawal * 100) / 100,
     })
   }
 
@@ -172,6 +185,8 @@ export function calculateProjection(
     finalUsdRate: Math.round(finalUsdRate * 100) / 100,
     totalSafeWithdrawal: Math.round(totalSafeWithdrawal * 100) / 100,
     totalRealSafeWithdrawal: Math.round(totalRealSafeWithdrawal * 100) / 100,
+    totalWithdrawals: Math.round(totalWithdrawals * 100) / 100,
+    totalRealWithdrawals: Math.round(totalRealWithdrawals * 100) / 100,
   }
 
   return {

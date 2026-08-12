@@ -37,6 +37,7 @@ export function exportToCsv(
     "Year Index",
     "Month in Year",
     "Monthly DCA",
+    "Monthly Withdrawal",
     "Total Invested Capital",
     "Real Invested Capital",
     "Nominal Value",
@@ -57,6 +58,7 @@ export function exportToCsv(
       r.yearIndex,
       r.monthInYear,
       r.monthlyDca.toFixed(2),
+      r.withdrawal.toFixed(2),
       r.totalInvested.toFixed(2),
       r.realTotalInvested.toFixed(2),
       r.nominalValue.toFixed(2),
@@ -92,6 +94,12 @@ export function exportToCsv(
   )
   lines.push(
     `Total Real Profit/Loss${delimiter}${summary.totalRealProfit.toFixed(2)}`,
+  )
+  lines.push(
+    `Total Actual Withdrawals (Nominal)${delimiter}${summary.totalWithdrawals.toFixed(2)}`,
+  )
+  lines.push(
+    `Total Actual Withdrawals (Real)${delimiter}${summary.totalRealWithdrawals.toFixed(2)}`,
   )
   lines.push(
     `Total Safe Withdrawal (Nominal)${delimiter}${summary.totalSafeWithdrawal.toFixed(2)}`,

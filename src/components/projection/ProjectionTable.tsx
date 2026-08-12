@@ -162,9 +162,6 @@ export const ProjectionTable: React.FC = () => {
                   {t("table.realValueCol")}
                 </th>
                 <th className="py-2.5 px-3 text-right">
-                  {t("table.usdValueCol")}
-                </th>
-                <th className="py-2.5 px-3 text-right">
                   {t("table.realProfitCol")}
                 </th>
                 <th className="py-2.5 px-3 text-right">
