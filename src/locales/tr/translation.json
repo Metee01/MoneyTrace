@@ -82,6 +82,7 @@
     "usdValueCol": "Ref. Döviz Değeri ($)",
     "nominalProfitCol": "Nominal Kar/Zarar",
     "realProfitCol": "Reel Kar/Zarar",
+    "safeWithdrawalCol": "Çekilebilir Kar (Enflasyon Korumalı)",
     "usdRateCol": "Döviz Kuru",
     "totalRows": "Toplam {{count}} dönem listeleniyor"
   },
@@ -100,6 +101,9 @@
     "exchangeRate": "Döviz Kuru",
     "realProfitLoss": "Reel Kar / Zarar",
     "nominalProfitLoss": "Nominal Kar / Zarar",
+    "safeWithdrawal": "Çekilebilir Kar",
+    "totalSafeWithdrawal": "Toplam Güvenli Çekilebilir Kar",
+    "safeWithdrawalHelp": "Ana paranın satın alma gücünü koruyarak çekilebilecek kar",
     "usdReturn": "Toplam Ref. Döviz Getirisi",
     "inflationLoss": "Enflasyon Değer Kaybı",
     "totalContribution": "Toplam Ek Yatırım",

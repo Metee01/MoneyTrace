@@ -45,6 +45,8 @@ export function exportToCsv(
     "Exchange Rate",
     "Nominal Profit/Loss",
     "Real Profit/Loss",
+    "Safe Withdrawal (Nominal)",
+    "Safe Withdrawal (Real)",
   ]
   lines.push(headers.join(delimiter))
 
@@ -63,6 +65,8 @@ export function exportToCsv(
       r.usdRate.toFixed(2),
       r.nominalProfit.toFixed(2),
       r.realProfit.toFixed(2),
+      r.safeWithdrawal.toFixed(2),
+      r.realSafeWithdrawal.toFixed(2),
     ]
     lines.push(rowValues.join(delimiter))
   })
@@ -88,6 +92,12 @@ export function exportToCsv(
   )
   lines.push(
     `Total Real Profit/Loss${delimiter}${summary.totalRealProfit.toFixed(2)}`,
+  )
+  lines.push(
+    `Total Safe Withdrawal (Nominal)${delimiter}${summary.totalSafeWithdrawal.toFixed(2)}`,
+  )
+  lines.push(
+    `Total Safe Withdrawal (Real)${delimiter}${summary.totalRealSafeWithdrawal.toFixed(2)}`,
   )
   lines.push(`Nominal ROI (%)${delimiter}${summary.nominalRoi.toFixed(2)}`)
   lines.push(`Real ROI (%)${delimiter}${summary.realRoi.toFixed(2)}`)

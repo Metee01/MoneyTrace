@@ -1,7 +1,7 @@
 {
   "name": "moneytrace",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "A personal finance management application built with React, TypeScript, and Tailwind CSS.",
   "license": "MIT",

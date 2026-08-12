@@ -56,6 +56,10 @@ export interface ProjectionRow {
   nominalProfit: number
   /** Real Profit/Loss Amount for this Month */
   realProfit: number
+  /** Inflation-protected safe withdrawal amount for this Month (Nominal) */
+  safeWithdrawal: number
+  /** Inflation-protected safe withdrawal amount for this Month (Real) */
+  realSafeWithdrawal: number
 }
 
 /**
@@ -86,6 +90,10 @@ export interface ProjectionSummary {
   purchasingPowerLossRate: number
   /** Estimated Final Exchange Rate */
   finalUsdRate: number
+  /** Cumulative Total Inflation-Protected Safe Withdrawal Amount (Nominal) */
+  totalSafeWithdrawal: number
+  /** Cumulative Total Inflation-Protected Safe Withdrawal Amount (Real) */
+  totalRealSafeWithdrawal: number
 }
 
 /**

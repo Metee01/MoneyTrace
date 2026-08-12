@@ -168,6 +168,12 @@ export const ProjectionTable: React.FC = () => {
                   {t("table.realProfitCol")}
                 </th>
                 <th className="py-2.5 px-3 text-right">
+                  {t("table.safeWithdrawalCol")}
+                </th>
+                <th className="py-2.5 px-3 text-right">
+                  {t("table.usdValueCol")}
+                </th>
+                <th className="py-2.5 px-3 text-right">
                   {t("table.usdRateCol")}
                 </th>
               </tr>
@@ -236,9 +242,6 @@ export const ProjectionTable: React.FC = () => {
                           locale,
                         )}
                       </td>
-                      <td className="py-2 px-3 text-right text-amber-600 dark:text-amber-400">
-                        {formatUSD(row.usdValue)}
-                      </td>
                       <td
                         className={`py-2 px-3 text-right font-medium ${
                           isRealProfitPos
@@ -259,6 +262,16 @@ export const ProjectionTable: React.FC = () => {
                           )}
                         </div>
                       </td>
+                      <td className="py-2 px-3 text-right font-medium text-cyan-600 dark:text-cyan-400">
+                        {formatLocalCurrency(
+                          row.safeWithdrawal,
+                          currencyCode,
+                          locale,
+                        )}
+                      </td>
+                      <td className="py-2 px-3 text-right text-amber-600 dark:text-amber-400">
+                        {formatUSD(row.usdValue)}
+                      </td>
                       <td className="py-2 px-3 text-right text-muted-foreground">
                         {formatNumber(row.usdRate, 2, locale)}
                       </td>
@@ -268,7 +281,7 @@ export const ProjectionTable: React.FC = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={10}
                     className="py-6 text-center text-muted-foreground font-sans"
                   >
                     No matching records found.
