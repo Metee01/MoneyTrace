@@ -62,7 +62,9 @@
     "portfolioName": "Portfolio Name",
     "portfolioNamePlaceholder": "e.g., 10-Year Retirement Plan",
     "portfolioDesc": "Description (Optional)",
-    "savedSuccess": "Portfolio saved successfully!"
+    "savedSuccess": "Portfolio saved successfully!",
+    "withholdingTaxRate": "Withholding Tax Rate (%)",
+    "withholdingTaxRateHelp": "Monthly tax deducted from investment returns (e.g. 15% for deposits, 10% for funds)."
   },
   "validation": {
     "positiveNumber": "Please enter a non-negative number.",
@@ -87,7 +89,10 @@
     "safeWithdrawalCol": "Safe Withdrawal (Inflation-Protected)",
     "withdrawalCol": "Cash Withdrawal",
     "usdRateCol": "Exchange Rate",
-    "totalRows": "Listing {{count}} total periods"
+    "totalRows": "Listing {{count}} total periods",
+    "withholdingTaxCol": "Withholding Tax",
+    "nominalProfitChangeCol": "Nominal Profit Δ",
+    "realProfitChangeCol": "Real Profit Δ"
   },
   "projection": {
     "summaryTitle": "Projection Summary",

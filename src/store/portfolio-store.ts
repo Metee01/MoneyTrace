@@ -16,6 +16,7 @@ export const DEFAULT_PROJECTION_PARAMS: ProjectionParams = {
   usdRate: 1,
   expectedUsdGrowthRate: 0,
   targetYears: 10,
+  withholdingTaxRate: 0,
 }
 
 export interface PortfolioState {

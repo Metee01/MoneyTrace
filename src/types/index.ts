@@ -26,6 +26,8 @@ export interface ProjectionParams {
   targetYears: number
   /** Input Period for Rates & DCA ('annual' | 'monthly') */
   rateInputPeriod?: "annual" | "monthly"
+  /** Withholding tax rate on monthly returns (%) — e.g. 15 for 15% */
+  withholdingTaxRate?: number
 }
 
 /**
@@ -64,6 +66,12 @@ export interface ProjectionRow {
   realSafeWithdrawal: number
   /** Actual Cash Withdrawal Amount in this Month */
   withdrawal: number
+  /** Monthly withholding tax amount deducted */
+  withholdingTax: number
+  /** Month-over-month nominal profit change (current - previous) */
+  nominalProfitChange: number
+  /** Month-over-month real profit change (current - previous) */
+  realProfitChange: number
 }
 
 /**
@@ -102,6 +110,8 @@ export interface ProjectionSummary {
   totalWithdrawals: number
   /** Cumulative Total Actual Cash Withdrawals (Real) */
   totalRealWithdrawals: number
+  /** Total withholding tax paid over projection period */
+  totalWithholdingTax: number
 }
 
 /**

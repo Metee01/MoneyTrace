@@ -538,6 +538,38 @@ export const PortfolioForm: React.FC = () => {
                 placeholder="0"
               />
             </div>
+
+            {/* 9. Withholding Tax Rate */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Label
+                  htmlFor="withholdingTaxRate"
+                  className="text-sm font-medium"
+                >
+                  {t("portfolio.withholdingTaxRate")}
+                </Label>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs text-xs">
+                    {t("portfolio.withholdingTaxRateHelp")}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Input
+                id="withholdingTaxRate"
+                type="number"
+                step="0.5"
+                min="0"
+                max="100"
+                value={currentParams.withholdingTaxRate ?? ""}
+                onChange={(e) =>
+                  handleChange("withholdingTaxRate", e.target.value)
+                }
+                placeholder="0"
+              />
+            </div>
           </div>
         </TooltipProvider>
       </CardContent>
