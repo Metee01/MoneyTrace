@@ -1,12 +1,6 @@
 import React, { useState } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  Sparkles,
-  Loader2,
-  RefreshCw,
-  Bot,
-  Settings,
-} from "lucide-react"
+import { Sparkles, Loader2, RefreshCw, Bot, Settings } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -16,7 +10,12 @@ import {
   DialogFooter,
 } from "../ui/dialog"
 import { Button } from "../ui/button"
-import { usePortfolioStore, useSettingsStore, MAX_DEMO_FORECASTS } from "../../store"
+import {
+  usePortfolioStore,
+  useSettingsStore,
+  MAX_DEMO_FORECASTS,
+} from "../../store"
+import { APP_CONFIG } from "../../config"
 import { getDemoApiKey } from "../../lib/ai-chat-service"
 import {
   forecastEconomics,
@@ -25,7 +24,7 @@ import {
 } from "../../lib/ai-service"
 import { formatPercent, formatNumber } from "../../lib/formatters"
 import { annualPercentToMonthlyPercent } from "../../engine"
-import type { AiForecastResult } from "../../types"
+import type { AiForecastResult, AiModelProvider } from "../../types"
 
 interface AiForecastModalProps {
   open: boolean
@@ -73,10 +72,14 @@ export const AiForecastModal: React.FC<AiForecastModalProps> = ({
   const isUsingDemo = (useDemoApi ?? false) && hasDemoKey
   const isQuotaExceeded = isUsingDemo && demoForecastCount >= MAX_DEMO_FORECASTS
 
-  const provider = isUsingDemo ? "gemini" : (aiModelProvider ?? "gemini")
+  const provider: AiModelProvider = isUsingDemo
+    ? (APP_CONFIG.ai.demo.provider as AiModelProvider)
+    : (aiModelProvider ?? "gemini")
   const apiKey = isUsingDemo ? demoApiKey : (aiApiKey ?? "")
-  const model = isUsingDemo ? "" : (aiModel ?? "")
-  const baseUrl = aiBaseUrl ?? ""
+  const model = isUsingDemo ? APP_CONFIG.ai.models.demo : (aiModel ?? "")
+  const baseUrl = isUsingDemo
+    ? (APP_CONFIG.ai.demo.baseUrl ?? "")
+    : (aiBaseUrl ?? "")
   const corsProxy = aiCorsProxy ?? ""
   const corsProxyEnabled = aiCorsProxyEnabled ?? false
   const isCustom = provider === "custom"

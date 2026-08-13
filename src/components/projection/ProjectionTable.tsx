@@ -7,6 +7,7 @@ import {
   ChevronRight,
   TrendingUp,
   TrendingDown,
+  RotateCcw,
 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card"
 import { Button } from "../ui/button"
@@ -22,7 +23,8 @@ import { exportToCsv } from "../../lib/export"
 
 export const ProjectionTable: React.FC = () => {
   const { t, i18n } = useTranslation()
-  const { currentParams } = usePortfolioStore()
+  const { currentParams, setCustomWithdrawal, clearCustomWithdrawals } =
+    usePortfolioStore()
   const { currencyCode } = useSettingsStore()
 
   const [filterMode, setFilterMode] = useState<"all" | "yearly">("all")
@@ -35,6 +37,9 @@ export const ProjectionTable: React.FC = () => {
   const projectionResult = useMemo(() => {
     return calculateProjection(currentParams)
   }, [currentParams])
+
+  const hasCustomWithdrawals =
+    Object.keys(currentParams.customWithdrawals ?? {}).length > 0
 
   // Filter & Search Logic
   const filteredRows = useMemo(() => {
@@ -111,6 +116,19 @@ export const ProjectionTable: React.FC = () => {
               </Button>
             </div>
 
+            {/* Clear Custom Withdrawals Button */}
+            {hasCustomWithdrawals && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearCustomWithdrawals}
+                className="h-7 text-xs gap-1 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/10"
+              >
+                <RotateCcw className="w-3 h-3" />
+                {t("table.clearCustomWithdrawals")}
+              </Button>
+            )}
+
             {/* Search Input */}
             <div className="relative w-32 sm:w-40">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -171,7 +189,13 @@ export const ProjectionTable: React.FC = () => {
                   {t("table.realProfitChangeCol")}
                 </th>
                 <th className="py-2.5 px-3 text-right">
+                  {t("table.withdrawalCol")}
+                </th>
+                <th className="py-2.5 px-3 text-right">
                   {t("table.withholdingTaxCol")}
+                </th>
+                <th className="py-2.5 px-3 text-right">
+                  {t("table.netWithdrawalCol")}
                 </th>
                 <th className="py-2.5 px-3 text-right">
                   {t("table.safeWithdrawalCol")}
@@ -189,6 +213,8 @@ export const ProjectionTable: React.FC = () => {
                 paginatedRows.map((row) => {
                   const isNominalProfitPos = row.nominalProfit >= 0
                   const isRealProfitPos = row.realProfit >= 0
+                  const isCustomWithdrawal =
+                    currentParams.customWithdrawals?.[row.month] !== undefined
                   return (
                     <tr
                       key={row.month}
@@ -308,13 +334,64 @@ export const ProjectionTable: React.FC = () => {
                           )}
                         </div>
                       </td>
-                      <td className="py-2 px-3 text-right text-orange-600 dark:text-orange-400">
+
+                      {/* Withdrawal input cell */}
+                      <td className="py-1 px-2 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Input
+                            type="number"
+                            min={0}
+                            step={500}
+                            value={
+                              currentParams.customWithdrawals?.[row.month] ??
+                              (row.withdrawal || "")
+                            }
+                            onChange={(e) => {
+                              const val =
+                                e.target.value === ""
+                                  ? undefined
+                                  : parseFloat(e.target.value)
+                              setCustomWithdrawal(row.month, val)
+                            }}
+                            placeholder="0"
+                            className={`h-7 w-24 text-xs font-mono text-right py-0 px-1.5 border ${
+                              isCustomWithdrawal
+                                ? "border-amber-500 bg-amber-500/10 font-bold"
+                                : "border-border/60 bg-background"
+                            }`}
+                          />
+                          {isCustomWithdrawal && (
+                            <button
+                              onClick={() =>
+                                setCustomWithdrawal(row.month, undefined)
+                              }
+                              title="Reset withdrawal"
+                              className="text-muted-foreground hover:text-rose-500 text-xs px-0.5"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Stopaj Kesintisi */}
+                      <td className="py-2 px-3 text-right font-medium text-orange-600 dark:text-orange-400">
                         {formatLocalCurrency(
                           row.withholdingTax,
                           currencyCode,
                           locale,
                         )}
                       </td>
+
+                      {/* Eline Geçecek Net Tutar */}
+                      <td className="py-2 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
+                        {formatLocalCurrency(
+                          row.netWithdrawal,
+                          currencyCode,
+                          locale,
+                        )}
+                      </td>
+
                       <td className="py-2 px-3 text-right font-medium text-cyan-600 dark:text-cyan-400">
                         {formatLocalCurrency(
                           row.safeWithdrawal,
@@ -334,7 +411,7 @@ export const ProjectionTable: React.FC = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={15}
                     className="py-6 text-center text-muted-foreground font-sans"
                   >
                     No matching records found.

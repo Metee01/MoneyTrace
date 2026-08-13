@@ -91,8 +91,7 @@ export const useSettingsStore = create<SettingsState>()(
             corsProxyEnabled !== undefined
               ? corsProxyEnabled
               : state.aiCorsProxyEnabled,
-          useDemoApi:
-            useDemoApi !== undefined ? useDemoApi : state.useDemoApi,
+          useDemoApi: useDemoApi !== undefined ? useDemoApi : state.useDemoApi,
         })),
       setUseDemoApi: (useDemoApi) => set({ useDemoApi }),
       incrementDemoForecastCount: () => {

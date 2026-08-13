@@ -54,13 +54,12 @@ export function calculateProjection(
   let totalRealSafeWithdrawal = 0
   let totalWithdrawals = 0
   let totalRealWithdrawals = 0
+  let totalNetWithdrawals = 0
   let totalWithholdingTax = 0
   let prevNominalProfit = 0
   let prevRealProfit = 0
 
   const withholdingTaxRate = Math.max(0, params.withholdingTaxRate || 0) / 100
-
-  const plannedWithdrawal = Math.max(0, params.monthlyWithdrawal || 0)
 
   const rows: ProjectionRow[] = []
 
@@ -109,18 +108,29 @@ export function calculateProjection(
       monthlyReturnRate,
     )
 
-    // Withholding tax: applied on positive monthly gross return only
-    const grossReturn = currentNominalValue - capitalBase
-    const withholdingTax =
-      grossReturn > 0 ? grossReturn * withholdingTaxRate : 0
-    currentNominalValue -= withholdingTax
-    totalWithholdingTax += withholdingTax
+    // Determine planned gross withdrawal for this month (custom override or default monthly withdrawal)
+    const plannedGrossWithdrawal =
+      params.customWithdrawals?.[month] ?? (params.monthlyWithdrawal || 0)
+    const targetWithdrawal = Math.max(0, plannedGrossWithdrawal)
 
-    // Monthly cash withdrawal step
-    const actualWithdrawal = Math.min(currentNominalValue, plannedWithdrawal)
+    // Monthly cash withdrawal step: actual withdrawal clamped to available balance
+    const actualWithdrawal = Math.min(currentNominalValue, targetWithdrawal)
+
+    // Withholding tax on withdrawal: applied on profit portion of the withdrawn capital
+    const currentProfit = Math.max(0, currentNominalValue - totalInvested)
+    const profitRatio =
+      currentNominalValue > 0
+        ? Math.min(1, Math.max(0, currentProfit / currentNominalValue))
+        : 0
+    const profitPortionOfWithdrawal = actualWithdrawal * profitRatio
+    const withholdingTax = profitPortionOfWithdrawal * withholdingTaxRate
+    const netWithdrawal = Math.max(0, actualWithdrawal - withholdingTax)
+
     currentNominalValue -= actualWithdrawal
 
     totalWithdrawals += actualWithdrawal
+    totalNetWithdrawals += netWithdrawal
+    totalWithholdingTax += withholdingTax
     totalRealWithdrawals +=
       cumInflation > 0 ? actualWithdrawal / cumInflation : actualWithdrawal
 
@@ -163,6 +173,7 @@ export function calculateProjection(
       realSafeWithdrawal: Math.round(realSafeWithdrawal * 100) / 100,
       withdrawal: Math.round(actualWithdrawal * 100) / 100,
       withholdingTax: Math.round(withholdingTax * 100) / 100,
+      netWithdrawal: Math.round(netWithdrawal * 100) / 100,
       nominalProfitChange: Math.round(nominalProfitChange * 100) / 100,
       realProfitChange: Math.round(realProfitChange * 100) / 100,
     })
@@ -208,6 +219,7 @@ export function calculateProjection(
     totalRealSafeWithdrawal: Math.round(totalRealSafeWithdrawal * 100) / 100,
     totalWithdrawals: Math.round(totalWithdrawals * 100) / 100,
     totalRealWithdrawals: Math.round(totalRealWithdrawals * 100) / 100,
+    totalNetWithdrawals: Math.round(totalNetWithdrawals * 100) / 100,
     totalWithholdingTax: Math.round(totalWithholdingTax * 100) / 100,
   }
 

@@ -12,7 +12,10 @@ import { POPULAR_CURRENCIES } from "@/lib/formatters"
 import { APP_CONFIG } from "@/config"
 import { GEMINI_MODEL, OPENAI_MODEL } from "@/lib/ai-service"
 import { getDemoApiKey } from "@/lib/ai-chat-service"
-import { MAX_DEMO_FORECASTS, MAX_DEMO_CHAT_MESSAGES } from "@/store/settings-store"
+import {
+  MAX_DEMO_FORECASTS,
+  MAX_DEMO_CHAT_MESSAGES,
+} from "@/store/settings-store"
 import {
   Loader2,
   Globe,
@@ -76,9 +79,7 @@ function App() {
   const hasDemoKey = demoApiKey.length > 0
 
   // Local state for AI settings (synced on dialog open)
-  const [localUseDemoApi, setLocalUseDemoApi] = useState(
-    useDemoApi ?? false,
-  )
+  const [localUseDemoApi, setLocalUseDemoApi] = useState(useDemoApi ?? false)
   const [localProvider, setLocalProvider] = useState<AiModelProvider>(
     aiModelProvider ?? "gemini",
   )

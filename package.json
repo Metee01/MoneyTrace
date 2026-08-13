@@ -21,7 +21,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "test:engine": "tsx src/engine/engine.test.ts",
-    "test:store": "tsx src/store/store.test.ts",
+    "test:store": "tsx src/store/store.test.ts && tsx src/store/chat-store.test.ts",
     "test": "npm run test:engine && npm run test:store"
   },
   "dependencies": {

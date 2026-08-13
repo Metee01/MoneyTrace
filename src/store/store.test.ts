@@ -301,7 +301,9 @@ async function runStoreTests() {
     useSettingsStore.getState().demoForecastCount === 5,
     "demoForecastCount should be 5",
   )
-  const failedForecastIncrement = useSettingsStore.getState().incrementDemoForecastCount()
+  const failedForecastIncrement = useSettingsStore
+    .getState()
+    .incrementDemoForecastCount()
   console.assert(
     failedForecastIncrement === false,
     "incrementDemoForecastCount should fail when limit is reached",
@@ -316,7 +318,9 @@ async function runStoreTests() {
     useSettingsStore.getState().demoChatCount === 15,
     "demoChatCount should be 15",
   )
-  const failedChatIncrement = useSettingsStore.getState().incrementDemoChatCount()
+  const failedChatIncrement = useSettingsStore
+    .getState()
+    .incrementDemoChatCount()
   console.assert(
     failedChatIncrement === false,
     "incrementDemoChatCount should fail when limit is reached",

@@ -23,15 +23,21 @@ export const APP_CONFIG = {
       gemini: "gemini-3.6-flash",
       openai: "gpt-4o-mini",
       /** Model used for Demo API requests */
-      demo: "gemini-3.6-flash",
+      demo: "deepseek/deepseek-v4-flash-0731",
     },
+    /** Default max response tokens for AI completion requests */
+    maxTokens: 8000,
     /** Provider base endpoints */
     endpoints: {
       geminiBase: "https://generativelanguage.googleapis.com/v1beta/models",
       openaiBase: "https://api.openai.com/v1/chat/completions",
     },
-    /** Demo API usage quotas & security limits */
+    /** Demo API usage quotas, provider configuration & security limits */
     demo: {
+      /** Provider used for Demo API requests ("gemini" | "openai" | "custom") */
+      provider: "custom" as const,
+      /** Base URL for Demo API requests when provider is "custom" (e.g. OpenRouter or custom endpoint) */
+      baseUrl: "https://openrouter.ai/api/v1",
       /** Maximum allowed economic forecast predictions using Demo API */
       maxForecasts: 5,
       /** Maximum allowed chat messages using Demo API */

@@ -273,6 +273,11 @@ async function callOpenAiCompatible(
 ): Promise<AiForecastResult> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "HTTP-Referer":
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://moneytrace.metee.com.tr",
+    "X-Title": "MoneyTrace",
   }
   if (apiKey.trim()) {
     headers.Authorization = `Bearer ${apiKey.trim()}`
@@ -321,11 +326,13 @@ async function callOpenAiCompatible(
   return parseForecast(extractJsonObject(content))
 }
 
+// ─── Public API ──────────────────────────────────────────────────────────────
+
 /**
- * Requests an economic forecast from the selected AI provider.
+ * Predicts macroeconomic parameters (inflation, returns, currency growth) using AI.
  *
- * @param request Provider, API key, model, endpoint, currency and horizon settings
- * @returns Parsed forecast values on an annual basis
+ * @param request API key, model settings, and target investment parameters
+ * @returns AI predicted financial rates
  * @throws {AiForecastError} with a machine-readable `code`
  */
 export async function forecastEconomics(
@@ -351,7 +358,9 @@ export async function forecastEconomics(
 
   if (request.provider === "custom") {
     const baseUrl = (request.baseUrl ?? "").trim()
-    const model = (request.model ?? "").trim()
+    const model =
+      (request.model ?? "").trim() ||
+      (request.isDemo ? APP_CONFIG.ai.models.demo : "")
     if (!baseUrl) {
       throw new AiForecastError(
         "config",
@@ -375,10 +384,14 @@ export async function forecastEconomics(
   } else if (!request.apiKey.trim()) {
     throw new AiForecastError("auth", "No API key provided.")
   } else if (request.provider === "gemini") {
-    const model = (request.model ?? "").trim() || GEMINI_MODEL
+    const model =
+      (request.model ?? "").trim() ||
+      (request.isDemo ? APP_CONFIG.ai.models.demo : GEMINI_MODEL)
     result = await callGemini(request.apiKey.trim(), model, systemPrompt)
   } else {
-    const model = (request.model ?? "").trim() || OPENAI_MODEL
+    const model =
+      (request.model ?? "").trim() ||
+      (request.isDemo ? APP_CONFIG.ai.models.demo : OPENAI_MODEL)
     result = await callOpenAiCompatible(
       OPENAI_ENDPOINT,
       request.apiKey,

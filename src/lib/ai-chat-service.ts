@@ -11,6 +11,7 @@ import type {
   AiModelProvider,
   ProjectionParams,
   ProjectionSummary,
+  ProjectionResult,
 } from "../types"
 import { GEMINI_MODEL, OPENAI_MODEL, AiForecastError } from "./ai-service"
 
@@ -96,6 +97,7 @@ function toNetworkError(endpoint: string, label: string): AiForecastError {
 export interface PortfolioContext {
   params: ProjectionParams
   summary: ProjectionSummary | null
+  projection?: ProjectionResult | null
   currencyCode: string
   language: string
 }
@@ -138,6 +140,7 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
       ``,
       `── Projection Summary (${s.totalMonths} months) ──`,
       `• Total Invested: ${formatCurrency(s.totalInvested)} ${ctx.currencyCode}`,
+      `• Real Total Invested: ${formatCurrency(s.realTotalInvested)} ${ctx.currencyCode}`,
       `• Final Nominal Value: ${formatCurrency(s.finalNominalValue)} ${ctx.currencyCode}`,
       `• Final Real Value (today's money): ${formatCurrency(s.finalRealValue)} ${ctx.currencyCode}`,
       `• Final USD Value: $${formatCurrency(s.finalUsdValue)}`,
@@ -146,22 +149,50 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
       `• Purchasing Power Loss: ${s.purchasingPowerLossRate.toFixed(2)}%`,
       `• Total Nominal Profit: ${formatCurrency(s.totalNominalProfit)} ${ctx.currencyCode}`,
       `• Total Real Profit: ${formatCurrency(s.totalRealProfit)} ${ctx.currencyCode}`,
-      `• Total Safe Withdrawal: ${formatCurrency(s.totalSafeWithdrawal)} ${ctx.currencyCode}`,
-      `• Total Actual Withdrawals: ${formatCurrency(s.totalWithdrawals)} ${ctx.currencyCode}`,
-      `• Total Withholding Tax: ${formatCurrency(s.totalWithholdingTax)} ${ctx.currencyCode}`,
+      `• Total Safe Withdrawal (Nominal): ${formatCurrency(s.totalSafeWithdrawal)} ${ctx.currencyCode}`,
+      `• Total Safe Withdrawal (Real): ${formatCurrency(s.totalRealSafeWithdrawal)} ${ctx.currencyCode}`,
+      `• Total Actual Withdrawals (Gross Nominal): ${formatCurrency(s.totalWithdrawals)} ${ctx.currencyCode}`,
+      `• Total Net Withdrawals Landed in Hand (Nominal): ${formatCurrency(s.totalNetWithdrawals)} ${ctx.currencyCode}`,
+      `• Total Actual Withdrawals (Real): ${formatCurrency(s.totalRealWithdrawals)} ${ctx.currencyCode}`,
+      `• Total Withholding Tax (Stopaj): ${formatCurrency(s.totalWithholdingTax)} ${ctx.currencyCode}`,
       `• Final Exchange Rate: ${s.finalUsdRate.toFixed(4)}`,
     )
   }
 
+  if (ctx.projection && ctx.projection.rows.length > 0) {
+    lines.push(
+      ``,
+      `── Full Month-by-Month Calculated Projection Data (${ctx.projection.rows.length} months) ──`,
+      `Below is the complete, exact monthly calculation table rendered in the user's UI data tables and charts:`,
+    )
+    ctx.projection.rows.forEach((r) => {
+      lines.push(
+        `• Month ${r.month} (Y${r.yearIndex}M${r.monthInYear}): MonthlyDCA: ${formatCurrency(r.monthlyDca)} ${ctx.currencyCode} | TotalInvested: ${formatCurrency(r.totalInvested)} ${ctx.currencyCode} | RealTotalInvested: ${formatCurrency(r.realTotalInvested)} ${ctx.currencyCode} | NominalValue: ${formatCurrency(r.nominalValue)} ${ctx.currencyCode} | RealValue: ${formatCurrency(r.realValue)} ${ctx.currencyCode} | NominalProfit: ${formatCurrency(r.nominalProfit)} ${ctx.currencyCode} | NominalProfitChange(Delta): ${formatCurrency(r.nominalProfitChange)} ${ctx.currencyCode} | RealProfit: ${formatCurrency(r.realProfit)} ${ctx.currencyCode} | RealProfitChange(Delta): ${formatCurrency(r.realProfitChange)} ${ctx.currencyCode} | GrossWithdrawal: ${formatCurrency(r.withdrawal)} ${ctx.currencyCode} | WithholdingTax(Stopaj): ${formatCurrency(r.withholdingTax)} ${ctx.currencyCode} | NetWithdrawal(ElineGecen): ${formatCurrency(r.netWithdrawal)} ${ctx.currencyCode} | SafeWithdrawal(Nominal): ${formatCurrency(r.safeWithdrawal)} ${ctx.currencyCode} | SafeWithdrawal(Real): ${formatCurrency(r.realSafeWithdrawal)} ${ctx.currencyCode} | CumInflationFactor: ${r.cumulativeInflationFactor.toFixed(4)} | USDValue: $${formatCurrency(r.usdValue)} | USDRate: ${r.usdRate.toFixed(2)}`,
+      )
+    })
+  }
+
   lines.push(
     ``,
-    `── Instructions ──`,
-    `• Answer financial questions about the user's portfolio, projections, and investment strategies.`,
-    `• Use the data above to provide accurate, data-driven insights.`,
-    `• Be concise but thorough. Use bullet points and numbers when helpful.`,
-    `• If the user asks something unrelated to finance or their portfolio, politely redirect.`,
-    `• Never fabricate portfolio data — only reference what is provided above.`,
-    `• This is NOT investment advice — always include appropriate disclaimers when making suggestions.`,
+    `── Strict Calculation & Data Integrity Protocol ──`,
+    `1. DO NOT PERFORM CUSTOM CALCULATIONS BY DEFAULT:`,
+    `   • You must rely STRICTLY on the exact figures provided in the "Current Portfolio Parameters", "Projection Summary", and "Full Month-by-Month Calculated Projection Data" sections above.`,
+    `   • The dataset includes all monthly calculated values from the user's projection table: Monthly DCA, Total Invested (Nominal & Real), Portfolio Values (Nominal, Real, USD), Profits & Deltas, Gross Withdrawals, Withholding Tax (Stopaj), Net Withdrawals Landed in Hand (Eline Geçecek Net Tutar), Safe Withdrawals (Nominal & Real), Inflation Factors, and USD Exchange Rates.`,
+    `   • All monthly figures including withholding tax (stopaj), gross withdrawals, and net withdrawals landed in hand ARE pre-calculated and explicitly listed in the monthly data above. Do NOT state that monthly stopaj or net withdrawal data is missing.`,
+    ``,
+    `2. PROTOCOL WHEN REQUIRED DATA IS OUTSIDE THE PROJECTION HORIZON:`,
+    `   • If the user asks for a month/year beyond the current projection horizon (${p.targetYears} years) or for hypothetical parameters not in the current portfolio:`,
+    `   • Explicitly inform the user that this requires a custom calculation outside their current projection horizon/parameters.`,
+    `   • Ask for permission before performing an AI estimation calculation.`,
+    ``,
+    `3. EXECUTE CUSTOM CALCULATIONS ONLY AFTER EXPLICIT USER CONSENT:`,
+    `   • ONLY IF the user explicitly confirms (e.g. "evet", "hesapla", "izin veriyorum"), proceed to calculate and clearly mark the numbers as AI estimations.`,
+    ``,
+    `── General Guidelines ──`,
+    `• Answer financial questions about the user's portfolio, projections, and investment strategies concisely and professionally.`,
+    `• If the user asks something completely unrelated to finance or their portfolio, politely redirect.`,
+    `• Never fabricate portfolio data — only reference what is provided above or requested after consent.`,
+    `• Always include appropriate disclaimers that AI analysis is NOT formal investment advice.`,
   )
 
   return lines.join("\n")
@@ -169,7 +200,10 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
 
 // ─── Chat Request Types ──────────────────────────────────────────────────────
 
-import { useSettingsStore, MAX_DEMO_CHAT_MESSAGES } from "../store/settings-store"
+import {
+  useSettingsStore,
+  MAX_DEMO_CHAT_MESSAGES,
+} from "../store/settings-store"
 
 export interface ChatRequest {
   provider: AiModelProvider
@@ -189,6 +223,18 @@ import { APP_CONFIG } from "../config"
 const MAX_DEMO_MESSAGE_LENGTH = APP_CONFIG.ai.demo.maxMessageLength
 const DEMO_COOLDOWN_MS = APP_CONFIG.ai.demo.cooldownMs
 let lastDemoCallTime = 0
+
+function cleanReasoningTokens(text: string): string {
+  if (!text) return ""
+  // Strip completed <think>...</think> blocks generated by reasoning models (e.g. DeepSeek R1/V4)
+  let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim()
+  // If the output was truncated mid-thought, remove leading unclosed <think> block
+  if (cleaned.startsWith("<think>")) {
+    cleaned = cleaned.replace(/^<think>[\s\S]*/gi, "").trim()
+  }
+  // If stripping empty-handed, fallback to original trimmed text
+  return cleaned || text.trim()
+}
 
 // ─── Gemini Chat ─────────────────────────────────────────────────────────────
 
@@ -220,7 +266,7 @@ async function chatWithGemini(
         contents,
         generationConfig: {
           temperature: 0.8,
-          maxOutputTokens: 2048,
+          maxOutputTokens: APP_CONFIG.ai.maxTokens,
         },
       }),
     })
@@ -247,12 +293,13 @@ async function chatWithGemini(
       candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
     }
   ).candidates
-  const text = candidates?.[0]?.content?.parts?.[0]?.text
-  if (typeof text !== "string") {
+  const text = candidates?.[0]?.content?.parts?.[0]?.text ?? ""
+  const cleaned = cleanReasoningTokens(text)
+  if (!cleaned) {
     throw new AiForecastError("parse", "Gemini response has no text content.")
   }
 
-  return text
+  return cleaned
 }
 
 // ─── OpenAI-compatible Chat ──────────────────────────────────────────────────
@@ -267,6 +314,11 @@ async function chatWithOpenAi(
 ): Promise<string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "HTTP-Referer":
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://moneytrace.metee.com.tr",
+    "X-Title": "MoneyTrace",
   }
   if (apiKey.trim()) {
     headers.Authorization = `Bearer ${apiKey.trim()}`
@@ -291,7 +343,7 @@ async function chatWithOpenAi(
         model,
         messages: openaiMessages,
         temperature: 0.8,
-        max_tokens: 2048,
+        max_tokens: APP_CONFIG.ai.maxTokens,
       }),
     })
   } catch {
@@ -314,12 +366,13 @@ async function chatWithOpenAi(
       choices?: Array<{ message?: { content?: string } }>
     }
   ).choices
-  const content = choices?.[0]?.message?.content
-  if (typeof content !== "string") {
+  const rawContent = choices?.[0]?.message?.content ?? ""
+  const cleanedContent = cleanReasoningTokens(rawContent)
+  if (!cleanedContent) {
     throw new AiForecastError("parse", `${label} response has no text content.`)
   }
 
-  return content
+  return cleanedContent
 }
 
 // ─── Public API ──────────────────────────────────────────────────────────────
@@ -356,7 +409,11 @@ export async function sendChatMessage(request: ChatRequest): Promise<string> {
 
   // Security: Truncate messages if using demo key to prevent excessive token abuse
   const sanitizeMessages = request.messages.map((m) => {
-    if (request.isDemo && m.role === "user" && m.content.length > MAX_DEMO_MESSAGE_LENGTH) {
+    if (
+      request.isDemo &&
+      m.role === "user" &&
+      m.content.length > MAX_DEMO_MESSAGE_LENGTH
+    ) {
       return {
         ...m,
         content: m.content.slice(0, MAX_DEMO_MESSAGE_LENGTH) + "...",
@@ -370,7 +427,9 @@ export async function sendChatMessage(request: ChatRequest): Promise<string> {
 
   if (request.provider === "custom") {
     const baseUrl = (request.baseUrl ?? "").trim()
-    const model = (request.model ?? "").trim()
+    const model =
+      (request.model ?? "").trim() ||
+      (request.isDemo ? APP_CONFIG.ai.models.demo : "")
     if (!baseUrl) {
       throw new AiForecastError(
         "config",
@@ -395,7 +454,9 @@ export async function sendChatMessage(request: ChatRequest): Promise<string> {
   } else if (!request.apiKey.trim()) {
     throw new AiForecastError("auth", "No API key provided.")
   } else if (request.provider === "gemini") {
-    const model = (request.model ?? "").trim() || GEMINI_MODEL
+    const model =
+      (request.model ?? "").trim() ||
+      (request.isDemo ? APP_CONFIG.ai.models.demo : GEMINI_MODEL)
     responseText = await chatWithGemini(
       request.apiKey.trim(),
       model,
@@ -403,7 +464,9 @@ export async function sendChatMessage(request: ChatRequest): Promise<string> {
       sanitizeMessages,
     )
   } else {
-    const model = (request.model ?? "").trim() || OPENAI_MODEL
+    const model =
+      (request.model ?? "").trim() ||
+      (request.isDemo ? APP_CONFIG.ai.models.demo : OPENAI_MODEL)
     responseText = await chatWithOpenAi(
       OPENAI_ENDPOINT,
       request.apiKey,

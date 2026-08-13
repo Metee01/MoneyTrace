@@ -68,4 +68,3 @@ export function calculateSafeWithdrawal(
   if (baseCapital <= 0 || monthlyReturnRate <= monthlyInflationRate) return 0
   return baseCapital * (monthlyReturnRate - monthlyInflationRate)
 }
-
