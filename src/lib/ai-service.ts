@@ -7,15 +7,16 @@
  * except for the direct HTTPS call to the selected provider.
  */
 
+import { APP_CONFIG } from "../config"
 import type { AiForecastResult, AiModelProvider } from "../types"
 
-/** Default model names (update here when providers release newer models) */
-export const GEMINI_MODEL = "gemini-3.6-flash"
-export const OPENAI_MODEL = "gpt-4o-mini"
+/** Default model names (update in src/config/index.ts) */
+export const GEMINI_MODEL = APP_CONFIG.ai.models.gemini
+export const OPENAI_MODEL = APP_CONFIG.ai.models.openai
+export const DEMO_MODEL = APP_CONFIG.ai.models.demo
 
-const GEMINI_API_BASE =
-  "https://generativelanguage.googleapis.com/v1beta/models"
-const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
+const GEMINI_API_BASE = APP_CONFIG.ai.endpoints.geminiBase
+const OPENAI_ENDPOINT = APP_CONFIG.ai.endpoints.openaiBase
 
 import { useSettingsStore, MAX_DEMO_FORECASTS } from "../store/settings-store"
 

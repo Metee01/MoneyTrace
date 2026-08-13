@@ -1,459 +1,213 @@
 # 💸 MoneyTrace
 
-### Inflation-Adjusted Portfolio Projection & Simulation
+### Privacy-First, Client-Only Investment Projection & AI Simulation Engine
 
-**MoneyTrace** is a modern, privacy-first investment projection and simulation tool built to help you understand how your money can grow — and how inflation can affect its real purchasing power over time.
+**[MoneyTrace](https://moneytrace.metee.com.tr)** is a privacy-first, client-only investment projection and simulation tool designed to help investors understand how their wealth grows over time through compound interest and Dollar-Cost Averaging (DCA) strategies — while revealing the real impact of inflation on purchasing power.
 
-📊 Simulate compound growth and DCA strategies,
-💸 compare nominal vs. real returns,
-🌍 model inflation and currency movements,
-🤖 and optionally generate economic forecasts with AI.
-
-### 🌐 Live Demo
-
-**[moneytrace.metee.com.tr](https://moneytrace.metee.com.tr)**
+Featuring an **AI Financial Assistant Chat** and **AI-powered Economic Forecasting**, MoneyTrace gives you data-driven insights into your portfolio projections without storing your financial data on any external server.
 
 ---
 
-## ✨ Features
+<p align="center">
+  <a href="https://moneytrace.metee.com.tr"><strong>🌐 Launch Live Demo</strong></a> &nbsp;|&nbsp;
+  <a href="https://github.com/Metee01/MoneyTrace"><strong>💻 GitHub Repository</strong></a>
+</p>
 
-### 📈 Real vs. Nominal Value
+---
 
-See the difference between your portfolio's nominal balance and its inflation-adjusted purchasing power.
+## ✨ Key Features
 
-Understand not only **how much your money grows**, but also **what that money may actually be worth in today's terms**.
+### 1. 📈 Real vs. Nominal Value Comparison
+- Compare nominal balance growth alongside **inflation-adjusted purchasing power**.
+- Understand not just how large your future balance numbers appear, but what that money can actually buy in today's terms.
 
-### 🌍 Global Currency Support
+### 2. 🤖 AI Financial Assistant Chat
+- Interactive floating chat widget (bottom-right FAB) ready to answer questions about your active portfolio projections.
+- Analyzes compound returns, risk horizons, and DCA strategy variations (e.g., *"What happens if I increase my DCA by 5% annually?"*).
+- **100% Private:** Full portfolio context is constructed entirely client-side before sending queries to your selected AI provider.
 
-MoneyTrace is currency-agnostic and supports currencies including:
+### 3. ⚡ AI Economic Forecasting
+- One-click macroeconomic parameter estimates (projected inflation rates, annual returns, currency exchange rates).
+- Auto-fills investment inputs using real-time market projections.
 
-`USD` · `EUR` · `GBP` · `JPY` · `CAD` · `AUD` · `TRY` · `BRL` · `INR` · and more.
+### 4. 🔑 Flexible AI Configuration & Demo Mode
+Configure your AI experience inside the **Settings** dialog:
+- **Demo API Mode:** Test AI chat and forecasting out-of-the-box with free daily quotas (5 forecasts, 15 chat messages).
+- **Bring Your Own Key (BYOK):** Connect your own API key for unlimited AI interactions.
+- **Supported Providers:** Google Gemini (`gemini-3.6-flash`), OpenAI (`gpt-4o-mini`), and custom OpenAI-compatible APIs (OpenRouter, Groq, LM Studio, Ollama, etc.).
+- **Built-in Security:** Rate-limiting cooldowns, prompt length limits, and prompt injection protection safeguards.
 
-Amounts are automatically formatted according to the selected currency.
+### 5. 🌍 Global Currency Support
+- Fully currency-agnostic: Supports **USD**, **EUR**, **GBP**, **JPY**, **CAD**, **AUD**, **TRY**, **BRL**, **INR**, and more.
+- Automatically formats numbers according to chosen currency standards.
 
-### 💰 Compound Growth & DCA
+### 6. 💰 Compound Growth & DCA Simulation
+Simulate comprehensive financial models up to **50 years** (600 months):
+- Initial capital & monthly DCA contributions
+- Compound annual return rate
+- Annual DCA contribution increases (%)
+- Monthly cash withdrawals
+- Withholding tax deductions (%)
+- Inflation rate adjustments
 
-Simulate long-term investment strategies with:
+### 7. 💱 Reference Currency Tracking
+- Track local currency portfolios against a benchmark reference currency (e.g., USD).
+- Model projected exchange-rate growth to evaluate foreign currency exposure over long horizons.
 
-* Initial capital
-* Monthly contributions
-* Compound returns
-* Annual contribution increases
-* Custom investment horizons
-* Inflation-adjusted results
+### 8. 🎯 Scenario Management
+- Create, clone, edit, compare, and set baseline portfolio scenarios.
+- Pre-configured defaults included: **Optimistic**, **Market Growth**, **Conservative**, and **Custom**.
+- Side-by-side scenario comparison table and metrics.
 
-Perfect for modelling long-term investing and Dollar-Cost Averaging (DCA).
+### 9. 📊 Interactive Visualizations
+Visual analytics powered by **Recharts**:
+- **Portfolio Growth:** Nominal vs. Real Balance vs. Invested Capital
+- **Reference Currency Balance:** Valuation in reference currency ($)
+- **Inflation Impact:** Purchasing power loss visualization
 
-### 💱 Reference Currency Tracking
+### 10. 📁 Export & Import
+- **CSV Export:** Full year-by-year and month-by-month projection tables.
+- **JSON Backup:** Export all scenarios to JSON and restore them seamlessly across browsers or devices.
 
-Track your portfolio against a reference currency such as USD.
+### 11. 🌐 Internationalization (i18n)
+- Seamless language switching: **English (en)** and **Turkish (tr)**.
 
-Configure projected exchange-rate growth to estimate how your local-currency portfolio could perform relative to another currency.
-
-### 🎯 Scenario Management
-
-Create and compare multiple investment scenarios side-by-side.
-
-For example:
-
-* 🚀 Optimistic
-* 📊 Market Growth
-* 🛡️ Conservative
-* 🧪 Custom
-
-You can **create, clone, compare, edit, and set baseline scenarios** without losing your existing projections.
-
-### 🤖 AI Economic Forecast
-
-Generate economic assumptions with AI directly from the portfolio form.
-
-MoneyTrace can estimate:
-
-* Average inflation
-* Exchange-rate growth
-* Expected portfolio return
-* Current exchange rate
-
-Supported providers include:
-
-* Google Gemini
-* OpenAI
-* OpenAI-compatible APIs
-* OpenRouter
-* Groq
-* LM Studio
-* Ollama
-* Other compatible local/custom endpoints
-
-**Bring your own API key (BYOK).**
-
-Your API key is stored locally in your browser and is only sent to the provider or proxy you explicitly configure.
-
-### 📊 Interactive Visualizations
-
-Understand your projections through interactive charts powered by **Recharts**.
-
-Visualize:
-
-* Portfolio growth
-* Inflation-adjusted purchasing power
-* Contribution vs. growth
-* Long-term value changes
-
-### 📁 Export & Import
-
-Take your data with you.
-
-**Export:**
-
-* Full projection tables as Excel-compatible CSV
-* Scenario backups as JSON
-
-**Import:**
-
-* Restore previously exported scenarios
-* Move your configuration between browsers or devices
-
-### 🌐 Internationalization
-
-Built-in multilingual support with:
-
-* 🇬🇧 English
-* 🇹🇷 Turkish
-
-The translation architecture is designed to make adding additional languages straightforward.
-
-### 🔒 Privacy First
-
-MoneyTrace is **100% client-side**.
-
-Your portfolio data stays in your browser's `localStorage`.
-
-There is:
-
-* ❌ No backend database
-* ❌ No portfolio data upload
-* ❌ No account required
-* ❌ No tracking of your financial data
-
-Your data stays with you.
+### 12. 🔒 Privacy-First Architecture
+- **100% Client-Side Engine:** All financial calculations run locally in your browser.
+- **No Backend & No Tracking:** Zero database storage, no user accounts, no analytics tracking of your financial inputs.
+- **Local Persistence:** Data is saved locally using Zustand `persist` middleware in `localStorage`.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Category             | Technology                              |
-| -------------------- | --------------------------------------- |
-| Framework            | React 19                                |
-| Language             | TypeScript                              |
-| Build Tool           | Vite                                    |
-| Styling              | Tailwind CSS v4                         |
-| UI                   | shadcn/ui                               |
-| Icons                | Lucide                                  |
-| State Management     | Zustand                                 |
-| Persistence          | Zustand Persist                         |
-| Charts               | Recharts                                |
-| Internationalization | i18next + react-i18next                 |
-| AI                   | Gemini, OpenAI & OpenAI-compatible APIs |
-| Deployment           | Vercel                                  |
+| Category | Technology & Libraries |
+| :--- | :--- |
+| **Framework & Language** | React 19, TypeScript, Vite 8 |
+| **Styling & UI** | Tailwind CSS v4 (`@tailwindcss/vite` plugin), `@base-ui/react` (shadcn base-nova style), Lucide Icons |
+| **State & Storage** | Zustand (with `persist` middleware -> `localStorage`) |
+| **Charts** | Recharts |
+| **Internationalization** | i18next & react-i18next |
+| **Styling Utilities** | `class-variance-authority`, `clsx`, `tailwind-merge` |
+| **Analytics** | `@vercel/analytics` |
+
+> **Note:** Tailwind CSS v4 is integrated directly via the `@tailwindcss/vite` plugin without a `tailwind.config` file. Theme configuration and custom CSS variables are located in `src/index.css`.
 
 ---
 
-## 🚀 Getting Started
+## ⚙️ Central Configuration (`src/config/index.ts`)
 
-### Prerequisites
+All application settings, AI model configurations, demo quota limits, and default engine parameters are managed centrally in `src/config/index.ts`:
 
-Make sure you have:
-
-* **Node.js 20.19.0+**
-* npm, pnpm, yarn, or bun
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/Metee01/MoneyTrace.git
-cd MoneyTrace
-```
-
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
-### 3. Start the development server
-
-```bash
-npm run dev
-```
-
-Then open:
-
-```text
-http://localhost:5173
-```
-
-### 4. Build for production
-
-```bash
-npm run build
-```
-
-### 5. Run lint & code audit
-
-```bash
-npm run lint
+```typescript
+// Abbreviated summary of APP_CONFIG
+export const APP_CONFIG = {
+  app: {
+    name: "MoneyTrace",
+    version: "x.x.x",
+    defaultLanguage: "en",
+    defaultCurrencyCode: "USD",
+  },
+  ai: {
+    models: { gemini: "gemini-3.6-flash", openai: "gpt-4o-mini", demo: "gemini-3.6-flash" },
+    demo: { maxForecasts: 5, maxChatMessages: 15, maxMessageLength: 500, cooldownMs: 3000 },
+    // ...
+  },
+  engine: {
+    maxTargetYears: 50,
+    maxTargetMonths: 600,
+    roundingDecimals: 2,
+    defaultParams: { /* ... */ }
+  }
+};
 ```
 
 ---
 
-## 🤖 AI Economic Forecast
-
-MoneyTrace includes an optional AI-powered forecasting system.
-
-The **AI Forecast** button can generate assumptions for your selected currency and investment horizon.
-
-The AI is asked to estimate:
-
-```text
-Inflation
-Exchange-rate growth
-Portfolio return
-Current exchange rate
-```
-
-These values can then be automatically applied to the portfolio simulation.
-
-### 🔑 Bring Your Own API Key
-
-MoneyTrace does not provide or manage API keys.
-
-You provide your own key and choose the provider you want to use.
-
-### Supported Providers
-
-| Provider            | Description                                 |
-| ------------------- | ------------------------------------------- |
-| **Google Gemini**   | Gemini API through Google AI Studio         |
-| **OpenAI**          | OpenAI API                                  |
-| **Custom**          | Any OpenAI-compatible endpoint              |
-| **OpenRouter**      | OpenAI-compatible API                       |
-| **Groq**            | OpenAI-compatible API                       |
-| **LM Studio**       | Local models                                |
-| **Ollama**          | Local models                                |
-| **Other endpoints** | Any compatible `/chat/completions` endpoint |
-
-For local providers, an API key may not be required.
-
----
-
-## 🌐 CORS Proxy
-
-Some API providers do not allow direct browser requests because of CORS restrictions.
-
-For these providers, MoneyTrace supports an optional **CORS proxy**.
-
-### How to enable it
-
-1. Open **AI Forecast**.
-2. Select **Custom (OpenAI-compatible)**.
-3. Enable **Use CORS proxy**.
-4. Enter a proxy URL containing the `{url}` placeholder.
-
-Example:
-
-```text
-https://corsproxy.io/?url={url}
-```
-
-MoneyTrace replaces `{url}` with the encoded target endpoint before sending the request.
-
-### ⚠️ Security
-
-When using a proxy, your request — including your API key — passes through that proxy.
-
-**Only use a proxy you trust.**
-
-For sensitive usage, consider running your own proxy instead of relying on a public service.
-
----
-
-## 🧮 How the Simulation Works
-
-MoneyTrace combines several financial models to provide a long-term projection.
-
-### Compound Growth
-
-Investment growth is modelled using compound returns over the selected time horizon.
-
-### Monthly DCA
-
-Monthly contributions can be added throughout the simulation.
-
-You can also configure an **annual contribution increase rate** to model increasing your investments over time.
-
-### Inflation Adjustment
-
-Nominal portfolio values are adjusted for projected inflation to estimate their future purchasing power.
-
-This allows you to compare:
-
-```text
-Nominal Value
-      ↓
-Inflation Adjustment
-      ↓
-Real Purchasing Power
-```
-
-### Currency / FX Projection
-
-When a reference currency is selected, projected exchange-rate changes can be incorporated into the simulation.
-
-This makes it possible to view your portfolio from both a **local-currency** and **reference-currency** perspective.
-
-> MoneyTrace is a projection and simulation tool. Its outputs are mathematical estimates based on user-provided assumptions and should not be considered financial advice.
-
----
-
-## 📊 Example Use Cases
-
-MoneyTrace can be used for questions such as:
-
-> "If I invest ₺10,000 today and add ₺5,000 every month, how much could I have in 10 years?"
-
-Or:
-
-> "What happens to my portfolio if inflation averages 30% per year?"
-
-Or:
-
-> "How does my TRY portfolio compare against USD over the next 10 years?"
-
-Or:
-
-> "What happens if I increase my monthly contribution by 10% every year?"
-
-Create multiple scenarios and compare them side-by-side to explore different assumptions.
-
----
-
-## 📁 Project Structure
+## 📂 Project Structure
 
 ```text
 MoneyTrace/
-├── public/
-│   ├── Static assets
-│   └── favicon
-│
+├── public/                # Static assets & favicon
 ├── src/
 │   ├── components/
-│   │   ├── layout/
-│   │   ├── portfolio/
-│   │   ├── projection/
-│   │   ├── scenarios/
-│   │   └── ui/
-│   │
-│   ├── engine/
-│   │   ├── compounding
-│   │   ├── inflation
-│   │   └── FX calculations
-│   │
-│   ├── hooks/
-│   │
-│   ├── lib/
-│   │   ├── formatters
-│   │   ├── export helpers
-│   │   ├── i18n
-│   │   ├── AI service
-│   │   └── version
-│   │
-│   ├── locales/
-│   │   ├── en/
-│   │   └── tr/
-│   │
-│   ├── store/
-│   │   ├── portfolio
-│   │   └── settings
-│   │
-│   ├── types/
-│   │
-│   ├── App.tsx
-│   └── main.tsx
-│
-├── vercel.json
+│   │   ├── chat/          # AI Chat FAB widget & panel (AiChat.tsx)
+│   │   ├── layout/        # Header, Footer, Layout wrapper
+│   │   ├── portfolio/     # Portfolio input form & AI Forecast modal
+│   │   ├── projection/    # Summary cards, Recharts section, detail table
+│   │   ├── scenarios/     # Scenario manager & comparison dialog
+│   │   └── ui/            # Base UI primitives (Button, Card, Dialog, Input, Label, Select, Separator, Switch, Tabs, Tooltip)
+│   ├── config/            # Central app configuration (APP_CONFIG)
+│   ├── engine/            # Pure deterministic financial math (compound-growth, inflation-adjust, currency-convert)
+│   ├── hooks/             # Custom hooks (useTheme)
+│   ├── lib/               # AI service, AI chat service, formatters, export, i18n, utils
+│   ├── locales/           # Translation dictionaries (en, tr)
+│   ├── store/             # Zustand stores (portfolio-store, settings-store)
+│   ├── types/             # TypeScript interfaces & types
+│   ├── App.tsx            # Main application entry & Settings dialog
+│   ├── index.css          # Tailwind CSS v4 theme & CSS custom properties
+│   └── main.tsx           # React DOM entry point
+├── .env.example           # Demo API key configuration
+├── vercel.json            # Vercel SPA rewrites
+├── vite.config.ts         # Vite config with React & Tailwind plugins
+├── tsconfig.app.json      # TypeScript config with path alias @/* -> src/*
+├── eslint.config.js       # ESLint flat config
 ├── package.json
 └── README.md
 ```
 
 ---
 
-## 🔖 Versioning
+## 💻 Prerequisites & Installation
 
-The application version is displayed in the header and Settings dialog.
+### Requirements
+- **Node.js**: `>= 20.19`
+- **npm** or preferred package manager
 
-When releasing a new version, update the version in:
+### Setup Steps
 
-### `package.json`
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Metee01/MoneyTrace.git
+   cd MoneyTrace
+   ```
 
-```json
-{
-  "version": "X.Y.Z"
-}
-```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-### `src/lib/version.ts`
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+   Open `http://localhost:5173` in your browser.
 
-```ts
-export const APP_VERSION = "X.Y.Z";
-```
+4. **Build for production:**
+   ```bash
+   npm run build
+   ```
 
-Both values should remain synchronized.
-
-`package-lock.json` will be updated automatically when running `npm install`.
+5. **Run linters and test suites:**
+   ```bash
+   npm run lint
+   npm run test
+   ```
 
 ---
 
-## 🤝 Contributing
+## 🔑 Environment Variables
 
-Contributions, ideas, bug reports, and improvements are welcome.
+To enable the optional built-in Demo API mode for AI features in self-hosted deployments, set your Gemini API key in `.env`:
 
-Before contributing, please read:
-
-```text
-CONTRIBUTING.md
+```bash
+# Optional: Gemini API key for free Demo Mode
+# When provided, a "Use Demo API" option will appear in the app's Settings dialog.
+VITE_DEMO_API_KEY=your_gemini_api_key_here
 ```
-
-Areas where contributions are especially welcome:
-
-* New translations
-* UI/UX improvements
-* Financial calculation improvements
-* New simulation features
-* Accessibility
-* Performance optimizations
-* Bug fixes
 
 ---
 
 ## 📄 License
 
-MoneyTrace is released under the **MIT License**.
-
-See [`LICENSE`](LICENSE) for the complete license text.
-
----
-
-## 🔗 Links
-
-🌐 **Live Demo:**
-https://moneytrace.metee.com.tr
-
-💻 **GitHub:**
-https://github.com/Metee01/MoneyTrace
-
----
-
-<p align="center">
-  Built with ❤️ using React, TypeScript & Vite.
-</p>
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.

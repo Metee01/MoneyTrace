@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { useTheme } from "@/hooks/useTheme"
 import { Button } from "@/components/ui/button"
-import { APP_VERSION } from "@/lib/version"
+import { APP_CONFIG } from "@/config"
 import { Sun, Moon, Laptop, TrendingUp, Settings } from "lucide-react"
 
 interface HeaderProps {
@@ -23,7 +23,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
           <div>
             <span className="font-bold text-xl tracking-tight">MoneyTrace</span>
             <span className="hidden md:inline-block ml-2 text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded-full font-medium">
-              v{APP_VERSION}
+              v{APP_CONFIG.app.version}
             </span>
           </div>
         </div>

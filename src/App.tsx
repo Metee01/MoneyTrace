@@ -9,7 +9,7 @@ import { ScenarioManager } from "@/components/scenarios/ScenarioManager"
 import { useSettingsStore } from "@/store"
 import { SUPPORTED_LANGUAGES } from "@/lib/i18n"
 import { POPULAR_CURRENCIES } from "@/lib/formatters"
-import { APP_VERSION } from "@/lib/version"
+import { APP_CONFIG } from "@/config"
 import { GEMINI_MODEL, OPENAI_MODEL } from "@/lib/ai-service"
 import { getDemoApiKey } from "@/lib/ai-chat-service"
 import { MAX_DEMO_FORECASTS, MAX_DEMO_CHAT_MESSAGES } from "@/store/settings-store"
@@ -439,7 +439,7 @@ function App() {
                   {t("settings.appVersion")}
                 </span>
                 <span className="font-semibold text-foreground">
-                  v{APP_VERSION}
+                  v{APP_CONFIG.app.version}
                 </span>
               </div>
               <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 border">

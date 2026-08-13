@@ -182,16 +182,17 @@ export interface ChatRequest {
   isDemo?: boolean
 }
 
+import { APP_CONFIG } from "../config"
+
 // ─── Anti-abuse Security Constants ──────────────────────────────────────────
 
-const MAX_DEMO_MESSAGE_LENGTH = 500
-const DEMO_COOLDOWN_MS = 3000
+const MAX_DEMO_MESSAGE_LENGTH = APP_CONFIG.ai.demo.maxMessageLength
+const DEMO_COOLDOWN_MS = APP_CONFIG.ai.demo.cooldownMs
 let lastDemoCallTime = 0
 
 // ─── Gemini Chat ─────────────────────────────────────────────────────────────
 
-const GEMINI_API_BASE =
-  "https://generativelanguage.googleapis.com/v1beta/models"
+const GEMINI_API_BASE = APP_CONFIG.ai.endpoints.geminiBase
 
 async function chatWithGemini(
   apiKey: string,

@@ -6,8 +6,10 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import type { Settings } from "../types"
 
-export const MAX_DEMO_FORECASTS = 5
-export const MAX_DEMO_CHAT_MESSAGES = 15
+import { APP_CONFIG } from "../config"
+
+export const MAX_DEMO_FORECASTS = APP_CONFIG.ai.demo.maxForecasts
+export const MAX_DEMO_CHAT_MESSAGES = APP_CONFIG.ai.demo.maxChatMessages
 
 export interface SettingsState extends Settings {
   setTheme: (theme: Settings["theme"]) => void
