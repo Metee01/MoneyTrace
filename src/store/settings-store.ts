@@ -30,6 +30,7 @@ export interface SettingsState extends Settings {
   decrementDemoForecastCount: () => void
   decrementDemoChatCount: () => void
   setDemoLastChatCallTime: (time: number) => void
+  setDemoUserId: (userId: string) => void
   resetSettings: () => void
 }
 
@@ -120,6 +121,7 @@ export const useSettingsStore = create<SettingsState>()(
       },
       setDemoLastChatCallTime: (demoLastChatCallTime) =>
         set({ demoLastChatCallTime }),
+      setDemoUserId: (demoUserId) => set({ demoUserId }),
       resetSettings: () => set({ ...DEFAULT_SETTINGS }),
     }),
     {

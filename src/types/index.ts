@@ -256,4 +256,5 @@ export interface Settings {
   demoForecastCount?: number
   demoChatCount?: number
   demoLastChatCallTime?: number
+  demoUserId?: string
 }

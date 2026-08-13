@@ -13,6 +13,7 @@
 import { calculateProjection } from "../engine"
 import { APP_CONFIG } from "../config"
 import { forecastEconomics } from "./ai-service"
+import { isDemoAvailable } from "./demo-proxy"
 import { usePortfolioStore } from "../store/portfolio-store"
 import { useSettingsStore } from "../store/settings-store"
 import type {
@@ -534,14 +535,6 @@ export async function executeToolCall(
 
 // ─── Default Dependencies (browser wiring) ─────────────────────────────────
 
-function readDemoApiKey(): string {
-  try {
-    return (import.meta.env.VITE_DEMO_API_KEY as string) ?? ""
-  } catch {
-    return ""
-  }
-}
-
 /** Wires the executor to the real Zustand stores + AI forecast service. */
 export function createDefaultToolDeps(): ToolDeps {
   return {
@@ -556,9 +549,8 @@ export function createDefaultToolDeps(): ToolDeps {
     resetParams: () => usePortfolioStore.getState().resetParams(),
     forecastEconomics: async () => {
       const s = useSettingsStore.getState()
-      const demoKey = readDemoApiKey()
-      const isDemo = (s.useDemoApi ?? false) && demoKey.length > 0
-      const key = isDemo ? demoKey : (s.aiApiKey ?? "")
+      const isDemo = (s.useDemoApi ?? false) && isDemoAvailable()
+      const key = isDemo ? "" : (s.aiApiKey ?? "")
       const provider = isDemo
         ? APP_CONFIG.ai.demo.provider
         : (s.aiModelProvider ?? "gemini")

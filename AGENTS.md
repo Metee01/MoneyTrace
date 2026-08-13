@@ -3,9 +3,9 @@
 Guidance for AI coding assistants working on MoneyTrace.
 
 ## Project Identity
-- Client-only Vite + React 19 + TypeScript app for inflation-adjusted portfolio projection and AI-assisted financial Q&A.
+- Vite + React 19 + TypeScript app for inflation-adjusted portfolio projection and AI-assisted financial Q&A.
 - All state persisted in browser localStorage via Zustand `persist`.
-- No backend server, no CI pipeline, no external test runner framework.
+- No CI pipeline, no external test runner framework. The only backend piece is the Vercel serverless demo proxy (`api/demo.ts`).
 
 ## Commands
 - Dev server: `npm run dev` (Vite, default port 5173)
@@ -28,7 +28,8 @@ Guidance for AI coding assistants working on MoneyTrace.
   - Keep stores importable without DOM for node test runner.
 - `src/lib/`:
   - `ai-service.ts`: Macroeconomic forecasting (inflation, returns, currency rates).
-  - `ai-chat-service.ts`: Conversational portfolio Q&A, quota enforcement, rate limiting.
+  - `ai-chat-service.ts`: Conversational portfolio Q&A, client-side quota pre-checks, rate limiting.
+  - `demo-proxy.ts`: Client side of the Demo API. Routes demo requests through the serverless proxy (so the shared demo key never ships in the bundle), generates the persisted `demoUserId`, maps proxy errors. Availability is controlled by `VITE_DEMO_PROXY_URL` — if unset, demo option is hidden in UI.
   - `formatters.ts`: Currency and number formatting.
   - `export.ts`: CSV/JSON export and import.
   - `i18n.ts`: i18next setup with static locale imports.
@@ -54,5 +55,5 @@ Guidance for AI coding assistants working on MoneyTrace.
 - Local `dist/` folder is gitignored. Do not commit build artifacts.
 - Header comments in some files are in Turkish (e.g., `src/store/index.ts`). Match existing comment language in target file.
 - AI settings are configured via Settings dialog (`App.tsx`) and stored in `useSettingsStore`.
-- Demo API enforces rate limits (3s cooldown, max 500 chars prompt) and usage caps (5 forecasts, 15 chat messages) defined in `APP_CONFIG.ai.demo`.
-- Demo API availability is controlled by `VITE_DEMO_API_KEY`. If unset, demo option is hidden in UI.
+- Demo API produces server-side enforcement via `api/demo.ts` (Vercel edge function): owns `DEMO_API_KEY` env var, per-user quotas + per-IP daily caps (Upstash Redis if configured, in-memory fallback), chat cooldown. Client-side counters in `settings-store.ts` are display/UX only.
+- Demo API availability is controlled by `VITE_DEMO_PROXY_URL`. If unset, demo option is hidden in UI.

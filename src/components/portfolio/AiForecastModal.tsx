@@ -16,7 +16,7 @@ import {
   MAX_DEMO_FORECASTS,
 } from "../../store"
 import { APP_CONFIG } from "../../config"
-import { getDemoApiKey } from "../../lib/ai-chat-service"
+import { isDemoAvailable } from "../../lib/demo-proxy"
 import {
   forecastEconomics,
   AiForecastError,
@@ -67,15 +67,14 @@ export const AiForecastModal: React.FC<AiForecastModalProps> = ({
   const [result, setResult] = useState<AiForecastResult | null>(null)
   const [errorCode, setErrorCode] = useState<AiForecastErrorCode | null>(null)
 
-  const demoApiKey = getDemoApiKey()
-  const hasDemoKey = demoApiKey.length > 0
+  const hasDemoKey = isDemoAvailable()
   const isUsingDemo = (useDemoApi ?? false) && hasDemoKey
   const isQuotaExceeded = isUsingDemo && demoForecastCount >= MAX_DEMO_FORECASTS
 
   const provider: AiModelProvider = isUsingDemo
     ? (APP_CONFIG.ai.demo.provider as AiModelProvider)
     : (aiModelProvider ?? "gemini")
-  const apiKey = isUsingDemo ? demoApiKey : (aiApiKey ?? "")
+  const apiKey = isUsingDemo ? "" : (aiApiKey ?? "")
   const model = isUsingDemo ? APP_CONFIG.ai.models.demo : (aiModel ?? "")
   const baseUrl = isUsingDemo
     ? (APP_CONFIG.ai.demo.baseUrl ?? "")

@@ -33,11 +33,11 @@ import { calculateProjection } from "../../engine"
 import { APP_CONFIG } from "../../config"
 import {
   sendChatMessage,
-  getDemoApiKey,
   type PortfolioContext,
   type ChatServiceResponse,
 } from "../../lib/ai-chat-service"
 import { AiForecastError } from "../../lib/ai-service"
+import { isDemoAvailable } from "../../lib/demo-proxy"
 import {
   TOOL_SCHEMAS,
   createDefaultToolDeps,
@@ -257,13 +257,12 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
 
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession])
 
-  const demoApiKey = useMemo(() => getDemoApiKey(), [])
-  const hasDemoKey = demoApiKey.length > 0
+  const hasDemoKey = useMemo(() => isDemoAvailable(), [])
   const isUsingDemo = (useDemoApi || localDemoOverride) && hasDemoKey
   const isQuotaExceeded = isUsingDemo && demoChatCount >= MAX_DEMO_CHAT_MESSAGES
 
   // Determine active API key and provider configuration
-  const activeApiKey = isUsingDemo ? demoApiKey : (aiApiKey ?? "")
+  const activeApiKey = isUsingDemo ? "" : (aiApiKey ?? "")
   const activeProvider: AiModelProvider = isUsingDemo
     ? (APP_CONFIG.ai.demo.provider as AiModelProvider)
     : (aiModelProvider ?? "gemini")
@@ -271,7 +270,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   const activeBaseUrl = isUsingDemo
     ? (APP_CONFIG.ai.demo.baseUrl ?? "")
     : (aiBaseUrl ?? "")
-  const hasActiveKey = activeApiKey.trim().length > 0
+  const hasActiveKey = isUsingDemo || activeApiKey.trim().length > 0
 
   // Calculate projection for context
   const projectionResult = useMemo(() => {

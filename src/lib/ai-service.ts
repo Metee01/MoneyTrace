@@ -9,6 +9,7 @@
 
 import { APP_CONFIG } from "../config"
 import type { AiForecastResult, AiModelProvider } from "../types"
+import { callDemoProxy } from "./demo-proxy"
 
 /** Default model names (update in src/config/index.ts) */
 export const GEMINI_MODEL = APP_CONFIG.ai.models.gemini
@@ -358,7 +359,31 @@ export async function forecastEconomics(
   let result: AiForecastResult
 
   try {
-    if (request.provider === "custom") {
+    if (request.isDemo) {
+      const model = APP_CONFIG.ai.models.demo
+      const data = await callDemoProxy("forecast", {
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: "Generate the forecast." },
+        ],
+        temperature: 0.7,
+        response_format: { type: "json_object" },
+      })
+      const choices = (
+        data as {
+          choices?: Array<{ message?: { content?: string } }>
+        }
+      ).choices
+      const content = choices?.[0]?.message?.content
+      if (typeof content !== "string") {
+        throw new AiForecastError(
+          "parse",
+          "Demo API response has no text content.",
+        )
+      }
+      result = parseForecast(extractJsonObject(content))
+    } else if (request.provider === "custom") {
       const baseUrl = (request.baseUrl ?? "").trim()
       const model =
         (request.model ?? "").trim() ||

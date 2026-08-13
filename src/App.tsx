@@ -11,7 +11,7 @@ import { SUPPORTED_LANGUAGES } from "@/lib/i18n"
 import { POPULAR_CURRENCIES } from "@/lib/formatters"
 import { APP_CONFIG } from "@/config"
 import { GEMINI_MODEL, OPENAI_MODEL } from "@/lib/ai-service"
-import { getDemoApiKey } from "@/lib/ai-chat-service"
+import { isDemoAvailable } from "@/lib/demo-proxy"
 import {
   MAX_DEMO_FORECASTS,
   MAX_DEMO_CHAT_MESSAGES,
@@ -75,8 +75,7 @@ function App() {
   } = useSettingsStore()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
-  const demoApiKey = getDemoApiKey()
-  const hasDemoKey = demoApiKey.length > 0
+  const hasDemoKey = isDemoAvailable()
 
   // Local state for AI settings (synced on dialog open)
   const [localUseDemoApi, setLocalUseDemoApi] = useState(useDemoApi ?? false)

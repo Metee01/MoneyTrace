@@ -16,6 +16,7 @@ import type {
 } from "../types"
 import { GEMINI_MODEL, OPENAI_MODEL, AiForecastError } from "./ai-service"
 import { TOOL_SCHEMAS, parseToolCalls } from "./ai-tools"
+import { callDemoProxy } from "./demo-proxy"
 
 // ─── Helpers shared with ai-service ──────────────────────────────────────────
 
@@ -461,7 +462,36 @@ export async function sendChatMessage(
   let responseText: string
 
   try {
-    if (request.provider === "custom") {
+    if (request.isDemo) {
+      const data = await callDemoProxy("chat", {
+        model: APP_CONFIG.ai.models.demo,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...sanitizeMessages
+            .filter((m) => m.role !== "system")
+            .map((m) => ({
+              role: m.role as "user" | "assistant",
+              content: m.content,
+            })),
+        ],
+        temperature: 0.8,
+        max_tokens: APP_CONFIG.ai.maxTokens,
+      })
+      const choices = (
+        data as {
+          choices?: Array<{ message?: { content?: string } }>
+        }
+      ).choices
+      const rawContent = choices?.[0]?.message?.content ?? ""
+      const cleanedContent = cleanReasoningTokens(rawContent)
+      if (!cleanedContent) {
+        throw new AiForecastError(
+          "parse",
+          "Demo API response has no text content.",
+        )
+      }
+      responseText = cleanedContent
+    } else if (request.provider === "custom") {
       const baseUrl = (request.baseUrl ?? "").trim()
       const model =
         (request.model ?? "").trim() ||
@@ -520,16 +550,4 @@ export async function sendChatMessage(
   }
 
   return { text: responseText, toolCalls: parseToolCalls(responseText) }
-}
-
-/**
- * Returns the demo API key from the Vite environment, or an empty string
- * if no demo key is configured.
- */
-export function getDemoApiKey(): string {
-  try {
-    return (import.meta.env.VITE_DEMO_API_KEY as string) ?? ""
-  } catch {
-    return ""
-  }
 }

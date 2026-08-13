@@ -354,6 +354,13 @@ async function runStoreTests() {
     "setDemoLastChatCallTime failed",
   )
 
+  // Demo user ID persists via store
+  useSettingsStore.getState().setDemoUserId("u_test123")
+  console.assert(
+    useSettingsStore.getState().demoUserId === "u_test123",
+    "setDemoUserId failed",
+  )
+
   console.log("\n✅ ALL STORE & PERSISTENCE TESTS PASSED SUCCESSFULLY!")
 }
 
