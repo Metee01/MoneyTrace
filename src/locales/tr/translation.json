@@ -62,7 +62,9 @@
     "portfolioName": "Portföy Adı",
     "portfolioNamePlaceholder": "Örn: 10 Yıllık Birikim Planı",
     "portfolioDesc": "Açıklama (Opsiyonel)",
-    "savedSuccess": "Portföy başarıyla kaydedildi!"
+    "savedSuccess": "Portföy başarıyla kaydedildi!",
+    "withholdingTaxRate": "Stopaj Oranı (%)",
+    "withholdingTaxRateHelp": "Yatırım getirisi üzerinden kesilen aylık vergi oranı (örn. mevduat için %15, fon için %10)."
   },
   "validation": {
     "positiveNumber": "Lütfen 0 veya daha büyük bir sayı girin.",
@@ -87,7 +89,10 @@
     "safeWithdrawalCol": "Çekilebilir Kar (Enflasyon Korumalı)",
     "withdrawalCol": "Nakit Çekim",
     "usdRateCol": "Döviz Kuru",
-    "totalRows": "Toplam {{count}} dönem listeleniyor"
+    "totalRows": "Toplam {{count}} dönem listeleniyor",
+    "withholdingTaxCol": "Stopaj Kesintisi",
+    "nominalProfitChangeCol": "Nominal Kar Δ",
+    "realProfitChangeCol": "Reel Kar Δ"
   },
   "projection": {
     "summaryTitle": "Projeksiyon Özeti",

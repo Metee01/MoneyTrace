@@ -159,10 +159,19 @@ export const ProjectionTable: React.FC = () => {
                   {t("table.nominalProfitCol")}
                 </th>
                 <th className="py-2.5 px-3 text-right">
+                  {t("table.nominalProfitChangeCol")}
+                </th>
+                <th className="py-2.5 px-3 text-right">
                   {t("table.realValueCol")}
                 </th>
                 <th className="py-2.5 px-3 text-right">
                   {t("table.realProfitCol")}
+                </th>
+                <th className="py-2.5 px-3 text-right">
+                  {t("table.realProfitChangeCol")}
+                </th>
+                <th className="py-2.5 px-3 text-right">
+                  {t("table.withholdingTaxCol")}
                 </th>
                 <th className="py-2.5 px-3 text-right">
                   {t("table.safeWithdrawalCol")}
@@ -232,6 +241,26 @@ export const ProjectionTable: React.FC = () => {
                           )}
                         </div>
                       </td>
+                      <td
+                        className={`py-2 px-3 text-right font-medium ${
+                          row.nominalProfitChange >= 0
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-rose-600 dark:text-rose-400"
+                        }`}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          {row.nominalProfitChange >= 0 ? (
+                            <TrendingUp className="w-3 h-3 text-blue-500" />
+                          ) : (
+                            <TrendingDown className="w-3 h-3 text-rose-500" />
+                          )}
+                          {formatLocalCurrency(
+                            row.nominalProfitChange,
+                            currencyCode,
+                            locale,
+                          )}
+                        </div>
+                      </td>
                       <td className="py-2 px-3 text-right font-medium text-emerald-600 dark:text-emerald-400">
                         {formatLocalCurrency(
                           row.realValue,
@@ -259,6 +288,33 @@ export const ProjectionTable: React.FC = () => {
                           )}
                         </div>
                       </td>
+                      <td
+                        className={`py-2 px-3 text-right font-medium ${
+                          row.realProfitChange >= 0
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-rose-600 dark:text-rose-400"
+                        }`}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          {row.realProfitChange >= 0 ? (
+                            <TrendingUp className="w-3 h-3 text-emerald-500" />
+                          ) : (
+                            <TrendingDown className="w-3 h-3 text-rose-500" />
+                          )}
+                          {formatLocalCurrency(
+                            row.realProfitChange,
+                            currencyCode,
+                            locale,
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 text-right text-orange-600 dark:text-orange-400">
+                        {formatLocalCurrency(
+                          row.withholdingTax,
+                          currencyCode,
+                          locale,
+                        )}
+                      </td>
                       <td className="py-2 px-3 text-right font-medium text-cyan-600 dark:text-cyan-400">
                         {formatLocalCurrency(
                           row.safeWithdrawal,
@@ -278,7 +334,7 @@ export const ProjectionTable: React.FC = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={13}
                     className="py-6 text-center text-muted-foreground font-sans"
                   >
                     No matching records found.

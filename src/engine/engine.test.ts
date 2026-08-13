@@ -246,6 +246,43 @@ function runTests() {
     "Total withdrawals mismatch",
   )
 
+  // Test 10: Withholding Tax Deduction & Profit Tracking
+  console.log("\n--- Test 10: Tax Deduction & Profit Tracking ---")
+  const taxParams: ProjectionParams = {
+    initialCapital: 10000,
+    monthlyDca: 0,
+    dcaIncreaseRate: 0,
+    expectedReturnRate: 10, // 10% annual return
+    expectedInflationRate: 0,
+    usdRate: 1,
+    expectedUsdGrowthRate: 0,
+    targetYears: 1,
+    withholdingTaxRate: 10, // 10% withholding tax on returns
+  }
+  const taxResult = calculateProjection(taxParams)
+  console.log(
+    `Total Withholding Tax Paid: ${taxResult.summary.totalWithholdingTax} TL`,
+  )
+  console.assert(
+    taxResult.summary.totalWithholdingTax > 0,
+    "Withholding tax should be > 0",
+  )
+
+  const row1 = taxResult.rows[0]
+  console.log(`Month 1 Nominal Profit Change: ${row1.nominalProfitChange} TL`)
+  console.assert(
+    row1.nominalProfitChange === row1.nominalProfit,
+    "Month 1 profit change should equal nominal profit",
+  )
+
+  const row2 = taxResult.rows[1]
+  console.assert(
+    Math.abs(
+      row2.nominalProfit - (row1.nominalProfit + row2.nominalProfitChange),
+    ) < 0.05,
+    "Month 2 nominal profit should equal month 1 profit plus month 2 profit change",
+  )
+
   console.log("\n✅ ALL ENGINE TESTS PASSED SUCCESSFULLY!")
 }
 

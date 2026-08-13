@@ -54,6 +54,11 @@ export function calculateProjection(
   let totalRealSafeWithdrawal = 0
   let totalWithdrawals = 0
   let totalRealWithdrawals = 0
+  let totalWithholdingTax = 0
+  let prevNominalProfit = 0
+  let prevRealProfit = 0
+
+  const withholdingTaxRate = Math.max(0, params.withholdingTaxRate || 0) / 100
 
   const plannedWithdrawal = Math.max(0, params.monthlyWithdrawal || 0)
 
@@ -104,6 +109,13 @@ export function calculateProjection(
       monthlyReturnRate,
     )
 
+    // Withholding tax: applied on positive monthly gross return only
+    const grossReturn = currentNominalValue - capitalBase
+    const withholdingTax =
+      grossReturn > 0 ? grossReturn * withholdingTaxRate : 0
+    currentNominalValue -= withholdingTax
+    totalWithholdingTax += withholdingTax
+
     // Monthly cash withdrawal step
     const actualWithdrawal = Math.min(currentNominalValue, plannedWithdrawal)
     currentNominalValue -= actualWithdrawal
@@ -127,6 +139,12 @@ export function calculateProjection(
     const nominalProfit = currentNominalValue - totalInvested
     const realProfit = realValue - realTotalInvested
 
+    // Month-over-month profit change
+    const nominalProfitChange = nominalProfit - prevNominalProfit
+    const realProfitChange = realProfit - prevRealProfit
+    prevNominalProfit = nominalProfit
+    prevRealProfit = realProfit
+
     rows.push({
       month,
       yearIndex,
@@ -144,6 +162,9 @@ export function calculateProjection(
       safeWithdrawal: Math.round(safeWithdrawal * 100) / 100,
       realSafeWithdrawal: Math.round(realSafeWithdrawal * 100) / 100,
       withdrawal: Math.round(actualWithdrawal * 100) / 100,
+      withholdingTax: Math.round(withholdingTax * 100) / 100,
+      nominalProfitChange: Math.round(nominalProfitChange * 100) / 100,
+      realProfitChange: Math.round(realProfitChange * 100) / 100,
     })
   }
 
@@ -187,6 +208,7 @@ export function calculateProjection(
     totalRealSafeWithdrawal: Math.round(totalRealSafeWithdrawal * 100) / 100,
     totalWithdrawals: Math.round(totalWithdrawals * 100) / 100,
     totalRealWithdrawals: Math.round(totalRealWithdrawals * 100) / 100,
+    totalWithholdingTax: Math.round(totalWithholdingTax * 100) / 100,
   }
 
   return {
