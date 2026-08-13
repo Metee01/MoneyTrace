@@ -147,7 +147,14 @@
     "themeSelect": "Theme Preference",
     "saved": "Settings saved successfully.",
     "appVersion": "Version",
-    "defaultCurrency": "Local Currency"
+    "defaultCurrency": "Local Currency",
+    "aiSettings": "AI Settings",
+    "aiSettingsDesc": "Configure your AI provider and API key for forecasts and chat.",
+    "useDemoApi": "Use Demo API",
+    "useDemoApiDesc": "Use the free demo API key to test the system.",
+    "demoUsageQuota": "Demo Usage Quotas",
+    "demoForecastQuota": "AI Forecast Quota: {{used}}/{{max}}",
+    "demoChatQuota": "AI Chat Message Quota: {{used}}/{{max}}"
   },
   "ai": {
     "modalTitle": "AI Economic Forecast",
@@ -186,5 +193,20 @@
     "errorConfig": "Missing required fields. Check the base URL and model.",
     "errorCors": "This provider blocks direct browser access. Enable a CORS proxy (e.g. for OpenCode Zen) in the custom provider section.",
     "errorUnknown": "Something went wrong while calling the AI provider. Please try again."
+  },
+  "chat": {
+    "title": "MoneyTrace AI Assistant",
+    "subtitle": "Ask questions about your portfolio",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "thinking": "Thinking...",
+    "welcome": "Hello! 👋 I'm your MoneyTrace AI financial assistant. I can see your current portfolio data and projections. Ask me anything about your investments!",
+    "noApiKey": "Please configure your AI API key in Settings to start chatting.",
+    "useDemoApi": "Use Demo API",
+    "usingDemoApi": "Using demo API key",
+    "demoApiNote": "Try the AI assistant with our demo API key",
+    "errorSending": "Failed to send message. Please try again.",
+    "clearChat": "Clear Chat",
+    "configureInSettings": "Configure in Settings"
   }
 }

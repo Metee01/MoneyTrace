@@ -6,6 +6,9 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import type { Settings } from "../types"
 
+export const MAX_DEMO_FORECASTS = 5
+export const MAX_DEMO_CHAT_MESSAGES = 15
+
 export interface SettingsState extends Settings {
   setTheme: (theme: Settings["theme"]) => void
   setLanguage: (language: string) => void
@@ -17,7 +20,11 @@ export interface SettingsState extends Settings {
     baseUrl?: string
     corsProxy?: string
     corsProxyEnabled?: boolean
+    useDemoApi?: boolean
   }) => void
+  setUseDemoApi: (enabled: boolean) => void
+  incrementDemoForecastCount: () => boolean
+  incrementDemoChatCount: () => boolean
   resetSettings: () => void
 }
 
@@ -32,6 +39,9 @@ const DEFAULT_SETTINGS: Settings = {
   aiBaseUrl: "",
   aiCorsProxy: "",
   aiCorsProxyEnabled: false,
+  useDemoApi: false,
+  demoForecastCount: 0,
+  demoChatCount: 0,
 }
 
 const getLocalStorage = () => ({
@@ -53,7 +63,7 @@ const getLocalStorage = () => ({
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...DEFAULT_SETTINGS,
 
       setTheme: (theme) => set({ theme }),
@@ -67,6 +77,7 @@ export const useSettingsStore = create<SettingsState>()(
         baseUrl,
         corsProxy,
         corsProxyEnabled,
+        useDemoApi,
       }) =>
         set((state) => ({
           aiModelProvider: provider ?? state.aiModelProvider,
@@ -78,7 +89,22 @@ export const useSettingsStore = create<SettingsState>()(
             corsProxyEnabled !== undefined
               ? corsProxyEnabled
               : state.aiCorsProxyEnabled,
+          useDemoApi:
+            useDemoApi !== undefined ? useDemoApi : state.useDemoApi,
         })),
+      setUseDemoApi: (useDemoApi) => set({ useDemoApi }),
+      incrementDemoForecastCount: () => {
+        const current = get().demoForecastCount ?? 0
+        if (current >= MAX_DEMO_FORECASTS) return false
+        set({ demoForecastCount: current + 1 })
+        return true
+      },
+      incrementDemoChatCount: () => {
+        const current = get().demoChatCount ?? 0
+        if (current >= MAX_DEMO_CHAT_MESSAGES) return false
+        set({ demoChatCount: current + 1 })
+        return true
+      },
       resetSettings: () => set({ ...DEFAULT_SETTINGS }),
     }),
     {

@@ -17,6 +17,8 @@ const GEMINI_API_BASE =
   "https://generativelanguage.googleapis.com/v1beta/models"
 const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 
+import { useSettingsStore, MAX_DEMO_FORECASTS } from "../store/settings-store"
+
 export interface ForecastRequest {
   provider: AiModelProvider
   apiKey: string
@@ -29,6 +31,8 @@ export interface ForecastRequest {
   currencyCode: string
   targetYears: number
   language?: string
+  /** Whether the request is using the Demo API key */
+  isDemo?: boolean
 }
 
 export type AiForecastErrorCode =
@@ -326,11 +330,23 @@ async function callOpenAiCompatible(
 export async function forecastEconomics(
   request: ForecastRequest,
 ): Promise<AiForecastResult> {
+  if (request.isDemo) {
+    const currentCount = useSettingsStore.getState().demoForecastCount ?? 0
+    if (currentCount >= MAX_DEMO_FORECASTS) {
+      throw new AiForecastError(
+        "quota",
+        `Demo API forecast limit reached (${MAX_DEMO_FORECASTS}/${MAX_DEMO_FORECASTS}).`,
+      )
+    }
+  }
+
   const systemPrompt = buildSystemPrompt(
     request.currencyCode,
     request.targetYears,
     request.language === "tr" ? "Turkish" : "English",
   )
+
+  let result: AiForecastResult
 
   if (request.provider === "custom") {
     const baseUrl = (request.baseUrl ?? "").trim()
@@ -348,30 +364,32 @@ export async function forecastEconomics(
       normalizeChatCompletionsUrl(baseUrl),
       request.corsProxy ?? "",
     )
-    return callOpenAiCompatible(
+    result = await callOpenAiCompatible(
       endpoint,
       request.apiKey,
       model,
       systemPrompt,
       "custom provider",
     )
-  }
-
-  if (!request.apiKey.trim()) {
+  } else if (!request.apiKey.trim()) {
     throw new AiForecastError("auth", "No API key provided.")
-  }
-
-  if (request.provider === "gemini") {
+  } else if (request.provider === "gemini") {
     const model = (request.model ?? "").trim() || GEMINI_MODEL
-    return callGemini(request.apiKey.trim(), model, systemPrompt)
+    result = await callGemini(request.apiKey.trim(), model, systemPrompt)
+  } else {
+    const model = (request.model ?? "").trim() || OPENAI_MODEL
+    result = await callOpenAiCompatible(
+      OPENAI_ENDPOINT,
+      request.apiKey,
+      model,
+      systemPrompt,
+      "OpenAI API",
+    )
   }
 
-  const model = (request.model ?? "").trim() || OPENAI_MODEL
-  return callOpenAiCompatible(
-    OPENAI_ENDPOINT,
-    request.apiKey,
-    model,
-    systemPrompt,
-    "OpenAI API",
-  )
+  if (request.isDemo) {
+    useSettingsStore.getState().incrementDemoForecastCount()
+  }
+
+  return result
 }

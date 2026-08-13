@@ -284,6 +284,44 @@ async function runStoreTests() {
     "Reset settings should disable CORS proxy toggle",
   )
 
+  // Test 7: Demo API Quotas & Toggle
+  console.log("\n--- Test 7: Demo API Quotas & Toggle ---")
+  useSettingsStore.getState().setUseDemoApi(true)
+  console.assert(
+    useSettingsStore.getState().useDemoApi === true,
+    "setUseDemoApi failed",
+  )
+
+  // Increment forecast count 5 times
+  for (let i = 0; i < 5; i++) {
+    const success = useSettingsStore.getState().incrementDemoForecastCount()
+    console.assert(success === true, `Forecast increment ${i + 1} failed`)
+  }
+  console.assert(
+    useSettingsStore.getState().demoForecastCount === 5,
+    "demoForecastCount should be 5",
+  )
+  const failedForecastIncrement = useSettingsStore.getState().incrementDemoForecastCount()
+  console.assert(
+    failedForecastIncrement === false,
+    "incrementDemoForecastCount should fail when limit is reached",
+  )
+
+  // Increment chat count 15 times
+  for (let i = 0; i < 15; i++) {
+    const success = useSettingsStore.getState().incrementDemoChatCount()
+    console.assert(success === true, `Chat increment ${i + 1} failed`)
+  }
+  console.assert(
+    useSettingsStore.getState().demoChatCount === 15,
+    "demoChatCount should be 15",
+  )
+  const failedChatIncrement = useSettingsStore.getState().incrementDemoChatCount()
+  console.assert(
+    failedChatIncrement === false,
+    "incrementDemoChatCount should fail when limit is reached",
+  )
+
   console.log("\n✅ ALL STORE & PERSISTENCE TESTS PASSED SUCCESSFULLY!")
 }
 

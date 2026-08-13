@@ -178,6 +178,20 @@ export interface AiForecastResult {
 }
 
 /**
+ * AI Chat Message
+ */
+export interface ChatMessage {
+  /** Unique message identifier */
+  id: string
+  /** Message sender role */
+  role: "user" | "assistant" | "system"
+  /** Message text content */
+  content: string
+  /** Unix timestamp (ms) */
+  timestamp: number
+}
+
+/**
  * Application Global Settings
  */
 export interface Settings {
@@ -191,4 +205,7 @@ export interface Settings {
   aiBaseUrl?: string
   aiCorsProxy?: string
   aiCorsProxyEnabled?: boolean
+  useDemoApi?: boolean
+  demoForecastCount?: number
+  demoChatCount?: number
 }

@@ -2,11 +2,10 @@ import React, { useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   Sparkles,
-  KeyRound,
   Loader2,
-  ExternalLink,
   RefreshCw,
   Bot,
+  Settings,
 } from "lucide-react"
 import {
   Dialog,
@@ -17,24 +16,21 @@ import {
   DialogFooter,
 } from "../ui/dialog"
 import { Button } from "../ui/button"
-import { Input } from "../ui/input"
-import { Label } from "../ui/label"
-import { Switch } from "../ui/switch"
-import { usePortfolioStore, useSettingsStore } from "../../store"
+import { usePortfolioStore, useSettingsStore, MAX_DEMO_FORECASTS } from "../../store"
+import { getDemoApiKey } from "../../lib/ai-chat-service"
 import {
   forecastEconomics,
   AiForecastError,
-  GEMINI_MODEL,
-  OPENAI_MODEL,
   type AiForecastErrorCode,
 } from "../../lib/ai-service"
 import { formatPercent, formatNumber } from "../../lib/formatters"
 import { annualPercentToMonthlyPercent } from "../../engine"
-import type { AiForecastResult, AiModelProvider } from "../../types"
+import type { AiForecastResult } from "../../types"
 
 interface AiForecastModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onOpenSettings?: () => void
 }
 
 const ERROR_CODE_KEYS: Record<AiForecastErrorCode, string> = {
@@ -52,40 +48,42 @@ const round2 = (value: number) => Math.round(value * 100) / 100
 export const AiForecastModal: React.FC<AiForecastModalProps> = ({
   open,
   onOpenChange,
+  onOpenSettings,
 }) => {
   const { t, i18n } = useTranslation()
   const {
-    aiApiKey: storedKey,
-    aiModelProvider: storedProvider,
-    aiModel: storedModel,
-    aiBaseUrl: storedBaseUrl,
-    aiCorsProxy: storedCorsProxy,
-    aiCorsProxyEnabled: storedCorsProxyEnabled,
-    setAiSettings,
+    aiApiKey,
+    aiModelProvider,
+    aiModel,
+    aiBaseUrl,
+    aiCorsProxy,
+    aiCorsProxyEnabled,
+    useDemoApi,
+    demoForecastCount = 0,
     currencyCode,
   } = useSettingsStore()
   const { currentParams, setParams } = usePortfolioStore()
 
-  // Remounted via key by the parent on every open, so state initializers
-  // always pick up the latest stored settings.
-  const [provider, setProvider] = useState<AiModelProvider>(
-    storedProvider ?? "gemini",
-  )
-  const [apiKey, setApiKey] = useState(storedKey ?? "")
-  const [model, setModel] = useState(storedModel ?? "")
-  const [baseUrl, setBaseUrl] = useState(storedBaseUrl ?? "")
-  const [corsProxy, setCorsProxy] = useState(storedCorsProxy ?? "")
-  const [corsProxyEnabled, setCorsProxyEnabled] = useState(
-    storedCorsProxyEnabled ?? false,
-  )
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<AiForecastResult | null>(null)
   const [errorCode, setErrorCode] = useState<AiForecastErrorCode | null>(null)
 
+  const demoApiKey = getDemoApiKey()
+  const hasDemoKey = demoApiKey.length > 0
+  const isUsingDemo = (useDemoApi ?? false) && hasDemoKey
+  const isQuotaExceeded = isUsingDemo && demoForecastCount >= MAX_DEMO_FORECASTS
+
+  const provider = isUsingDemo ? "gemini" : (aiModelProvider ?? "gemini")
+  const apiKey = isUsingDemo ? demoApiKey : (aiApiKey ?? "")
+  const model = isUsingDemo ? "" : (aiModel ?? "")
+  const baseUrl = aiBaseUrl ?? ""
+  const corsProxy = aiCorsProxy ?? ""
+  const corsProxyEnabled = aiCorsProxyEnabled ?? false
   const isCustom = provider === "custom"
+  const hasApiKey = (apiKey.trim().length > 0 || isCustom) && !isQuotaExceeded
 
   const handlePredict = async () => {
-    if (isLoading) return
+    if (isLoading || isQuotaExceeded) return
 
     if (isCustom) {
       if (!baseUrl.trim() || !model.trim()) {
@@ -97,14 +95,6 @@ export const AiForecastModal: React.FC<AiForecastModalProps> = ({
       return
     }
 
-    setAiSettings({
-      provider,
-      apiKey: apiKey.trim(),
-      model: model.trim(),
-      baseUrl: baseUrl.trim(),
-      corsProxy: corsProxyEnabled ? corsProxy.trim() : "",
-      corsProxyEnabled,
-    })
     setErrorCode(null)
     setResult(null)
     setIsLoading(true)
@@ -118,6 +108,7 @@ export const AiForecastModal: React.FC<AiForecastModalProps> = ({
         currencyCode,
         targetYears: Math.max(1, currentParams.targetYears || 1),
         language: i18n.language,
+        isDemo: isUsingDemo,
       })
       setResult(forecast)
     } catch (err) {
@@ -146,18 +137,6 @@ export const AiForecastModal: React.FC<AiForecastModalProps> = ({
     onOpenChange(false)
   }
 
-  const providerLink = !isCustom
-    ? provider === "gemini"
-      ? "https://aistudio.google.com/apikey"
-      : "https://platform.openai.com/api-keys"
-    : null
-
-  const modelPlaceholder = isCustom
-    ? t("ai.modelPlaceholderCustom")
-    : provider === "gemini"
-      ? GEMINI_MODEL
-      : OPENAI_MODEL
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
@@ -170,132 +149,26 @@ export const AiForecastModal: React.FC<AiForecastModalProps> = ({
         </DialogHeader>
 
         <div className="py-2 space-y-4 text-sm">
-          {/* Provider Selection */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="aiProvider"
-              className="text-xs font-semibold text-muted-foreground"
-            >
-              {t("ai.provider")}
-            </Label>
-            <select
-              id="aiProvider"
-              value={provider}
-              onChange={(e) => setProvider(e.target.value as AiModelProvider)}
-              className="w-full bg-muted border border-border rounded-lg p-2 text-xs font-medium text-foreground focus:outline-none"
-            >
-              <option value="gemini">Google Gemini</option>
-              <option value="openai">OpenAI</option>
-              <option value="custom">{t("ai.custom")}</option>
-            </select>
-          </div>
-
-          {/* Custom Provider Base URL */}
-          {isCustom && (
-            <div className="space-y-2">
-              <Label
-                htmlFor="aiBaseUrl"
-                className="text-xs font-semibold text-muted-foreground"
-              >
-                {t("ai.baseUrl")}
-              </Label>
-              <Input
-                id="aiBaseUrl"
-                type="url"
-                value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
-                placeholder={t("ai.baseUrlPlaceholder")}
-                autoComplete="off"
-              />
-              <p className="text-[10px] text-muted-foreground/70">
-                {t("ai.baseUrlHint")}
-              </p>
-            </div>
-          )}
-
-          {/* Custom Provider CORS Proxy */}
-          {isCustom && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="aiCorsProxyToggle"
-                  className="text-xs font-semibold text-muted-foreground cursor-pointer"
+          {/* No API Key Warning */}
+          {!hasApiKey && (
+            <div className="p-3 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs rounded-lg border border-amber-500/20 space-y-2">
+              <p>{t("chat.noApiKey")}</p>
+              {onOpenSettings && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    onOpenChange(false)
+                    onOpenSettings()
+                  }}
+                  className="text-xs gap-1.5"
                 >
-                  {t("ai.corsProxyToggle")}
-                </Label>
-                <Switch
-                  id="aiCorsProxyToggle"
-                  checked={corsProxyEnabled}
-                  onCheckedChange={(checked) => setCorsProxyEnabled(checked)}
-                />
-              </div>
-              {corsProxyEnabled && (
-                <div className="space-y-2">
-                  <Input
-                    id="aiCorsProxy"
-                    type="url"
-                    value={corsProxy}
-                    onChange={(e) => setCorsProxy(e.target.value)}
-                    placeholder={t("ai.corsProxyPlaceholder")}
-                    autoComplete="off"
-                  />
-                  <p className="text-[10px] text-muted-foreground/70">
-                    {t("ai.corsProxyHint")}
-                  </p>
-                </div>
+                  <Settings className="w-3 h-3" />
+                  {t("chat.configureInSettings")}
+                </Button>
               )}
             </div>
           )}
-
-          {/* Model Selection */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="aiModel"
-              className="text-xs font-semibold text-muted-foreground"
-            >
-              {t("ai.model")}
-            </Label>
-            <Input
-              id="aiModel"
-              type="text"
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder={modelPlaceholder}
-              autoComplete="off"
-            />
-          </div>
-
-          {/* API Key Input */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="aiApiKey"
-              className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"
-            >
-              <KeyRound className="w-3.5 h-3.5" />
-              {isCustom ? t("ai.apiKeyOptional") : t("ai.apiKey")}
-            </Label>
-            <Input
-              id="aiApiKey"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={t("ai.apiKeyPlaceholder")}
-              autoComplete="off"
-            />
-            {providerLink && (
-              <a
-                href={providerLink}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-              >
-                <ExternalLink className="w-3 h-3" />
-                {provider === "gemini"
-                  ? t("ai.getGeminiKey")
-                  : t("ai.getOpenaiKey")}
-              </a>
-            )}
-          </div>
 
           {/* Error Message */}
           {errorCode && (
@@ -310,7 +183,7 @@ export const AiForecastModal: React.FC<AiForecastModalProps> = ({
             variant="secondary"
             className="w-full gap-1.5"
             onClick={handlePredict}
-            disabled={isLoading}
+            disabled={isLoading || !hasApiKey}
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

@@ -147,7 +147,14 @@
     "themeSelect": "Tema Tercihi",
     "saved": "Ayarlar başarıyla kaydedildi.",
     "appVersion": "Sürüm",
-    "defaultCurrency": "Yerel Para Birimi"
+    "defaultCurrency": "Yerel Para Birimi",
+    "aiSettings": "AI Ayarları",
+    "aiSettingsDesc": "Tahminler ve sohbet için AI sağlayıcınızı ve API anahtarınızı yapılandırın.",
+    "useDemoApi": "Demo API'yi Kullan",
+    "useDemoApiDesc": "Sistemi denemek için sunulan ücretsiz demo API anahtarını kullanın.",
+    "demoUsageQuota": "Demo Kullanım Kotaları",
+    "demoForecastQuota": "AI Tahmin Hakkı: {{used}}/{{max}}",
+    "demoChatQuota": "AI Chat Mesaj Hakkı: {{used}}/{{max}}"
   },
   "ai": {
     "modalTitle": "AI Ekonomik Tahmin",
@@ -186,5 +193,20 @@
     "errorConfig": "Zorunlu alanlar eksik. Temel URL ve modeli kontrol edin.",
     "errorCors": "Bu sağlayıcı tarayıcıdan doğrudan erişimi engelliyor. Özel sağlayıcı bölümünde bir CORS proxy'si etkinleştirin (örn. OpenCode Zen).",
     "errorUnknown": "AI sağlayıcısı çağrılırken bir hata oluştu. Lütfen tekrar deneyin."
+  },
+  "chat": {
+    "title": "MoneyTrace AI Asistan",
+    "subtitle": "Portföyünüz hakkında sorular sorun",
+    "placeholder": "Bir mesaj yazın...",
+    "send": "Gönder",
+    "thinking": "Düşünüyor...",
+    "welcome": "Merhaba! 👋 Ben MoneyTrace yapay zekâ finans asistanınızım. Mevcut portföy verilerinizi ve projeksiyonlarınızı görebiliyorum. Yatırımlarınız hakkında her şeyi sorabilirsiniz!",
+    "noApiKey": "Sohbete başlamak için lütfen Ayarlar'dan AI API anahtarınızı yapılandırın.",
+    "useDemoApi": "Demo API'yi Kullan",
+    "usingDemoApi": "Demo API anahtarı kullanılıyor",
+    "demoApiNote": "Demo API anahtarımızla AI asistanı deneyin",
+    "errorSending": "Mesaj gönderilemedi. Lütfen tekrar deneyin.",
+    "clearChat": "Sohbeti Temizle",
+    "configureInSettings": "Ayarlardan Yapılandır"
   }
 }
