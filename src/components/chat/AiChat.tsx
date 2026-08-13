@@ -193,11 +193,51 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [localDemoOverride, setLocalDemoOverride] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
+  const [panelSize, setPanelSize] = useState({ width: 420, height: 580 })
   const [pendingProposals, setPendingProposals] = useState<{
     calls: AiToolCall[]
   } | null>(null)
 
   const toolDeps = useMemo(() => createDefaultToolDeps(), [])
+
+  /**
+   * Starts drag-resizing of the chat panel. The panel is anchored to the
+   * bottom-right corner of the viewport, so the free edges (top, left) act
+   * as resize handles.
+   */
+  const startResize = useCallback(
+    (dir: "corner" | "top" | "left") => (e: React.PointerEvent) => {
+      if (e.button !== 0 && e.pointerType === "mouse") return
+      e.preventDefault()
+      e.stopPropagation()
+      setIsResizing(true)
+      const startX = e.clientX
+      const startY = e.clientY
+      const startW = panelSize.width
+      const startH = panelSize.height
+      const clampW = (v: number) =>
+        Math.min(Math.max(v, 320), Math.max(window.innerWidth - 48, 320))
+      const clampH = (v: number) =>
+        Math.min(Math.max(v, 360), Math.max(window.innerHeight - 96, 360))
+
+      const onMove = (ev: PointerEvent) => {
+        const width =
+          dir !== "top" ? clampW(startW + startX - ev.clientX) : startW
+        const height =
+          dir !== "left" ? clampH(startH + startY - ev.clientY) : startH
+        setPanelSize({ width, height })
+      }
+      const onUp = () => {
+        setIsResizing(false)
+        window.removeEventListener("pointermove", onMove)
+        window.removeEventListener("pointerup", onUp)
+      }
+      window.addEventListener("pointermove", onMove)
+      window.addEventListener("pointerup", onUp)
+    },
+    [panelSize],
+  )
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -523,13 +563,33 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
       {/* Chat Panel */}
       <div
         ref={chatPanelRef}
-        className={`fixed bottom-20 right-4 z-50 w-[calc(100vw-2rem)] sm:w-[420px] transition-all duration-300 ease-out origin-bottom-right ${
+        className={`fixed bottom-20 right-4 z-50 select-none origin-bottom-right ${
+          isResizing ? "" : "transition-all duration-300 ease-out"
+        } ${
           isOpen
             ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
             : "opacity-0 scale-95 translate-y-4 pointer-events-none"
         }`}
+        style={{
+          width: `min(${panelSize.width}px, calc(100vw - 2rem))`,
+          height: `min(${panelSize.height}px, calc(100vh - 96px))`,
+        }}
       >
-        <div className="flex flex-col h-[min(70vh,580px)] rounded-2xl border border-border bg-card shadow-2xl overflow-hidden">
+        {/* Resize handles (desktop only; panel spans full width on mobile) */}
+        <div
+          className="absolute -top-1.5 -left-1.5 z-30 w-4 h-4 cursor-nwse-resize touch-none hidden sm:block"
+          onPointerDown={startResize("corner")}
+        />
+        <div
+          className="absolute -top-1.5 left-3 right-3 z-30 h-2 cursor-ns-resize touch-none hidden sm:block"
+          onPointerDown={startResize("top")}
+        />
+        <div
+          className="absolute -left-1.5 top-3 bottom-3 z-30 w-2 cursor-ew-resize touch-none hidden sm:block"
+          onPointerDown={startResize("left")}
+        />
+
+        <div className="flex flex-col h-full rounded-2xl border border-border bg-card shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
             <div className="flex items-center gap-2.5 min-w-0">

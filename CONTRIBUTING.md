@@ -126,6 +126,25 @@ MoneyTrace uses `i18next` for internationalization. To add a new language:
    // Add translationFR to the i18n resources object
    ```
 
+4. **Add a language label (optional but recommended):**
+   In `src/lib/i18n.ts`, add a friendly label to the `LANGUAGE_LABELS` map so the
+   language appears properly in the UI language selector:
+   ```typescript
+   const LANGUAGE_LABELS: Record<string, string> = {
+     en: "English (EN)",
+     tr: "Türkçe (TR)",
+     fr: "Français (FR)",
+   }
+   ```
+
+5. **Update the central configuration:**
+   Open `src/config/index.ts` and add the new locale code to
+   `APP_CONFIG.app.supportedLanguages` (currently `["en", "tr"] as const`):
+   ```typescript
+   supportedLanguages: ["en", "tr", "fr"] as const,
+   ```
+   This keeps the config as the single source of truth for supported app locales.
+
 ---
 
 ## 🧩 Adding a UI Component

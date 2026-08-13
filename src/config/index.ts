@@ -23,7 +23,7 @@ export const APP_CONFIG = {
       gemini: "gemini-3.6-flash",
       openai: "gpt-4o-mini",
       /** Model used for Demo API requests */
-      demo: "deepseek/deepseek-v4-flash-0731",
+      demo: "nvidia/nemotron-3-ultra-550b-a55b:free",
     },
     /** Default max response tokens for AI completion requests */
     maxTokens: 8000,
@@ -48,7 +48,7 @@ export const APP_CONFIG = {
       /** Maximum allowed economic forecast predictions using Demo API */
       maxForecasts: 5,
       /** Maximum allowed chat messages using Demo API */
-      maxChatMessages: 20,
+      maxChatMessages: 15,
       /** Maximum allowed user prompt character length per chat message on Demo API */
       maxMessageLength: 500,
       /** Rate-limiting cooldown period between messages in milliseconds */
