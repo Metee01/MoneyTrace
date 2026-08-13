@@ -33,6 +33,8 @@ export interface PortfolioState {
 
   // Actions - Parameters
   setParams: (params: Partial<ProjectionParams>) => void
+  setCustomWithdrawal: (month: number, amount?: number) => void
+  clearCustomWithdrawals: () => void
   resetParams: () => void
 
   // Actions - Portfolios
@@ -93,6 +95,35 @@ export const usePortfolioStore = create<PortfolioState>()(
       setParams: (newParams) =>
         set((state) => ({
           currentParams: { ...state.currentParams, ...newParams },
+        })),
+
+      setCustomWithdrawal: (month, amount) =>
+        set((state) => {
+          const current = { ...(state.currentParams.customWithdrawals ?? {}) }
+          if (
+            amount === undefined ||
+            amount === null ||
+            isNaN(amount) ||
+            amount < 0
+          ) {
+            delete current[month]
+          } else {
+            current[month] = amount
+          }
+          return {
+            currentParams: {
+              ...state.currentParams,
+              customWithdrawals: current,
+            },
+          }
+        }),
+
+      clearCustomWithdrawals: () =>
+        set((state) => ({
+          currentParams: {
+            ...state.currentParams,
+            customWithdrawals: {},
+          },
         })),
 
       resetParams: () =>

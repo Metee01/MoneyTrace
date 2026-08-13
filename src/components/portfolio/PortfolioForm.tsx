@@ -366,7 +366,10 @@ export const PortfolioForm: React.FC = () => {
             {/* 4. Monthly Cash Withdrawal */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
-                <Label htmlFor="monthlyWithdrawal" className="text-sm font-medium">
+                <Label
+                  htmlFor="monthlyWithdrawal"
+                  className="text-sm font-medium"
+                >
                   {t("portfolio.monthlyWithdrawal", {
                     currency: currencySymbol,
                   })}

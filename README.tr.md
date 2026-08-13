@@ -1,13 +1,14 @@
 # 💸 MoneyTrace
 
-### Enflasyon Düzeltilmiş Portföy Projeksiyonu ve Simülasyon Aracı
+### Enflasyon Düzeltmeli Portföy Projeksiyonu, Simülasyonu ve Yapay Zekâ Asistanı
 
-**MoneyTrace**, yatırımlarınızın zaman içinde nasıl büyüyebileceğini ve enflasyonun gerçek satın alma gücünüz üzerindeki etkisini anlamanıza yardımcı olan modern, gizlilik odaklı bir yatırım projeksiyonu ve simülasyon aracıdır.
+**MoneyTrace**, yatırımlarınızın zaman içinde nasıl büyüyebileceğini ve enflasyonun gerçek satın alma gücünüz üzerindeki etkisini anlamanıza yardımcı olan modern, gizlilik odaklı, tamamen istemci tarafında çalışan bir yatırım projeksiyonu ve simülasyon aracıdır.
 
-📊 Bileşik büyüme ve DCA stratejilerini simüle edin,
-💸 nominal ve reel getirileri karşılaştırın,
-🌍 enflasyon ve döviz hareketlerini modelleyin,
-🤖 ve isteğe bağlı olarak yapay zekâ ile ekonomik tahminler oluşturun.
+📊 Bileşik büyüme ve DCA stratejilerini simüle edin,  
+💸 nominal ve reel getirileri karşılaştırın,  
+🌍 enflasyon ve döviz hareketlerini modelleyin,  
+🤖 canlı portföyünüz hakkında yapay zekâ asistanı ile konuşun,  
+⚡ ve tek tıkla ekonomik tahminler oluşturun.
 
 ### 🌐 Canlı Demo
 
@@ -15,106 +16,86 @@
 
 ---
 
-## ✨ Özellikler
+## ✨ Temel Özellikler
 
-### 📈 Reel ve Nominal Değer
+### 📈 Reel ve Nominal Değer Karşılaştırması
 
-Portföyünüzün nominal bakiyesi ile enflasyona göre düzeltilmiş gerçek satın alma gücü arasındaki farkı görün.
+Portföyünüzün nominal bakiyesi ile enflasyona göre düzeltilmiş satın alma gücü arasındaki farkı görün.
 
-Sadece **paranızın ne kadar büyüdüğünü** değil, aynı zamanda **gelecekte bu paranın bugünün şartlarında ne kadar satın alma gücüne sahip olabileceğini** de anlayın.
+Yalnızca **paranızın ne kadar büyüdüğünü** değil, aynı zamanda **bugünün koşullarında ne kadar değerli olduğunu** anlayın.
+
+### 🤖 AI Finansal Asistan Chat
+
+Sağ alt köşedeki yüzen chat widget'ı (FAB) aracılığıyla canlı portföy projeksiyonlarınız hakkında doğrudan yapay zekâya sorular sorun:
+
+* Beklenen bileşik büyümenizi ve risk profilinizi analiz edin
+* Strateji soruları sorun ("Yıllık %5 DCA artışı 10 yıllık hedefimi nasıl etkiler?")
+* Aktif girdilerinize dayalı olarak kişiselleştirilmiş ve veriye dayalı finansal analizler alın
+* Tam gizlilik: Tüm konuşma bağlamı tarayıcıda istemci tarafında oluşturulur
+
+### ⚡ AI Ekonomik Tahmin
+
+Tek tıkla makroekonomik parametre tahmini gerçekleştirin (enflasyon oranları, bileşik getiri beklentileri, döviz kuru artışı).
+
+### 🔑 Esnek AI Yapılandırması ve Demo Modu
+
+Yapay zekâ ayarlarınızı **Ayarlar** panelinden merkezi olarak yapılandırın:
+
+* **Demo API Modu:** Ücretsiz Demo API ile yapay zekâ özelliklerini anında deneyin (5 tahmin, 15 chat mesajı kotası).
+* **Kendi Anahtarını Getir (BYOK):** Sınırsız kullanım için kendi API anahtarınızı kullanın.
+* **Desteklenen Sağlayıcılar:** Google Gemini, OpenAI ve özel OpenAI uyumlu endpoint'ler (OpenRouter, Groq, LM Studio, Ollama vb.).
+* **Kötüye Kullanım Koruması:** Cooldown süreleri, mesaj uzunluğu kısıtlaması ve prompt injection koruması tümleşiktir.
 
 ### 🌍 Global Para Birimi Desteği
 
-MoneyTrace para biriminden bağımsız olarak çalışır ve aşağıdakiler dahil olmak üzere birçok para birimini destekler:
+MoneyTrace para biriminden bağımsızdır ve aşağıdaki para birimlerini destekler:
 
-`USD` · `EUR` · `GBP` · `JPY` · `CAD` · `AUD` · `TRY` · `BRL` · `INR` · ve daha fazlası.
+`USD` · `EUR` · `GBP` · `JPY` · `CAD` · `AUD` · `TRY` · `BRL` · `INR` ve daha fazlası.
 
-Tutarlar seçilen para birimine göre otomatik olarak biçimlendirilir.
+Tüm tutarlar seçilen para birimine göre otomatik olarak biçimlendirilir.
 
-### 💰 Bileşik Büyüme ve DCA
+### 💰 Bileşik Büyüme ve DCA Simülasyonu
 
 Uzun vadeli yatırım stratejilerini aşağıdaki parametrelerle simüle edin:
 
 * Başlangıç sermayesi
-* Aylık katkı
-* Bileşik getiri
+* Aylık katkılar (DCA)
+* Bileşik getiri oranı
 * Yıllık katkı artışı
-* Yatırım süresi
-* Enflasyona göre düzeltilmiş sonuçlar
-
-Uzun vadeli yatırım ve **Dolar Maliyet Ortalaması (DCA)** stratejilerini modellemek için idealdir.
+* Aylık nakit çekim
+* Stopaj vergisi kesintileri
+* Özel yatırım vadeleri (50 yıla kadar)
+* Enflasyon düzeltmeli sonuçlar
 
 ### 💱 Referans Para Birimi Takibi
 
-Portföyünüzü USD gibi bir referans para birimine karşı takip edin.
-
-Yerel para biriminizdeki portföyünüzün başka bir para birimine göre nasıl performans gösterebileceğini tahmin etmek için projekte edilen döviz kuru değişimini özelleştirin.
+Portföyünüzü USD gibi bir referans para birimine karşı takip edin. Yerel para birimindeki portföyünüzün zaman içinde başka bir para birimi karşısındaki performansını tahmin etmek için öngörülen döviz kuru büyümesini yapılandırın.
 
 ### 🎯 Senaryo Yönetimi
 
-Birden fazla yatırım senaryosu oluşturun ve bunları yan yana karşılaştırın.
-
-Örneğin:
+Birden fazla yatırım senaryosu oluşturun ve yan yana karşılaştırın:
 
 * 🚀 İyimser
 * 📊 Piyasa Büyümesi
 * 🛡️ Muhafazakâr
 * 🧪 Özel
 
-Senaryolarınızı **oluşturabilir, kopyalayabilir, karşılaştırabilir, düzenleyebilir ve temel senaryo olarak belirleyebilirsiniz.**
-
-Mevcut projeksiyonlarınızı kaybetmeden farklı varsayımları test edin.
-
-### 🤖 Yapay Zekâ Ekonomik Tahmini
-
-Portföy formu üzerinden yapay zekâ ile ekonomik varsayımlar oluşturun.
-
-MoneyTrace aşağıdaki değerleri tahmin edebilir:
-
-* Ortalama enflasyon
-* Döviz kuru değişimi
-* Beklenen portföy getirisi
-* Güncel döviz kuru
-
-Desteklenen sağlayıcılar:
-
-* Google Gemini
-* OpenAI
-* OpenAI uyumlu API'ler
-* OpenRouter
-* Groq
-* LM Studio
-* Ollama
-* Diğer uyumlu özel/local endpoint'ler
-
-**Kendi API anahtarınızı kullanın (BYOK).**
-
-API anahtarınız tarayıcınızda yerel olarak saklanır ve yalnızca sizin seçtiğiniz sağlayıcıya veya yapılandırdığınız proxy'ye gönderilir.
+Mevcut projeksiyonlarınızı kaybetmeden **senaryo oluşturabilir, kopyalayabilir, karşılaştırabilir, düzenleyebilir ve taban senaryo belirleyebilirsiniz**.
 
 ### 📊 Etkileşimli Grafikler
 
-Recharts tarafından desteklenen etkileşimli grafiklerle projeksiyonlarınızı daha kolay anlayın.
+**Recharts** destekli etkileşimli grafiklerle projeksiyonlarınızı görselleştirin:
 
-Şunları görselleştirin:
-
-* Portföy büyümesi
-* Enflasyona göre düzeltilmiş satın alma gücü
-* Yatırım katkısı ve getiriler
-* Uzun vadeli değer değişimleri
+* Portföy büyümesi (Nominal vs. Reel vs. Yatırılan Anapara)
+* Referans para birimi bakiyesi ($)
+* Enflasyon kaynaklı satın alma gücü kaybı
 
 ### 📁 Dışa ve İçe Aktarma
 
-Verilerinizi yanınızda taşıyın.
+Verilerinizi yanınızda taşıyın:
 
-**Dışa aktar:**
-
-* Tam projeksiyon tablolarını Excel uyumlu CSV olarak
-* Senaryo yedeklerini JSON olarak
-
-**İçe aktar:**
-
-* Daha önce dışa aktarılan senaryoları geri yükleyin
-* Ayarlarınızı farklı tarayıcılar veya cihazlar arasında taşıyın
+* **Dışa Aktarma:** CSV formatında detaylı projeksiyon tabloları, JSON formatında senaryo yedekleri.
+* **İçe Aktarma:** Daha önce dışa aktarılmış senaryoları farklı tarayıcı veya cihazlara geri yükleyin.
 
 ### 🌐 Çoklu Dil Desteği
 
@@ -123,222 +104,47 @@ Yerleşik çoklu dil desteği:
 * 🇬🇧 İngilizce
 * 🇹🇷 Türkçe
 
-Çeviri altyapısı, ileride yeni dillerin kolayca eklenebilmesi için tasarlanmıştır.
-
 ### 🔒 Gizlilik Öncelikli
 
-MoneyTrace **%100 istemci tarafında** çalışır.
-
-Portföy verileriniz tarayıcınızdaki `localStorage` içerisinde tutulur.
+MoneyTrace **%100 istemci tarafında** çalışır. Portföy verileriniz tamamen tarayıcınızın `localStorage` alanında saklanır.
 
 * ❌ Backend veritabanı yok
-* ❌ Portföy verilerinin sunucuya yüklenmesi yok
-* ❌ Hesap oluşturma zorunluluğu yok
+* ❌ Portföy verisi yükleme/gönderme yok
+* ❌ Hesap veya üyelik gereksinimi yok
 * ❌ Finansal verilerinizin takibi yok
-
-**Verileriniz sizde kalır.**
 
 ---
 
 ## 🛠️ Teknoloji Yığını
 
-| Kategori       | Teknoloji                               |
-| -------------- | --------------------------------------- |
-| Framework      | React 19                                |
-| Dil            | TypeScript                              |
-| Build Tool     | Vite                                    |
-| Stil           | Tailwind CSS v4                         |
-| UI             | shadcn/ui                               |
-| İkonlar        | Lucide                                  |
-| State Yönetimi | Zustand                                 |
-| Veri Saklama   | Zustand Persist                         |
-| Grafikler      | Recharts                                |
-| Çoklu Dil      | i18next + react-i18next                 |
-| Yapay Zekâ     | Gemini, OpenAI ve OpenAI uyumlu API'ler |
-| Deployment     | Vercel                                  |
+| Kategori             | Teknoloji                              |
+| -------------------- | --------------------------------------- |
+| Framework            | React 19                                |
+| Dil                  | TypeScript                              |
+| Yapı Aracı (Build)   | Vite 8                                  |
+| Stil (Styling)       | Tailwind CSS v4 (@tailwindcss/vite)     |
+| UI Bileşenleri       | Base UI (`@base-ui/react`) & Lucide Icons |
+| Durum Yönetimi       | Zustand (`persist` -> `localStorage`)   |
+| Grafikler            | Recharts                                |
+| i18n                 | i18next & react-i18next                 |
+| Analitik             | @vercel/analytics                       |
 
 ---
 
-## 🚀 Kurulum
+## ⚙️ Merkezi Yapılandırma (`src/config/index.ts`)
 
-### Gereksinimler
+Tüm uygulama limitleri, AI modelleri, demo kotaları ve hesaplama motoru parametreleri `src/config/index.ts` dosyasında merkezi olarak yönetilir:
 
-Aşağıdakilerden birine sahip olmanız gerekir:
-
-* **Node.js 20.19.0+**
-* npm, pnpm, yarn veya bun
-
-### 1. Repoyu klonlayın
-
-```bash
-git clone https://github.com/Metee01/MoneyTrace.git
-cd MoneyTrace
+```typescript
+export const APP_CONFIG = {
+  app: { name: "MoneyTrace", version: "x.x.x" },
+  ai: {
+    models: { gemini: "gemini-3.6-flash", openai: "gpt-4o-mini", demo: "gemini-3.6-flash" },
+    demo: { maxForecasts: 5, maxChatMessages: 15, maxMessageLength: 500, cooldownMs: 3000 }
+  },
+  engine: { maxTargetYears: 50, defaultParams: { ... } }
+}
 ```
-
-### 2. Bağımlılıkları yükleyin
-
-```bash
-npm install
-```
-
-### 3. Geliştirme sunucusunu başlatın
-
-```bash
-npm run dev
-```
-
-Ardından tarayıcınızdan:
-
-```text
-http://localhost:5173
-```
-
-adresini açın.
-
-### 4. Production build oluşturun
-
-```bash
-npm run build
-```
-
-### 5. Lint ve kod denetimi
-
-```bash
-npm run lint
-```
-
----
-
-## 🤖 Yapay Zekâ Ekonomik Tahmini
-
-MoneyTrace, isteğe bağlı olarak yapay zekâ destekli bir ekonomik tahmin sistemi içerir.
-
-**AI Forecast** özelliği, seçtiğiniz para birimi ve yatırım süresi için ekonomik varsayımlar oluşturabilir.
-
-Yapay zekâdan şu değerleri tahmin etmesi istenir:
-
-```text
-Enflasyon
-Döviz kuru değişimi
-Portföy getirisi
-Güncel döviz kuru
-```
-
-Oluşturulan değerler tek tıklamayla portföy simülasyonuna uygulanabilir.
-
-### 🔑 Kendi API Anahtarınızı Kullanın
-
-MoneyTrace API anahtarları sağlamaz veya yönetmez.
-
-Kullanmak istediğiniz sağlayıcıyı seçerek kendi API anahtarınızı girersiniz.
-
-### Desteklenen Sağlayıcılar
-
-| Sağlayıcı              | Açıklama                                 |
-| ---------------------- | ---------------------------------------- |
-| **Google Gemini**      | Google AI Studio üzerinden Gemini API    |
-| **OpenAI**             | OpenAI API                               |
-| **Custom**             | OpenAI uyumlu herhangi bir endpoint      |
-| **OpenRouter**         | OpenAI uyumlu API                        |
-| **Groq**               | OpenAI uyumlu API                        |
-| **LM Studio**          | Yerel modeller                           |
-| **Ollama**             | Yerel modeller                           |
-| **Diğer endpoint'ler** | Uyumlu `/chat/completions` endpoint'leri |
-
-Yerel sağlayıcılarda API anahtarı gerekmeyebilir.
-
----
-
-## 🌐 CORS Proxy
-
-Bazı API sağlayıcıları, CORS kısıtlamaları nedeniyle tarayıcıdan doğrudan gelen istekleri engelleyebilir.
-
-MoneyTrace bu tür sağlayıcılar için isteğe bağlı **CORS proxy** desteği sunar.
-
-### Nasıl kullanılır?
-
-1. **AI Forecast** penceresini açın.
-2. **Custom (OpenAI-compatible)** sağlayıcısını seçin.
-3. **Use CORS proxy** seçeneğini etkinleştirin.
-4. `{url}` placeholder'ını içeren bir proxy URL'si girin.
-
-Örnek:
-
-```text
-https://corsproxy.io/?url={url}
-```
-
-MoneyTrace, `{url}` kısmını hedef endpoint'in encode edilmiş adresiyle otomatik olarak değiştirir.
-
-### ⚠️ Güvenlik
-
-Proxy kullanıldığında API anahtarınız da dahil olmak üzere isteğiniz proxy üzerinden geçer.
-
-**Yalnızca güvendiğiniz proxy'leri kullanın.**
-
-Hassas kullanımlar için herkese açık bir proxy yerine kendi proxy sunucunuzu çalıştırmanız önerilir.
-
----
-
-## 🧮 Simülasyon Nasıl Çalışır?
-
-MoneyTrace, uzun vadeli projeksiyonlar oluşturmak için çeşitli finansal modelleri bir araya getirir.
-
-### Bileşik Büyüme
-
-Yatırım büyümesi, seçilen zaman aralığı boyunca bileşik getiri kullanılarak modellenir.
-
-### Aylık DCA
-
-Simülasyon boyunca aylık katkılar eklenebilir.
-
-Ayrıca yatırımlarınızı zaman içinde artırmayı modellemek için **yıllık katkı artış oranı** belirleyebilirsiniz.
-
-### Enflasyon Düzeltmesi
-
-Nominal portföy değerleri, gelecekteki satın alma gücünü tahmin etmek için öngörülen enflasyona göre düzeltilir.
-
-Böylece:
-
-```text
-Nominal Değer
-      ↓
-Enflasyon Düzeltmesi
-      ↓
-Reel Satın Alma Gücü
-```
-
-şeklinde gerçek değer değişimini görebilirsiniz.
-
-### Para Birimi / Döviz Kuru Projeksiyonu
-
-Bir referans para birimi seçildiğinde, projekte edilen döviz kuru değişimleri simülasyona dahil edilebilir.
-
-Bu sayede portföyünüzü hem **yerel para birimi** hem de **referans para birimi** perspektifinden inceleyebilirsiniz.
-
-> MoneyTrace bir projeksiyon ve simülasyon aracıdır. Sonuçlar, kullanıcı tarafından belirlenen varsayımlara dayanan matematiksel tahminlerdir ve finansal danışmanlık olarak değerlendirilmemelidir.
-
----
-
-## 📊 Kullanım Örnekleri
-
-MoneyTrace ile aşağıdaki gibi soruları inceleyebilirsiniz:
-
-> "Bugün ₺10.000 yatırıp her ay ₺5.000 eklersem, 10 yıl sonra ne kadar param olabilir?"
-
-Veya:
-
-> "Enflasyon yıllık ortalama %30 olursa portföyüme ne olur?"
-
-Veya:
-
-> "TRY cinsinden portföyüm önümüzdeki 10 yılda USD karşısında nasıl performans gösterebilir?"
-
-Veya:
-
-> "Aylık yatırım miktarımı her yıl %10 artırırsam sonuç nasıl değişir?"
-
-Farklı varsayımları test etmek için birden fazla senaryo oluşturabilir ve bunları yan yana karşılaştırabilirsiniz.
 
 ---
 
@@ -346,120 +152,79 @@ Farklı varsayımları test etmek için birden fazla senaryo oluşturabilir ve b
 
 ```text
 MoneyTrace/
-├── public/
-│   ├── Statik dosyalar
-│   └── favicon
-│
+├── public/                # Statik varlıklar & favicon
 ├── src/
 │   ├── components/
-│   │   ├── layout/
-│   │   ├── portfolio/
-│   │   ├── projection/
-│   │   ├── scenarios/
-│   │   └── ui/
-│   │
-│   ├── engine/
-│   │   ├── bileşik büyüme
-│   │   ├── enflasyon
-│   │   └── döviz kuru hesaplamaları
-│   │
-│   ├── hooks/
-│   │
-│   ├── lib/
-│   │   ├── formatters
-│   │   ├── export yardımcıları
-│   │   ├── i18n
-│   │   ├── AI servisi
-│   │   └── version
-│   │
-│   ├── locales/
-│   │   ├── en/
-│   │   └── tr/
-│   │
-│   ├── store/
-│   │   ├── portfolio
-│   │   └── settings
-│   │
-│   ├── types/
-│   │
-│   ├── App.tsx
-│   └── main.tsx
-│
-├── vercel.json
+│   │   ├── chat/          # AI Chat FAB widget'ı & paneli (AiChat.tsx)
+│   │   ├── layout/        # Header, Footer, Layout sarmalayıcısı
+│   │   ├── portfolio/     # Portföy girdi formu & AI Tahmin modalı
+│   │   ├── projection/    # Özet kartlar, Recharts grafik alanı, detay tablosu
+│   │   ├── scenarios/     # Senaryo yöneticisi & karşılaştırma dialog'u
+│   │   └── ui/            # Base UI bileşenleri (Button, Card, Dialog, Input, Label, Select, Separator, Switch, Tabs, Tooltip)
+│   ├── config/            # Merkezi uygulama yapılandırması (APP_CONFIG)
+│   ├── engine/            # Saf ve deterministik finansal hesaplama fonksiyonları
+│   ├── hooks/             # Özel hook'lar (useTheme)
+│   ├── lib/               # AI servisi, AI chat servisi, biçimlendiriciler, dışa aktarma, i18n, utils
+│   ├── locales/           # Çeviri dosyaları (en, tr)
+│   ├── store/             # Zustand depoları (portfolio-store, settings-store)
+│   ├── types/             # TypeScript tip tanımlamaları
+│   ├── App.tsx            # Ana uygulama & Ayarlar dialog'u
+│   ├── index.css          # Tailwind CSS v4 tema & CSS değişkenleri
+│   └── main.tsx           # React DOM giriş noktası
+├── .env.example           # Demo API anahtarı yapılandırması
+├── vercel.json            # Vercel SPA yönlendirmeleri
+├── vite.config.ts
+├── tsconfig.app.json      # TypeScript: @/* -> src/* path alias
+├── eslint.config.js
 ├── package.json
-└── README.md
+└── README.tr.md
 ```
 
 ---
 
-## 🔖 Sürümleme
+## 🚀 Başlarken
 
-Uygulamanın sürümü header bölümünde ve Settings penceresinde gösterilir.
+### Gereksinimler
+- **Node.js**: `>= 20.19`
 
-Yeni bir sürüm yayınlarken aşağıdaki iki konumdaki sürüm numarasını güncelleyin:
+```bash
+# Depoyu klonlayın
+git clone https://github.com/Metee01/MoneyTrace.git
+cd MoneyTrace
 
-### `package.json`
+# Bağımlılıkları yükleyin
+npm install
 
-```json
-{
-  "version": "X.Y.Z"
-}
+# Vite geliştirme sunucusunu başlatın (http://localhost:5173)
+npm run dev
+
+# Tip kontrolü yapın ve prodüksiyon derlemesini oluşturun
+npm run build
+
+# ESLint ve test paketlerini çalıştırın
+npm run lint
+npm run test
 ```
-
-### `src/lib/version.ts`
-
-```ts
-export const APP_VERSION = "X.Y.Z";
-```
-
-Her iki değer de aynı olmalıdır.
-
-`package-lock.json`, bir sonraki `npm install` çalıştırıldığında otomatik olarak güncellenecektir.
 
 ---
 
-## 🤝 Katkıda Bulunma
+## 🔑 Ortam Değişkenleri
 
-Katkılarınızı, fikirlerinizi, hata bildirimlerinizi ve geliştirmelerinizi memnuniyetle karşılıyoruz.
-
-Katkıda bulunmadan önce:
-
-```text
-CONTRIBUTING.md
+```bash
+# İsteğe bağlı: Demo modu için Gemini API anahtarı
+# Tanımlandığında Ayarlar'da "Demo API Kullan" seçeneği aktifleşir
+VITE_DEMO_API_KEY=
 ```
-
-dosyasını inceleyebilirsiniz.
-
-Özellikle şu alanlardaki katkılar değerlidir:
-
-* Yeni dil çevirileri
-* UI/UX geliştirmeleri
-* Finansal hesaplama iyileştirmeleri
-* Yeni simülasyon özellikleri
-* Erişilebilirlik
-* Performans optimizasyonları
-* Hata düzeltmeleri
 
 ---
 
 ## 📄 Lisans
 
-MoneyTrace **MIT Lisansı** ile yayınlanmaktadır.
-
-Lisansın tamamı için [`LICENSE`](LICENSE) dosyasına bakabilirsiniz.
+MoneyTrace **MIT Lisansı** altında lisanslanmıştır. Detaylar için [`LICENSE`](LICENSE) dosyasına bakın.
 
 ---
 
 ## 🔗 Bağlantılar
 
-🌐 **Canlı Demo:**
-https://moneytrace.metee.com.tr
-
-💻 **GitHub:**
-https://github.com/Metee01/MoneyTrace
-
----
-
-<p align="center">
-  React, TypeScript ve Vite ile ❤️ kullanılarak geliştirildi.
-</p>
+🌐 **Canlı Demo:** [moneytrace.metee.com.tr](https://moneytrace.metee.com.tr)  
+💻 **GitHub:** [github.com/Metee01/MoneyTrace](https://github.com/Metee01/MoneyTrace)

@@ -13,6 +13,7 @@ import {
   adjustForInflation,
   calculateSafeWithdrawal,
   calculateProjection,
+  calculateWithdrawalTax,
 } from "./index"
 import type { ProjectionParams } from "../types"
 
@@ -79,9 +80,15 @@ function runTests() {
   console.log(
     `Safe withdrawal on 100k @ 50% return vs 30% infl: ${safeW.toFixed(2)} TL`,
   )
-  console.assert(safeW > 0, "Safe withdrawal should be positive when return > inflation")
+  console.assert(
+    safeW > 0,
+    "Safe withdrawal should be positive when return > inflation",
+  )
   const zeroSafeW = calculateSafeWithdrawal(100000, 0.01, 0.02)
-  console.assert(zeroSafeW === 0, "Safe withdrawal should be 0 when return <= inflation")
+  console.assert(
+    zeroSafeW === 0,
+    "Safe withdrawal should be 0 when return <= inflation",
+  )
 
   // Test 5: Full Projection Simulation
   console.log("\n--- Test 5: Full Projection Simulation ---")
@@ -246,41 +253,93 @@ function runTests() {
     "Total withdrawals mismatch",
   )
 
-  // Test 10: Withholding Tax Deduction & Profit Tracking
-  console.log("\n--- Test 10: Tax Deduction & Profit Tracking ---")
+  // Test 10: Tax Deduction & Profit Tracking on Withdrawal
+  console.log(
+    "\n--- Test 10: Tax Deduction & Profit Tracking on Withdrawal ---",
+  )
   const taxParams: ProjectionParams = {
     initialCapital: 10000,
     monthlyDca: 0,
     dcaIncreaseRate: 0,
+    monthlyWithdrawal: 1000, // 1000 TL withdrawal
     expectedReturnRate: 10, // 10% annual return
     expectedInflationRate: 0,
     usdRate: 1,
     expectedUsdGrowthRate: 0,
     targetYears: 1,
-    withholdingTaxRate: 10, // 10% withholding tax on returns
+    withholdingTaxRate: 10, // 10% withholding tax on withdrawal profit
   }
   const taxResult = calculateProjection(taxParams)
   console.log(
     `Total Withholding Tax Paid: ${taxResult.summary.totalWithholdingTax} TL`,
   )
+  console.log(
+    `Total Net Withdrawals: ${taxResult.summary.totalNetWithdrawals} TL`,
+  )
   console.assert(
     taxResult.summary.totalWithholdingTax > 0,
-    "Withholding tax should be > 0",
+    "Withholding tax should be > 0 on withdrawal when in profit",
+  )
+  console.assert(
+    taxResult.summary.totalNetWithdrawals > 0,
+    "Total net withdrawals should be > 0",
   )
 
   const row1 = taxResult.rows[0]
-  console.log(`Month 1 Nominal Profit Change: ${row1.nominalProfitChange} TL`)
+  console.log(
+    `Month 1 Gross Withdrawal: ${row1.withdrawal} TL, Stopaj: ${row1.withholdingTax} TL, Net: ${row1.netWithdrawal} TL`,
+  )
   console.assert(
-    row1.nominalProfitChange === row1.nominalProfit,
-    "Month 1 profit change should equal nominal profit",
+    row1.netWithdrawal === row1.withdrawal - row1.withholdingTax,
+    "Month 1 net withdrawal should equal gross withdrawal minus withholding tax",
   )
 
-  const row2 = taxResult.rows[1]
+  // Test 11: Withdrawal Tax (Stopaj) Calculator
+  console.log("\n--- Test 11: Withdrawal Tax (Stopaj) Calculator ---")
+
+  // Case 1: Profitable portfolio — 100k nominal, 60k invested, 15% tax
+  const taxCalc1 = calculateWithdrawalTax(50000, 100000, 60000, 15)
+  console.log(`Profit Ratio: ${taxCalc1.profitRatio} (Expected: 0.4)`)
+  console.log(`Profit Portion: ${taxCalc1.profitPortion} (Expected: 20000)`)
+  console.log(`Tax Amount: ${taxCalc1.taxAmount} (Expected: 3000)`)
+  console.log(`Net Amount: ${taxCalc1.netAmount} (Expected: 47000)`)
+  console.assert(taxCalc1.profitRatio === 0.4, "Profit ratio should be 0.4")
   console.assert(
-    Math.abs(
-      row2.nominalProfit - (row1.nominalProfit + row2.nominalProfitChange),
-    ) < 0.05,
-    "Month 2 nominal profit should equal month 1 profit plus month 2 profit change",
+    taxCalc1.profitPortion === 20000,
+    "Profit portion should be 20000",
+  )
+  console.assert(taxCalc1.taxAmount === 3000, "Tax amount should be 3000")
+  console.assert(taxCalc1.netAmount === 47000, "Net amount should be 47000")
+
+  // Case 2: Loss position — no tax applied
+  const taxCalc2 = calculateWithdrawalTax(5000, 8000, 10000, 15)
+  console.log(`Loss position tax: ${taxCalc2.taxAmount} (Expected: 0)`)
+  console.assert(
+    taxCalc2.profitRatio === 0,
+    "Loss position profit ratio should be 0",
+  )
+  console.assert(taxCalc2.taxAmount === 0, "Loss position tax should be 0")
+  console.assert(
+    taxCalc2.netAmount === 5000,
+    "Loss position net should equal withdrawal",
+  )
+
+  // Case 3: Withdrawal exceeds portfolio value — clamped
+  const taxCalc3 = calculateWithdrawalTax(200000, 100000, 60000, 15)
+  console.log(
+    `Clamped withdrawal: ${taxCalc3.withdrawalAmount} (Expected: 100000)`,
+  )
+  console.assert(
+    taxCalc3.withdrawalAmount === 100000,
+    "Withdrawal should be clamped to nominal",
+  )
+
+  // Case 4: Zero tax rate
+  const taxCalc4 = calculateWithdrawalTax(50000, 100000, 60000, 0)
+  console.assert(taxCalc4.taxAmount === 0, "Zero rate should yield zero tax")
+  console.assert(
+    taxCalc4.netAmount === 50000,
+    "Zero rate net should equal withdrawal",
   )
 
   console.log("\n✅ ALL ENGINE TESTS PASSED SUCCESSFULLY!")

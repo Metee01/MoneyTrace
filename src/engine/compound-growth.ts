@@ -80,3 +80,47 @@ export function calculateCompoundStep(
   const base = Math.max(0, currentBalance) + Math.max(0, monthlyDca)
   return base * (1 + monthlyReturnRate)
 }
+
+export interface WithdrawalTaxResult {
+  withdrawalAmount: number
+  profitRatio: number
+  profitPortion: number
+  taxAmount: number
+  netAmount: number
+}
+
+/**
+ * Calculates withholding tax (stopaj) on a cash withdrawal from portfolio.
+ * Stopaj is only levied on the profit portion of the withdrawal.
+ *
+ * @param requestedWithdrawal Target amount to withdraw
+ * @param nominalValue Total portfolio nominal value
+ * @param totalInvested Total invested nominal capital
+ * @param withholdingTaxRatePercent Withholding tax rate (%)
+ */
+export function calculateWithdrawalTax(
+  requestedWithdrawal: number,
+  nominalValue: number,
+  totalInvested: number,
+  withholdingTaxRatePercent: number,
+): WithdrawalTaxResult {
+  const withdrawalAmount = Math.max(
+    0,
+    Math.min(requestedWithdrawal, Math.max(0, nominalValue)),
+  )
+  const totalProfit = Math.max(0, nominalValue - totalInvested)
+  const profitRatio =
+    nominalValue > 0 ? Math.min(1, Math.max(0, totalProfit / nominalValue)) : 0
+  const profitPortion = Math.round(withdrawalAmount * profitRatio * 100) / 100
+  const taxRate = Math.max(0, withholdingTaxRatePercent) / 100
+  const taxAmount = Math.round(profitPortion * taxRate * 100) / 100
+  const netAmount = Math.round((withdrawalAmount - taxAmount) * 100) / 100
+
+  return {
+    withdrawalAmount,
+    profitRatio,
+    profitPortion,
+    taxAmount,
+    netAmount,
+  }
+}

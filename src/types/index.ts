@@ -27,7 +27,10 @@ export interface ProjectionParams {
   /** Input Period for Rates & DCA ('annual' | 'monthly') */
   rateInputPeriod?: "annual" | "monthly"
   /** Withholding tax rate on monthly returns (%) — e.g. 15 for 15% */
+  /** Withholding tax rate on cash withdrawal profits (%) — e.g. 15 for 15% */
   withholdingTaxRate?: number
+  /** Per-month custom cash withdrawal overrides (e.g. { 13: 50000 }) */
+  customWithdrawals?: Record<number, number>
 }
 
 /**
@@ -64,10 +67,12 @@ export interface ProjectionRow {
   safeWithdrawal: number
   /** Inflation-protected safe withdrawal amount for this Month (Real) */
   realSafeWithdrawal: number
-  /** Actual Cash Withdrawal Amount in this Month */
+  /** Gross Cash Withdrawal Amount in this Month */
   withdrawal: number
-  /** Monthly withholding tax amount deducted */
+  /** Monthly withholding tax amount deducted from withdrawal profit */
   withholdingTax: number
+  /** Net cash withdrawal amount landed in hand after withholding tax */
+  netWithdrawal: number
   /** Month-over-month nominal profit change (current - previous) */
   nominalProfitChange: number
   /** Month-over-month real profit change (current - previous) */
@@ -106,10 +111,12 @@ export interface ProjectionSummary {
   totalSafeWithdrawal: number
   /** Cumulative Total Inflation-Protected Safe Withdrawal Amount (Real) */
   totalRealSafeWithdrawal: number
-  /** Cumulative Total Actual Cash Withdrawals (Nominal) */
+  /** Cumulative Total Actual Cash Withdrawals (Nominal Gross) */
   totalWithdrawals: number
   /** Cumulative Total Actual Cash Withdrawals (Real) */
   totalRealWithdrawals: number
+  /** Cumulative Total Net Cash Withdrawals Landed in Hand (Nominal) */
+  totalNetWithdrawals: number
   /** Total withholding tax paid over projection period */
   totalWithholdingTax: number
 }
@@ -178,6 +185,60 @@ export interface AiForecastResult {
 }
 
 /**
+ * AI Tool Call (In-Band JSON Protocol)
+ */
+export interface AiToolCall {
+  /** Tool name (see TOOL_SCHEMAS in src/lib/ai-tools.ts) */
+  tool: string
+  /** Tool arguments (JSON object) */
+  args: Record<string, unknown>
+}
+
+/**
+ * Tool Call Execution Result
+ */
+export interface AiToolCallResult {
+  /** Tool name that was executed */
+  tool: string
+  /** Whether execution succeeded */
+  ok: boolean
+  /** JSON-string output (or error message when failed) */
+  output: string
+}
+
+/**
+ * AI Chat Message
+ */
+export interface ChatMessage {
+  /** Unique message identifier */
+  id: string
+  /** Message sender role */
+  role: "user" | "assistant" | "system"
+  /** Message text content */
+  content: string
+  /** Unix timestamp (ms) */
+  timestamp: number
+  /** Hides this message from the chat UI (internal tool protocol use only) */
+  internal?: boolean
+}
+
+/**
+ * AI Chat Session / Conversation Thread
+ */
+export interface ChatSession {
+  /** Unique session identifier */
+  id: string
+  /** Display title for the chat thread */
+  title: string
+  /** Creation timestamp (ms) */
+  createdAt: number
+  /** Last activity timestamp (ms) */
+  updatedAt: number
+  /** Chronological messages in this thread */
+  messages: ChatMessage[]
+}
+
+/**
  * Application Global Settings
  */
 export interface Settings {
@@ -191,4 +252,7 @@ export interface Settings {
   aiBaseUrl?: string
   aiCorsProxy?: string
   aiCorsProxyEnabled?: boolean
+  useDemoApi?: boolean
+  demoForecastCount?: number
+  demoChatCount?: number
 }

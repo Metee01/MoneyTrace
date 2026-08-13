@@ -49,6 +49,7 @@ export function exportToCsv(
     "Real Profit/Loss",
     "Real Profit Change",
     "Withholding Tax",
+    "Net Withdrawal (Landed in Hand)",
     "Safe Withdrawal (Nominal)",
     "Safe Withdrawal (Real)",
   ]
@@ -73,6 +74,7 @@ export function exportToCsv(
       r.realProfit.toFixed(2),
       r.realProfitChange.toFixed(2),
       r.withholdingTax.toFixed(2),
+      r.netWithdrawal.toFixed(2),
       r.safeWithdrawal.toFixed(2),
       r.realSafeWithdrawal.toFixed(2),
     ]
@@ -102,7 +104,10 @@ export function exportToCsv(
     `Total Real Profit/Loss${delimiter}${summary.totalRealProfit.toFixed(2)}`,
   )
   lines.push(
-    `Total Actual Withdrawals (Nominal)${delimiter}${summary.totalWithdrawals.toFixed(2)}`,
+    `Total Actual Withdrawals (Gross)${delimiter}${summary.totalWithdrawals.toFixed(2)}`,
+  )
+  lines.push(
+    `Total Net Withdrawals (Landed in Hand)${delimiter}${summary.totalNetWithdrawals.toFixed(2)}`,
   )
   lines.push(
     `Total Actual Withdrawals (Real)${delimiter}${summary.totalRealWithdrawals.toFixed(2)}`,

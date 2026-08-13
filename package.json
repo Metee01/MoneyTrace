@@ -1,7 +1,7 @@
 {
   "name": "moneytrace",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.3.0",
   "type": "module",
   "description": "A personal finance management application built with React, TypeScript, and Tailwind CSS.",
   "license": "MIT",
@@ -21,8 +21,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "test:engine": "tsx src/engine/engine.test.ts",
-    "test:store": "tsx src/store/store.test.ts",
-    "test": "npm run test:engine && npm run test:store"
+    "test:store": "tsx src/store/store.test.ts && tsx src/store/chat-store.test.ts",
+    "test:tools": "tsx src/lib/ai-tools.test.ts",
+    "test": "npm run test:engine && npm run test:store && npm run test:tools"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
