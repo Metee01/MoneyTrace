@@ -244,7 +244,6 @@ import { APP_CONFIG } from "../config"
 
 const MAX_DEMO_MESSAGE_LENGTH = APP_CONFIG.ai.demo.maxMessageLength
 const DEMO_COOLDOWN_MS = APP_CONFIG.ai.demo.cooldownMs
-let lastDemoCallTime = 0
 
 function cleanReasoningTokens(text: string): string {
   if (!text) return ""
@@ -418,23 +417,27 @@ export async function sendChatMessage(
   request: ChatRequest,
 ): Promise<ChatServiceResponse> {
   if (request.isDemo) {
-    const currentCount = useSettingsStore.getState().demoChatCount ?? 0
-    if (currentCount >= MAX_DEMO_CHAT_MESSAGES) {
-      throw new AiForecastError(
-        "quota",
-        `Demo API chat message limit reached (${MAX_DEMO_CHAT_MESSAGES}/${MAX_DEMO_CHAT_MESSAGES}).`,
-      )
-    }
-
-    // Cooldown rate limit
+    // Cooldown rate limit (persisted so a page reload cannot reset it)
     const now = Date.now()
-    if (now - lastDemoCallTime < DEMO_COOLDOWN_MS) {
+    if (
+      now - (useSettingsStore.getState().demoLastChatCallTime ?? 0) <
+      DEMO_COOLDOWN_MS
+    ) {
       throw new AiForecastError(
         "quota",
         "Please wait a few seconds between messages when using Demo API.",
       )
     }
-    lastDemoCallTime = now
+
+    // Reserve the quota slot BEFORE the API call so concurrent requests
+    // cannot race past the limit. Rolled back if the call fails.
+    if (!useSettingsStore.getState().incrementDemoChatCount()) {
+      throw new AiForecastError(
+        "quota",
+        `Demo API chat message limit reached (${MAX_DEMO_CHAT_MESSAGES}/${MAX_DEMO_CHAT_MESSAGES}).`,
+      )
+    }
+    useSettingsStore.getState().setDemoLastChatCallTime(now)
   }
 
   // Security: Truncate user messages if using demo key to prevent excessive
@@ -457,60 +460,63 @@ export async function sendChatMessage(
   const systemPrompt = buildSystemPrompt(request.context)
   let responseText: string
 
-  if (request.provider === "custom") {
-    const baseUrl = (request.baseUrl ?? "").trim()
-    const model =
-      (request.model ?? "").trim() ||
-      (request.isDemo ? APP_CONFIG.ai.models.demo : "")
-    if (!baseUrl) {
-      throw new AiForecastError(
-        "config",
-        "Custom provider requires a base URL.",
+  try {
+    if (request.provider === "custom") {
+      const baseUrl = (request.baseUrl ?? "").trim()
+      const model =
+        (request.model ?? "").trim() ||
+        (request.isDemo ? APP_CONFIG.ai.models.demo : "")
+      if (!baseUrl) {
+        throw new AiForecastError(
+          "config",
+          "Custom provider requires a base URL.",
+        )
+      }
+      if (!model) {
+        throw new AiForecastError("config", "Custom provider requires a model.")
+      }
+      const endpoint = applyCorsProxy(
+        normalizeChatCompletionsUrl(baseUrl),
+        request.corsProxy ?? "",
+      )
+      responseText = await chatWithOpenAi(
+        endpoint,
+        request.apiKey,
+        model,
+        systemPrompt,
+        sanitizeMessages,
+        "custom provider",
+      )
+    } else if (!request.apiKey.trim()) {
+      throw new AiForecastError("auth", "No API key provided.")
+    } else if (request.provider === "gemini") {
+      const model =
+        (request.model ?? "").trim() ||
+        (request.isDemo ? APP_CONFIG.ai.models.demo : GEMINI_MODEL)
+      responseText = await chatWithGemini(
+        request.apiKey.trim(),
+        model,
+        systemPrompt,
+        sanitizeMessages,
+      )
+    } else {
+      const model =
+        (request.model ?? "").trim() ||
+        (request.isDemo ? APP_CONFIG.ai.models.demo : OPENAI_MODEL)
+      responseText = await chatWithOpenAi(
+        OPENAI_ENDPOINT,
+        request.apiKey,
+        model,
+        systemPrompt,
+        sanitizeMessages,
+        "OpenAI API",
       )
     }
-    if (!model) {
-      throw new AiForecastError("config", "Custom provider requires a model.")
+  } catch (err) {
+    if (request.isDemo) {
+      useSettingsStore.getState().decrementDemoChatCount()
     }
-    const endpoint = applyCorsProxy(
-      normalizeChatCompletionsUrl(baseUrl),
-      request.corsProxy ?? "",
-    )
-    responseText = await chatWithOpenAi(
-      endpoint,
-      request.apiKey,
-      model,
-      systemPrompt,
-      sanitizeMessages,
-      "custom provider",
-    )
-  } else if (!request.apiKey.trim()) {
-    throw new AiForecastError("auth", "No API key provided.")
-  } else if (request.provider === "gemini") {
-    const model =
-      (request.model ?? "").trim() ||
-      (request.isDemo ? APP_CONFIG.ai.models.demo : GEMINI_MODEL)
-    responseText = await chatWithGemini(
-      request.apiKey.trim(),
-      model,
-      systemPrompt,
-      sanitizeMessages,
-    )
-  } else {
-    const model =
-      (request.model ?? "").trim() ||
-      (request.isDemo ? APP_CONFIG.ai.models.demo : OPENAI_MODEL)
-    responseText = await chatWithOpenAi(
-      OPENAI_ENDPOINT,
-      request.apiKey,
-      model,
-      systemPrompt,
-      sanitizeMessages,
-      "OpenAI API",
-    )
-  }
-
-  if (request.isDemo) {
-    useSettingsStore.getState().incrementDemoChatCount()
+    throw err
   }
 
   return { text: responseText, toolCalls: parseToolCalls(responseText) }

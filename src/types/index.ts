@@ -255,4 +255,5 @@ export interface Settings {
   useDemoApi?: boolean
   demoForecastCount?: number
   demoChatCount?: number
+  demoLastChatCallTime?: number
 }

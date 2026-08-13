@@ -27,6 +27,9 @@ export interface SettingsState extends Settings {
   setUseDemoApi: (enabled: boolean) => void
   incrementDemoForecastCount: () => boolean
   incrementDemoChatCount: () => boolean
+  decrementDemoForecastCount: () => void
+  decrementDemoChatCount: () => void
+  setDemoLastChatCallTime: (time: number) => void
   resetSettings: () => void
 }
 
@@ -44,6 +47,7 @@ const DEFAULT_SETTINGS: Settings = {
   useDemoApi: false,
   demoForecastCount: 0,
   demoChatCount: 0,
+  demoLastChatCallTime: 0,
 }
 
 const getLocalStorage = () => ({
@@ -106,6 +110,16 @@ export const useSettingsStore = create<SettingsState>()(
         set({ demoChatCount: current + 1 })
         return true
       },
+      decrementDemoForecastCount: () => {
+        const current = get().demoForecastCount ?? 0
+        if (current > 0) set({ demoForecastCount: current - 1 })
+      },
+      decrementDemoChatCount: () => {
+        const current = get().demoChatCount ?? 0
+        if (current > 0) set({ demoChatCount: current - 1 })
+      },
+      setDemoLastChatCallTime: (demoLastChatCallTime) =>
+        set({ demoLastChatCallTime }),
       resetSettings: () => set({ ...DEFAULT_SETTINGS }),
     }),
     {

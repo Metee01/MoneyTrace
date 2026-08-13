@@ -326,6 +326,34 @@ async function runStoreTests() {
     "incrementDemoChatCount should fail when limit is reached",
   )
 
+  // Decrement (rollback on failed request) reduces counts
+  useSettingsStore.getState().decrementDemoForecastCount()
+  console.assert(
+    useSettingsStore.getState().demoForecastCount === 4,
+    "decrementDemoForecastCount should reduce count to 4",
+  )
+  useSettingsStore.getState().decrementDemoChatCount()
+  console.assert(
+    useSettingsStore.getState().demoChatCount === 14,
+    "decrementDemoChatCount should reduce count to 14",
+  )
+
+  // Decrement must never go below zero
+  for (let i = 0; i < 10; i++) {
+    useSettingsStore.getState().decrementDemoForecastCount()
+  }
+  console.assert(
+    useSettingsStore.getState().demoForecastCount === 0,
+    "decrementDemoForecastCount should floor at 0",
+  )
+
+  // Demo cooldown timestamp persists via store
+  useSettingsStore.getState().setDemoLastChatCallTime(123456789)
+  console.assert(
+    useSettingsStore.getState().demoLastChatCallTime === 123456789,
+    "setDemoLastChatCallTime failed",
+  )
+
   console.log("\n✅ ALL STORE & PERSISTENCE TESTS PASSED SUCCESSFULLY!")
 }
 

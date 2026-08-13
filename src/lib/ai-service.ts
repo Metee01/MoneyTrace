@@ -339,8 +339,9 @@ export async function forecastEconomics(
   request: ForecastRequest,
 ): Promise<AiForecastResult> {
   if (request.isDemo) {
-    const currentCount = useSettingsStore.getState().demoForecastCount ?? 0
-    if (currentCount >= MAX_DEMO_FORECASTS) {
+    // Reserve the quota slot BEFORE the API call so concurrent requests
+    // cannot race past the limit. Rolled back if the call fails.
+    if (!useSettingsStore.getState().incrementDemoForecastCount()) {
       throw new AiForecastError(
         "quota",
         `Demo API forecast limit reached (${MAX_DEMO_FORECASTS}/${MAX_DEMO_FORECASTS}).`,
@@ -356,53 +357,56 @@ export async function forecastEconomics(
 
   let result: AiForecastResult
 
-  if (request.provider === "custom") {
-    const baseUrl = (request.baseUrl ?? "").trim()
-    const model =
-      (request.model ?? "").trim() ||
-      (request.isDemo ? APP_CONFIG.ai.models.demo : "")
-    if (!baseUrl) {
-      throw new AiForecastError(
-        "config",
-        "Custom provider requires a base URL.",
+  try {
+    if (request.provider === "custom") {
+      const baseUrl = (request.baseUrl ?? "").trim()
+      const model =
+        (request.model ?? "").trim() ||
+        (request.isDemo ? APP_CONFIG.ai.models.demo : "")
+      if (!baseUrl) {
+        throw new AiForecastError(
+          "config",
+          "Custom provider requires a base URL.",
+        )
+      }
+      if (!model) {
+        throw new AiForecastError("config", "Custom provider requires a model.")
+      }
+      const endpoint = applyCorsProxy(
+        normalizeChatCompletionsUrl(baseUrl),
+        request.corsProxy ?? "",
+      )
+      result = await callOpenAiCompatible(
+        endpoint,
+        request.apiKey,
+        model,
+        systemPrompt,
+        "custom provider",
+      )
+    } else if (!request.apiKey.trim()) {
+      throw new AiForecastError("auth", "No API key provided.")
+    } else if (request.provider === "gemini") {
+      const model =
+        (request.model ?? "").trim() ||
+        (request.isDemo ? APP_CONFIG.ai.models.demo : GEMINI_MODEL)
+      result = await callGemini(request.apiKey.trim(), model, systemPrompt)
+    } else {
+      const model =
+        (request.model ?? "").trim() ||
+        (request.isDemo ? APP_CONFIG.ai.models.demo : OPENAI_MODEL)
+      result = await callOpenAiCompatible(
+        OPENAI_ENDPOINT,
+        request.apiKey,
+        model,
+        systemPrompt,
+        "OpenAI API",
       )
     }
-    if (!model) {
-      throw new AiForecastError("config", "Custom provider requires a model.")
+  } catch (err) {
+    if (request.isDemo) {
+      useSettingsStore.getState().decrementDemoForecastCount()
     }
-    const endpoint = applyCorsProxy(
-      normalizeChatCompletionsUrl(baseUrl),
-      request.corsProxy ?? "",
-    )
-    result = await callOpenAiCompatible(
-      endpoint,
-      request.apiKey,
-      model,
-      systemPrompt,
-      "custom provider",
-    )
-  } else if (!request.apiKey.trim()) {
-    throw new AiForecastError("auth", "No API key provided.")
-  } else if (request.provider === "gemini") {
-    const model =
-      (request.model ?? "").trim() ||
-      (request.isDemo ? APP_CONFIG.ai.models.demo : GEMINI_MODEL)
-    result = await callGemini(request.apiKey.trim(), model, systemPrompt)
-  } else {
-    const model =
-      (request.model ?? "").trim() ||
-      (request.isDemo ? APP_CONFIG.ai.models.demo : OPENAI_MODEL)
-    result = await callOpenAiCompatible(
-      OPENAI_ENDPOINT,
-      request.apiKey,
-      model,
-      systemPrompt,
-      "OpenAI API",
-    )
-  }
-
-  if (request.isDemo) {
-    useSettingsStore.getState().incrementDemoForecastCount()
+    throw err
   }
 
   return result
