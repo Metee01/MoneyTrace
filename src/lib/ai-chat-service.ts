@@ -9,11 +9,13 @@
 import type {
   ChatMessage,
   AiModelProvider,
+  AiToolCall,
   ProjectionParams,
   ProjectionSummary,
   ProjectionResult,
 } from "../types"
 import { GEMINI_MODEL, OPENAI_MODEL, AiForecastError } from "./ai-service"
+import { TOOL_SCHEMAS, parseToolCalls } from "./ai-tools"
 
 // ─── Helpers shared with ai-service ──────────────────────────────────────────
 
@@ -181,18 +183,38 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
     `   • All monthly figures including withholding tax (stopaj), gross withdrawals, and net withdrawals landed in hand ARE pre-calculated and explicitly listed in the monthly data above. Do NOT state that monthly stopaj or net withdrawal data is missing.`,
     ``,
     `2. PROTOCOL WHEN REQUIRED DATA IS OUTSIDE THE PROJECTION HORIZON:`,
-    `   • If the user asks for a month/year beyond the current projection horizon (${p.targetYears} years) or for hypothetical parameters not in the current portfolio:`,
-    `   • Explicitly inform the user that this requires a custom calculation outside their current projection horizon/parameters.`,
-    `   • Ask for permission before performing an AI estimation calculation.`,
+    `   • If the user asks for a month/year beyond the current projection horizon (${p.targetYears} years) or for hypothetical parameters not in the current portfolio, call "calculate_projection" with the requested updates/highlightMonths to get the exact engine output.`,
+    `   • If the user wants those hypothetical values SAVED into the portfolio, propose the change with a mutating tool call and wait for approval.`,
     ``,
-    `3. EXECUTE CUSTOM CALCULATIONS ONLY AFTER EXPLICIT USER CONSENT:`,
-    `   • ONLY IF the user explicitly confirms (e.g. "evet", "hesapla", "izin veriyorum"), proceed to calculate and clearly mark the numbers as AI estimations.`,
+    `3. NO HAND-MADE ESTIMATIONS:`,
+    `   • NEVER produce your own multiplication/compounding numbers. Always resolve questions through "calculate_projection" and cite the returned figures.`,
     ``,
     `── General Guidelines ──`,
     `• Answer financial questions about the user's portfolio, projections, and investment strategies concisely and professionally.`,
     `• If the user asks something completely unrelated to finance or their portfolio, politely redirect.`,
-    `• Never fabricate portfolio data — only reference what is provided above or requested after consent.`,
+    `• Never fabricate portfolio data — only reference what is provided above or the results of tool calls.`,
     `• Always include appropriate disclaimers that AI analysis is NOT formal investment advice.`,
+    ``,
+    `── Tool Calling Protocol ──`,
+    `You can modify the app's portfolio data (form fields, custom withdrawals, scenarios) and run exact engine calculations on the fly. The app executes your requests and returns precise results.`,
+    `• To use a tool, append a single block at the END of your answer:`,
+    `<TOOL_CALLS>[{"tool": "tool_name", "args": {...}}]</TOOL_CALLS>`,
+    `• The block must contain RAW JSON only — never wrap it in markdown fences and never split it across multiple blocks.`,
+    `• You may call several tools in one block. Tools run in order; later "calculate_projection" calls see earlier mutations that the user approved.`,
+    `• Mutating tools (apply_params, set_custom_withdrawal, clear_custom_withdrawals, create_scenario, reset_params) ALWAYS trigger an approval prompt in the UI — never claim the data was changed before the user approves.`,
+    `• Read-only tools (calculate_projection, forecast_economics) run instantly without approval.`,
+    `• AVAILABLE TOOLS:`,
+  )
+  TOOL_SCHEMAS.forEach((schema) => {
+    lines.push(
+      `  - ${schema.name} (${schema.kind === "read" ? "instant" : "requires approval"}): ${schema.description}`,
+      `    args: ${schema.argsDoc}`,
+    )
+  })
+  lines.push(
+    `• After the app executes your calls, a "[Tool result]" message follows this message's context. Base your final answer STRICTLY on those returned figures — never estimate or recalculate by hand.`,
+    `• If the user rejects the proposed changes, do not apply them and continue the conversation politely.`,
+    `• NEVER emit a tool call block unless you actually need to change data or you need exact engine figures that are not already in the context above.`,
   )
 
   return lines.join("\n")
@@ -379,14 +401,22 @@ async function chatWithOpenAi(
 
 const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 
+/** Chat service response: text plus any tool calls parsed from it. */
+export interface ChatServiceResponse {
+  text: string
+  toolCalls: AiToolCall[]
+}
+
 /**
  * Sends a chat message to the selected AI provider with full portfolio context.
  *
  * @param request Provider settings, conversation history, and portfolio context
- * @returns The AI assistant's text response
+ * @returns The AI assistant's text response plus any tool calls it requested
  * @throws {AiForecastError} with a machine-readable `code`
  */
-export async function sendChatMessage(request: ChatRequest): Promise<string> {
+export async function sendChatMessage(
+  request: ChatRequest,
+): Promise<ChatServiceResponse> {
   if (request.isDemo) {
     const currentCount = useSettingsStore.getState().demoChatCount ?? 0
     if (currentCount >= MAX_DEMO_CHAT_MESSAGES) {
@@ -407,10 +437,12 @@ export async function sendChatMessage(request: ChatRequest): Promise<string> {
     lastDemoCallTime = now
   }
 
-  // Security: Truncate messages if using demo key to prevent excessive token abuse
+  // Security: Truncate user messages if using demo key to prevent excessive
+  // token abuse. Internal tool-protocol messages are exempt.
   const sanitizeMessages = request.messages.map((m) => {
     if (
       request.isDemo &&
+      !m.internal &&
       m.role === "user" &&
       m.content.length > MAX_DEMO_MESSAGE_LENGTH
     ) {
@@ -481,7 +513,7 @@ export async function sendChatMessage(request: ChatRequest): Promise<string> {
     useSettingsStore.getState().incrementDemoChatCount()
   }
 
-  return responseText
+  return { text: responseText, toolCalls: parseToolCalls(responseText) }
 }
 
 /**

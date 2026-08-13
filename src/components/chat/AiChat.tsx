@@ -20,6 +20,7 @@ import {
   History,
   Plus,
   ChevronLeft,
+  Wrench,
 } from "lucide-react"
 import { Button } from "../ui/button"
 import {
@@ -34,9 +35,28 @@ import {
   sendChatMessage,
   getDemoApiKey,
   type PortfolioContext,
+  type ChatServiceResponse,
 } from "../../lib/ai-chat-service"
 import { AiForecastError } from "../../lib/ai-service"
-import type { ChatMessage, AiModelProvider } from "../../types"
+import {
+  TOOL_SCHEMAS,
+  createDefaultToolDeps,
+  describeMutationCall,
+  executeToolCall,
+  stripToolCalls,
+} from "../../lib/ai-tools"
+import type {
+  ChatMessage,
+  AiModelProvider,
+  AiToolCall,
+  AiToolCallResult,
+} from "../../types"
+
+const MAX_TOOL_ROUNDS = APP_CONFIG.ai.toolCall.maxRounds
+
+function isMutationTool(call: AiToolCall): boolean {
+  return TOOL_SCHEMAS.find((s) => s.name === call.tool)?.kind === "mutate"
+}
 
 interface AiChatProps {
   onOpenSettings: () => void
@@ -173,6 +193,11 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [localDemoOverride, setLocalDemoOverride] = useState(false)
+  const [pendingProposals, setPendingProposals] = useState<{
+    calls: AiToolCall[]
+  } | null>(null)
+
+  const toolDeps = useMemo(() => createDefaultToolDeps(), [])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -190,7 +215,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     [sessions, activeSessionId],
   )
 
-  const messages = activeSession?.messages ?? []
+  const messages = useMemo(() => activeSession?.messages ?? [], [activeSession])
 
   const demoApiKey = useMemo(() => getDemoApiKey(), [])
   const hasDemoKey = demoApiKey.length > 0
@@ -254,9 +279,180 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [isOpen])
 
+  // ── Tool Call Flow ─────────────────────────────────────────────────────────
+
+  const appendToolResults = useCallback(
+    (results: AiToolCallResult[]) => {
+      const now = Date.now()
+      for (const r of results) {
+        addMessageToActiveSession({
+          id: generateId(),
+          role: "user",
+          content: `[Tool result for ${r.tool}]${r.ok ? "" : " — ERROR"}\n${r.output}`,
+          timestamp: now,
+          internal: true,
+        })
+      }
+    },
+    [addMessageToActiveSession],
+  )
+
+  const addInternalNote = useCallback(
+    (note: string) => {
+      addMessageToActiveSession({
+        id: generateId(),
+        role: "user",
+        content: note,
+        timestamp: Date.now(),
+        internal: true,
+      })
+    },
+    [addMessageToActiveSession],
+  )
+
+  const reportError = useCallback(
+    (err: unknown) => {
+      if (err instanceof AiForecastError) {
+        if (err.code === "quota") {
+          setError(err.message || t("chat.demoQuotaExceeded"))
+        } else {
+          setError(
+            t(
+              `ai.error${err.code.charAt(0).toUpperCase() + err.code.slice(1)}` as "ai.errorAuth",
+            ),
+          )
+        }
+      } else {
+        setError(t("chat.errorSending"))
+      }
+    },
+    [t],
+  )
+
+  const buildRequest = useCallback(
+    (requestMessages: ChatMessage[]) => ({
+      provider: activeProvider,
+      apiKey: activeApiKey,
+      model: activeModel,
+      baseUrl: activeBaseUrl,
+      corsProxy: aiCorsProxyEnabled ? (aiCorsProxy ?? "") : "",
+      messages: requestMessages,
+      context: portfolioContext,
+      isDemo: isUsingDemo,
+    }),
+    [
+      activeProvider,
+      activeApiKey,
+      activeModel,
+      activeBaseUrl,
+      aiCorsProxy,
+      aiCorsProxyEnabled,
+      portfolioContext,
+      isUsingDemo,
+    ],
+  )
+
+  const appendAssistant = useCallback(
+    (response: ChatServiceResponse) => {
+      addMessageToActiveSession({
+        id: generateId(),
+        role: "assistant",
+        content: response.text,
+        timestamp: Date.now(),
+      })
+      if (response.toolCalls.length > 0) {
+        setPendingProposals({
+          calls: response.toolCalls,
+        })
+      }
+    },
+    [addMessageToActiveSession],
+  )
+
+  /**
+   * Sends follow-up rounds after tool results were injected into the session.
+   * Read-only tool calls are executed automatically; any mutation call pauses
+   * the flow again for user approval (bounded by MAX_TOOL_ROUNDS).
+   */
+  const runFollowUpRound = useCallback(async () => {
+    let rounds = 0
+    while (rounds < MAX_TOOL_ROUNDS) {
+      rounds += 1
+      const session = useChatStore.getState().getActiveSession()
+      const response = await sendChatMessage(
+        buildRequest(session?.messages ?? []),
+      )
+      addMessageToActiveSession({
+        id: generateId(),
+        role: "assistant",
+        content: response.text,
+        timestamp: Date.now(),
+      })
+
+      if (response.toolCalls.length === 0) return
+      if (response.toolCalls.some(isMutationTool)) {
+        setPendingProposals({ calls: response.toolCalls })
+        return
+      }
+      if (rounds >= MAX_TOOL_ROUNDS) return
+
+      for (const call of response.toolCalls) {
+        appendToolResults([await executeToolCall(call, toolDeps, false)])
+      }
+    }
+  }, [buildRequest, appendToolResults, addMessageToActiveSession, toolDeps])
+
+  const handleApproveProposals = useCallback(async () => {
+    if (!pendingProposals || isLoading) return
+    const calls = pendingProposals.calls
+    setPendingProposals(null)
+    setError(null)
+    setIsLoading(true)
+    try {
+      for (const call of calls) {
+        appendToolResults([await executeToolCall(call, toolDeps, true)])
+      }
+      await runFollowUpRound()
+    } catch (err) {
+      reportError(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [
+    pendingProposals,
+    isLoading,
+    toolDeps,
+    appendToolResults,
+    runFollowUpRound,
+    reportError,
+  ])
+
+  const handleRejectProposals = useCallback(async () => {
+    if (!pendingProposals || isLoading) return
+    setPendingProposals(null)
+    setError(null)
+    setIsLoading(true)
+    try {
+      addInternalNote(
+        "The user REJECTED the proposed tool calls above. Acknowledge this politely and continue the conversation; do NOT apply any of the proposed changes.",
+      )
+      await runFollowUpRound()
+    } catch (err) {
+      reportError(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [
+    pendingProposals,
+    isLoading,
+    addInternalNote,
+    runFollowUpRound,
+    reportError,
+  ])
+
   const handleSendMessage = useCallback(async () => {
     const trimmed = inputValue.trim()
-    if (!trimmed || isLoading || !hasActiveKey) return
+    if (!trimmed || isLoading || pendingProposals || !hasActiveKey) return
 
     if (isQuotaExceeded) {
       setError(t("chat.demoQuotaExceeded"))
@@ -277,56 +473,23 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
 
     try {
       const allMessages = [...messages, userMessage]
-      const responseText = await sendChatMessage({
-        provider: activeProvider,
-        apiKey: activeApiKey,
-        model: activeModel,
-        baseUrl: activeBaseUrl,
-        corsProxy: aiCorsProxyEnabled ? (aiCorsProxy ?? "") : "",
-        messages: allMessages,
-        context: portfolioContext,
-        isDemo: isUsingDemo,
-      })
-
-      const assistantMessage: ChatMessage = {
-        id: generateId(),
-        role: "assistant",
-        content: responseText,
-        timestamp: Date.now(),
-      }
-
-      addMessageToActiveSession(assistantMessage)
+      const response = await sendChatMessage(buildRequest(allMessages))
+      appendAssistant(response)
     } catch (err) {
-      if (err instanceof AiForecastError) {
-        if (err.code === "quota") {
-          setError(err.message || t("chat.demoQuotaExceeded"))
-        } else {
-          setError(
-            t(
-              `ai.error${err.code.charAt(0).toUpperCase() + err.code.slice(1)}` as "ai.errorAuth",
-            ),
-          )
-        }
-      } else {
-        setError(t("chat.errorSending"))
-      }
+      reportError(err)
     } finally {
       setIsLoading(false)
     }
   }, [
     inputValue,
     isLoading,
+    pendingProposals,
     hasActiveKey,
     isQuotaExceeded,
     messages,
-    activeProvider,
-    activeApiKey,
-    activeModel,
-    activeBaseUrl,
-    aiCorsProxy,
-    aiCorsProxyEnabled,
-    portfolioContext,
-    isUsingDemo,
+    buildRequest,
+    appendAssistant,
+    reportError,
     addMessageToActiveSession,
     t,
   ])
@@ -341,11 +504,13 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   const handleNewChat = () => {
     createSession(t("chat.welcome"))
     setIsHistoryOpen(false)
+    setPendingProposals(null)
     setError(null)
   }
 
   const handleClearCurrentChat = () => {
     clearActiveSession(t("chat.welcome"))
+    setPendingProposals(null)
     setError(null)
   }
 
@@ -494,6 +659,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
                       key={s.id}
                       onClick={() => {
                         selectSession(s.id)
+                        setPendingProposals(null)
                         setIsHistoryOpen(false)
                       }}
                       className={`group flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
@@ -535,24 +701,75 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
           ) : (
             /* Active Messages View */
             <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 scroll-smooth">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md"
-                        : "bg-muted text-foreground rounded-bl-md"
-                    }`}
-                  >
-                    {msg.role === "assistant"
-                      ? formatMessageContent(msg.content)
-                      : msg.content}
+              {messages.map((msg) =>
+                msg.internal ? (
+                  <div key={msg.id} className="flex justify-center">
+                    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/80 bg-muted/60 px-2 py-0.5 rounded-full">
+                      <Wrench className="w-2.5 h-2.5" />
+                      {t("chat.toolExecuted")}
+                    </span>
                   </div>
-                </div>
-              ))}
+                ) : (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
+                        msg.role === "user"
+                          ? "bg-primary text-primary-foreground rounded-br-md"
+                          : "bg-muted text-foreground rounded-bl-md"
+                      }`}
+                    >
+                      {msg.role === "assistant"
+                        ? formatMessageContent(stripToolCalls(msg.content))
+                        : msg.content}
+                    </div>
+                  </div>
+                ),
+              )}
+
+              {/* Tool Call Approval Card */}
+              {pendingProposals !== null &&
+                pendingProposals.calls.some(isMutationTool) && (
+                  <div className="border border-primary/40 bg-primary/5 dark:bg-primary/10 rounded-xl p-3 space-y-2">
+                    <p className="text-xs font-semibold text-foreground">
+                      {t("chat.proposalTitle")}
+                    </p>
+                    <ul className="space-y-1">
+                      {pendingProposals.calls
+                        .filter(isMutationTool)
+                        .map((call, idx) => (
+                          <li
+                            key={`${call.tool}-${idx}`}
+                            className="text-[11px] text-muted-foreground leading-relaxed"
+                          >
+                            <span className="text-primary mr-1.5">•</span>
+                            {describeMutationCall(call, () => currentParams)}
+                          </li>
+                        ))}
+                    </ul>
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        onClick={handleApproveProposals}
+                        disabled={isLoading}
+                        className="text-xs flex-1"
+                      >
+                        {t("chat.proposalApply")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleRejectProposals}
+                        disabled={isLoading}
+                        className="text-xs flex-1"
+                      >
+                        {t("chat.proposalReject")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
               {/* Typing Indicator */}
               {isLoading && (
@@ -638,12 +855,14 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
                   target.style.height = "auto"
                   target.style.height = `${Math.min(target.scrollHeight, 96)}px`
                 }}
-                disabled={isLoading}
+                disabled={isLoading || pendingProposals !== null}
               />
               <Button
                 size="icon"
                 onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isLoading}
+                disabled={
+                  !inputValue.trim() || isLoading || pendingProposals !== null
+                }
                 className="shrink-0 rounded-xl h-10 w-10"
               >
                 {isLoading ? (

@@ -227,6 +227,10 @@
     "deleteSession": "Sohbeti Sil",
     "activeChat": "Mevcut Sohbet",
     "backToChat": "Sohbete Dön",
-    "untitledChat": "İsimsiz Sohbet"
+    "untitledChat": "İsimsiz Sohbet",
+    "proposalTitle": "AI portföy verilerinizi güncellemek istiyor",
+    "proposalApply": "Uygula",
+    "proposalReject": "Reddet",
+    "toolExecuted": "AI verileri güncelledi"
   }
 }

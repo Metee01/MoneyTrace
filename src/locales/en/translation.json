@@ -227,6 +227,10 @@
     "deleteSession": "Delete Chat",
     "activeChat": "Active Chat",
     "backToChat": "Back to Chat",
-    "untitledChat": "Untitled Conversation"
+    "untitledChat": "Untitled Conversation",
+    "proposalTitle": "AI wants to update your portfolio data",
+    "proposalApply": "Apply",
+    "proposalReject": "Reject",
+    "toolExecuted": "AI data updated"
   }
 }

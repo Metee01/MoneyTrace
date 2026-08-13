@@ -185,6 +185,28 @@ export interface AiForecastResult {
 }
 
 /**
+ * AI Tool Call (In-Band JSON Protocol)
+ */
+export interface AiToolCall {
+  /** Tool name (see TOOL_SCHEMAS in src/lib/ai-tools.ts) */
+  tool: string
+  /** Tool arguments (JSON object) */
+  args: Record<string, unknown>
+}
+
+/**
+ * Tool Call Execution Result
+ */
+export interface AiToolCallResult {
+  /** Tool name that was executed */
+  tool: string
+  /** Whether execution succeeded */
+  ok: boolean
+  /** JSON-string output (or error message when failed) */
+  output: string
+}
+
+/**
  * AI Chat Message
  */
 export interface ChatMessage {
@@ -196,6 +218,8 @@ export interface ChatMessage {
   content: string
   /** Unix timestamp (ms) */
   timestamp: number
+  /** Hides this message from the chat UI (internal tool protocol use only) */
+  internal?: boolean
 }
 
 /**

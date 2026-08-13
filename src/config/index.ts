@@ -27,6 +27,13 @@ export const APP_CONFIG = {
     },
     /** Default max response tokens for AI completion requests */
     maxTokens: 8000,
+    /** AI tool calling (in-band JSON protocol) limits */
+    toolCall: {
+      /** Maximum exchange rounds per user message before finalizing */
+      maxRounds: 3,
+      /** Maximum month rows a projection tool may return per call */
+      maxHighlightMonths: 6,
+    },
     /** Provider base endpoints */
     endpoints: {
       geminiBase: "https://generativelanguage.googleapis.com/v1beta/models",
@@ -41,7 +48,7 @@ export const APP_CONFIG = {
       /** Maximum allowed economic forecast predictions using Demo API */
       maxForecasts: 5,
       /** Maximum allowed chat messages using Demo API */
-      maxChatMessages: 15,
+      maxChatMessages: 20,
       /** Maximum allowed user prompt character length per chat message on Demo API */
       maxMessageLength: 500,
       /** Rate-limiting cooldown period between messages in milliseconds */
@@ -59,6 +66,19 @@ export const APP_CONFIG = {
     maxTargetYears: 50,
     maxTargetMonths: 600,
     roundingDecimals: 2,
+    /** Sanitization bounds applied to AI-provided parameter values */
+    limits: {
+      initialCapital: { min: 0, max: 1e12 },
+      monthlyDca: { min: 0, max: 1e9 },
+      dcaIncreaseRate: { min: 0, max: 1000 },
+      monthlyWithdrawal: { min: 0, max: 1e9 },
+      expectedReturnRate: { min: -100, max: 1000 },
+      expectedInflationRate: { min: -100, max: 1000 },
+      usdRate: { min: 1e-6, max: 1e6 },
+      expectedUsdGrowthRate: { min: -100, max: 1000 },
+      targetYears: { min: 1, max: 50 },
+      withholdingTaxRate: { min: 0, max: 100 },
+    },
     defaultParams: {
       initialCapital: 10000,
       monthlyDca: 500,
