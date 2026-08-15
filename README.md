@@ -1,8 +1,8 @@
 # 💸 MoneyTrace
 
-### Privacy-First, Client-Only Investment Projection & AI Simulation Engine
+### Privacy-First Investment Projection & AI Simulation Engine
 
-**[MoneyTrace](https://moneytrace.metee.com.tr)** is a privacy-first, client-only investment projection and simulation tool designed to help investors understand how their wealth grows over time through compound interest and Dollar-Cost Averaging (DCA) strategies — while revealing the real impact of inflation on purchasing power.
+**[MoneyTrace](https://moneytrace.metee.com.tr)** is a privacy-first investment projection and simulation tool designed to help investors understand how their wealth grows over time through compound interest and Dollar-Cost Averaging (DCA) strategies — while revealing the real impact of inflation on purchasing power. All calculations run locally in your browser; the only server-side component is the optional Demo API proxy.
 
 Featuring an **AI Financial Assistant Chat** and **AI-powered Economic Forecasting**, MoneyTrace gives you data-driven insights into your portfolio projections without storing your financial data on any external server.
 
@@ -32,10 +32,10 @@ Featuring an **AI Financial Assistant Chat** and **AI-powered Economic Forecasti
 
 ### 4. 🔑 Flexible AI Configuration & Demo Mode
 Configure your AI experience inside the **Settings** dialog:
-- **Demo API Mode:** Test AI chat and forecasting out-of-the-box with free daily quotas (5 forecasts, 15 chat messages).
+- **Demo API Mode:** Test AI chat and forecasting out-of-the-box with free quotas (5 forecasts, 15 chat messages).
 - **Bring Your Own Key (BYOK):** Connect your own API key for unlimited AI interactions.
 - **Supported Providers:** Google Gemini (`gemini-3.6-flash`), OpenAI (`gpt-4o-mini`), and custom OpenAI-compatible APIs (OpenRouter, Groq, LM Studio, Ollama, etc.).
-- **Built-in Security:** Rate-limiting cooldowns, prompt length limits, and prompt injection protection safeguards.
+- **Built-in Security:** Server-enforced quotas and cooldowns, prompt length limits, and prompt injection protection safeguards.
 
 ### 5. 🌍 Global Currency Support
 - Fully currency-agnostic: Supports **USD**, **EUR**, **GBP**, **JPY**, **CAD**, **AUD**, **TRY**, **BRL**, **INR**, and more.
@@ -74,8 +74,9 @@ Visual analytics powered by **Recharts**:
 
 ### 12. 🔒 Privacy-First Architecture
 - **100% Client-Side Engine:** All financial calculations run locally in your browser.
-- **No Backend & No Tracking:** Zero database storage, no user accounts, no analytics tracking of your financial inputs.
+- **No Tracking:** Zero database storage, no user accounts, no analytics tracking of your financial inputs.
 - **Local Persistence:** Data is saved locally using Zustand `persist` middleware in `localStorage`.
+- **Optional Demo Proxy:** When demo mode is enabled, requests pass through a serverless proxy (`api/demo.ts`) that owns the shared demo key and enforces quotas server-side — your portfolio data is never stored on it.
 
 ---
 
@@ -90,6 +91,7 @@ Visual analytics powered by **Recharts**:
 | **Internationalization** | i18next & react-i18next |
 | **Styling Utilities** | `class-variance-authority`, `clsx`, `tailwind-merge` |
 | **Analytics** | `@vercel/analytics` |
+| **Backend (optional)** | Vercel Edge Function (`api/demo.ts`), `@upstash/redis` (optional persistent quota counters) |
 
 > **Note:** Tailwind CSS v4 is integrated directly via the `@tailwindcss/vite` plugin without a `tailwind.config` file. Theme configuration and custom CSS variables are located in `src/index.css`.
 
@@ -109,7 +111,11 @@ export const APP_CONFIG = {
     defaultCurrencyCode: "USD",
   },
   ai: {
-    models: { gemini: "gemini-3.6-flash", openai: "gpt-4o-mini", demo: "gemini-3.6-flash" },
+    models: {
+      gemini: "gemini-3.6-flash",
+      openai: "gpt-4o-mini",
+      demo: "nvidia/nemotron-3-ultra-550b-a55b:free",
+    },
     demo: { maxForecasts: 5, maxChatMessages: 15, maxMessageLength: 500, cooldownMs: 3000 },
     // ...
   },
@@ -128,7 +134,8 @@ export const APP_CONFIG = {
 
 ```text
 MoneyTrace/
-├── public/                # Static assets & favicon
+├── api/                    # Vercel serverless demo proxy (demo.ts) — owns the demo API key
+├── public/                 # Static assets & favicon
 ├── src/
 │   ├── components/
 │   │   ├── chat/          # AI Chat FAB widget & panel (AiChat.tsx)
@@ -140,15 +147,15 @@ MoneyTrace/
 │   ├── config/            # Central app configuration (APP_CONFIG)
 │   ├── engine/            # Pure deterministic financial math (compound-growth, inflation-adjust, currency-convert)
 │   ├── hooks/             # Custom hooks (useTheme)
-│   ├── lib/               # AI service, AI chat service, formatters, export, i18n, utils
+│   ├── lib/               # AI service, AI chat service, demo-proxy client, formatters, export, i18n, utils
 │   ├── locales/           # Translation dictionaries (en, tr)
 │   ├── store/             # Zustand stores (portfolio-store, settings-store)
 │   ├── types/             # TypeScript interfaces & types
 │   ├── App.tsx            # Main application entry & Settings dialog
 │   ├── index.css          # Tailwind CSS v4 theme & CSS custom properties
 │   └── main.tsx           # React DOM entry point
-├── .env.example           # Demo API key configuration
-├── vercel.json            # Vercel SPA rewrites
+├── .env.example           # Demo proxy configuration
+├── vercel.json            # Vercel SPA rewrites (/api/* excluded)
 ├── vite.config.ts         # Vite config with React & Tailwind plugins
 ├── tsconfig.app.json      # TypeScript config with path alias @/* -> src/*
 ├── eslint.config.js       # ESLint flat config
@@ -198,13 +205,43 @@ MoneyTrace/
 
 ## 🔑 Environment Variables
 
-To enable the optional built-in Demo API mode for AI features in self-hosted deployments, set your Gemini API key in `.env`:
+The shared demo API key is **server-only** and never ships in the client bundle. The client only knows the proxy address.
+
+### Local development (`.env`)
 
 ```bash
-# Optional: Gemini API key for free Demo Mode
-# When provided, a "Use Demo API" option will appear in the app's Settings dialog.
-VITE_DEMO_API_KEY=your_gemini_api_key_here
+# Optional: enables the "Use Demo API" option in the UI.
+# Point it at a deployed proxy, e.g. https://your-site.vercel.app/api/demo
+VITE_DEMO_PROXY_URL=
 ```
+
+### Vercel deployment
+
+Set these in **Vercel → Project → Settings → Environment Variables**:
+
+| Variable | Value | Notes |
+| :--- | :--- | :--- |
+| `DEMO_API_KEY` | `sk-or-v1-...` | The shared demo API key (server-side only) |
+| `VITE_DEMO_PROXY_URL` | `/api/demo` | Enables the Demo API option (Production) |
+
+Optional: install the **Upstash Redis** integration from the Vercel Marketplace for persistent quota counters. Without it, the proxy falls back to in-memory counters.
+
+---
+
+## 🔒 Demo API Architecture
+
+```
+Browser ──▶ /api/demo (Vercel Edge Function) ──▶ AI Provider (OpenRouter)
+              │
+              ├─ Owns DEMO_API_KEY (env var, never in the bundle)
+              ├─ Enforces per-user quotas (5 forecasts / 15 chat messages)
+              ├─ Enforces per-IP daily caps and 3s chat cooldown
+              └─ Optional Upstash Redis persistence for counters
+```
+
+- The demo key lives only in the serverless function's environment and is attached to the upstream request on the server — it cannot be extracted from the site's JavaScript.
+- Quota counters are reserved atomically before each request and rolled back if the provider call fails.
+- The client sends an anonymous persisted `demoUserId`; browser-storage resets no longer reset server-side quotas.
 
 ---
 
