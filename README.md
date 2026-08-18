@@ -1,250 +1,190 @@
-# 💸 MoneyTrace
+<p align="center">
+  <img src="public/favicon.svg" alt="MoneyTrace" width="64" height="64" />
+</p>
 
-### Privacy-First Investment Projection & AI Simulation Engine
-
-**[MoneyTrace](https://moneytrace.metee.com.tr)** is a privacy-first investment projection and simulation tool designed to help investors understand how their wealth grows over time through compound interest and Dollar-Cost Averaging (DCA) strategies — while revealing the real impact of inflation on purchasing power. All calculations run locally in your browser; the only server-side component is the optional Demo API proxy.
-
-Featuring an **AI Financial Assistant Chat** and **AI-powered Economic Forecasting**, MoneyTrace gives you data-driven insights into your portfolio projections without storing your financial data on any external server.
-
----
+<h1 align="center">MoneyTrace</h1>
 
 <p align="center">
-  <a href="https://moneytrace.metee.com.tr"><strong>🌐 Launch Live Demo</strong></a> &nbsp;|&nbsp;
-  <a href="https://github.com/Metee01/MoneyTrace"><strong>💻 GitHub Repository</strong></a>
+  <strong>See your money's real future — inflation-adjusted portfolio projection</strong>
+</p>
+
+<p align="center">
+  <em>Compound growth & DCA simulation · Real vs. nominal value · AI financial assistant</em>
+</p>
+
+<p align="center">
+  <a href="https://moneytrace.metee.com.tr">🌐 Live Demo</a> ·
+  <a href="https://github.com/Metee01/MoneyTrace">GitHub</a>
+</p>
+
+<p align="center">
+  <img alt="React" src="https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white" />
+  <img alt="Tailwind v4" src="https://img.shields.io/badge/Tailwind_CSS_v4-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white" />
+  <img alt="Zustand" src="https://img.shields.io/badge/Zustand-7F56D9?style=flat-square" />
+  <img alt="Vercel" src="https://img.shields.io/badge/Vercel-111111?style=flat-square&logo=vercel&logoColor=white" />
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-green?style=flat-square" />
 </p>
 
 ---
 
-## ✨ Key Features
-
-### 1. 📈 Real vs. Nominal Value Comparison
-- Compare nominal balance growth alongside **inflation-adjusted purchasing power**.
-- Understand not just how large your future balance numbers appear, but what that money can actually buy in today's terms.
-
-### 2. 🤖 AI Financial Assistant Chat
-- Interactive floating chat widget (bottom-right FAB) ready to answer questions about your active portfolio projections.
-- Analyzes compound returns, risk horizons, and DCA strategy variations (e.g., *"What happens if I increase my DCA by 5% annually?"*).
-- **100% Private:** Full portfolio context is constructed entirely client-side before sending queries to your selected AI provider.
-
-### 3. ⚡ AI Economic Forecasting
-- One-click macroeconomic parameter estimates (projected inflation rates, annual returns, currency exchange rates).
-- Auto-fills investment inputs using real-time market projections.
-
-### 4. 🔑 Flexible AI Configuration & Demo Mode
-Configure your AI experience inside the **Settings** dialog:
-- **Demo API Mode:** Test AI chat and forecasting out-of-the-box with free quotas (5 forecasts, 15 chat messages).
-- **Bring Your Own Key (BYOK):** Connect your own API key for unlimited AI interactions.
-- **Supported Providers:** Google Gemini (`gemini-3.6-flash`), OpenAI (`gpt-4o-mini`), and custom OpenAI-compatible APIs (OpenRouter, Groq, LM Studio, Ollama, etc.).
-- **Built-in Security:** Server-enforced quotas and cooldowns, prompt length limits, and prompt injection protection safeguards.
-
-### 5. 🌍 Global Currency Support
-- Fully currency-agnostic: Supports **USD**, **EUR**, **GBP**, **JPY**, **CAD**, **AUD**, **TRY**, **BRL**, **INR**, and more.
-- Automatically formats numbers according to chosen currency standards.
-
-### 6. 💰 Compound Growth & DCA Simulation
-Simulate comprehensive financial models up to **50 years** (600 months):
-- Initial capital & monthly DCA contributions
-- Compound annual return rate
-- Annual DCA contribution increases (%)
-- Monthly cash withdrawals
-- Withholding tax deductions (%)
-- Inflation rate adjustments
-
-### 7. 💱 Reference Currency Tracking
-- Track local currency portfolios against a benchmark reference currency (e.g., USD).
-- Model projected exchange-rate growth to evaluate foreign currency exposure over long horizons.
-
-### 8. 🎯 Scenario Management
-- Create, clone, edit, compare, and set baseline portfolio scenarios.
-- Pre-configured defaults included: **Optimistic**, **Market Growth**, **Conservative**, and **Custom**.
-- Side-by-side scenario comparison table and metrics.
-
-### 9. 📊 Interactive Visualizations
-Visual analytics powered by **Recharts**:
-- **Portfolio Growth:** Nominal vs. Real Balance vs. Invested Capital
-- **Reference Currency Balance:** Valuation in reference currency ($)
-- **Inflation Impact:** Purchasing power loss visualization
-
-### 10. 📁 Export & Import
-- **CSV Export:** Full year-by-year and month-by-month projection tables.
-- **JSON Backup:** Export all scenarios to JSON and restore them seamlessly across browsers or devices.
-
-### 11. 🌐 Internationalization (i18n)
-- Seamless language switching: **English (en)** and **Turkish (tr)**.
-
-### 12. 🔒 Privacy-First Architecture
-- **100% Client-Side Engine:** All financial calculations run locally in your browser.
-- **No Tracking:** Zero database storage, no user accounts, no analytics tracking of your financial inputs.
-- **Local Persistence:** Data is saved locally using Zustand `persist` middleware in `localStorage`.
-- **Optional Demo Proxy:** When demo mode is enabled, requests pass through a serverless proxy (`api/demo.ts`) that owns the shared demo key and enforces quotas server-side — your portfolio data is never stored on it.
+<!-- ⚠️ TODO: Add the app's main screenshot here (portfolio form + summary cards + projection table).
+     Path: docs/screenshots/dashboard.png (recommended size: 1600x1000, dark theme) -->
+<img src="docs/screenshots/dashboard.png" alt="MoneyTrace dashboard — portfolio parameters, summary cards, and year-by-year projection table" width="100%" />
 
 ---
 
-## 🛠️ Tech Stack
+## Why MoneyTrace?
 
-| Category | Technology & Libraries |
+Most financial calculators show you **nominal numbers** — big future balances that quietly lose their purchasing power to inflation. MoneyTrace computes the numbers in **today's money**, so you see not only *how much* you'll have, but *what it will actually buy*.
+
+It's an open-source, privacy-first investment projection engine:
+
+- **All calculations run in your browser** — no servers, no accounts, no tracking, no database. Your data never leaves your device.
+- **Deterministic finance engine** — pure, testable math orchestrated in `src/engine/`; the UI only renders results.
+- **AI that understands your portfolio** — an optional chat assistant and forecast tool that reads your actual projection context and answers real questions (e.g. *"What happens if I increase my DCA by 5% annually?"*).
+
+## Features
+
+| | |
 | :--- | :--- |
-| **Framework & Language** | React 19, TypeScript, Vite 8 |
-| **Styling & UI** | Tailwind CSS v4 (`@tailwindcss/vite` plugin), `@base-ui/react` (shadcn base-nova style), Lucide Icons |
-| **State & Storage** | Zustand (with `persist` middleware -> `localStorage`) |
-| **Charts** | Recharts |
-| **Internationalization** | i18next & react-i18next |
-| **Styling Utilities** | `class-variance-authority`, `clsx`, `tailwind-merge` |
-| **Analytics** | `@vercel/analytics` |
-| **Backend (optional)** | Vercel Edge Function (`api/demo.ts`), `@upstash/redis` (optional persistent quota counters) |
+| 📈 **Real vs. Nominal value** | Track both the raw balance and its inflation-adjusted purchasing power — two curves, one honest picture. |
+| 💰 **Compound growth & DCA engine** | Simulate up to **50 years**: initial capital, monthly DCA, annual contribution increase, withdrawals, withholding tax, inflation. |
+| 💱 **Multi-currency** | USD, EUR, GBP, JPY, TRY, BRL, INR and more, with automatic locale-aware number formatting. |
+| 📊 **Reference currency tracking** | Benchmark local-currency portfolios against USD (or any reference) with projected FX growth. |
+| 🤖 **AI Financial Assistant** | Floating chat widget that analyzes your active projection — returns, horizons, DCA variants — client-side context, full privacy. |
+| ⚡ **AI Economic Forecasting** | One click to estimate inflation, returns, and exchange rates, and auto-fill your portfolio inputs. |
+| 🔑 **Bring your own key** | Gemini, OpenAI, or any OpenAI-compatible API (OpenRouter, Groq, Ollama, LM Studio…). A hosted **Demo API** mode lets visitors try the AI for free, with server-enforced quotas. |
+| 🎯 **Scenario management** | Create, clone, edit, compare, and pin baseline scenarios — pre-seeded with *Optimistic*, *Market Growth*, *Conservative*, and *Custom*. |
+| 📊 **Interactive charts** | Portfolio growth (nominal vs. real vs. invested), reference-currency valuation, and inflation impact visualizations. |
+| 📁 **Export & import** | CSV export of year- and month-level tables; JSON backup/restore of all scenarios. |
+| 🌐 **i18n** | English and Turkish, switch seamlessly. |
+| 🔒 **Privacy-first** | Zero tracking, zero accounts; Zustand `persist` keeps everything in `localStorage`. |
 
-> **Note:** Tailwind CSS v4 is integrated directly via the `@tailwindcss/vite` plugin without a `tailwind.config` file. Theme configuration and custom CSS variables are located in `src/index.css`.
+## Screenshots
 
----
+<!-- Record the screenshots below into docs/screenshots/ — each one's expected path is noted. Once the files exist, this section renders as a gallery. -->
 
-## ⚙️ Central Configuration (`src/config/index.ts`)
+### 1. Dashboard
 
-All application settings, AI model configurations, demo quota limits, and default engine parameters are managed centrally in `src/config/index.ts`:
+<!-- TODO: docs/screenshots/dashboard.png — desktop, dark theme, portfolio form on the left, summary cards + projection table on the right -->
+<img src="docs/screenshots/dashboard.png" alt="Dashboard: portfolio form and projection table" />
 
-```typescript
-// Abbreviated summary of APP_CONFIG
-export const APP_CONFIG = {
-  app: {
-    name: "MoneyTrace",
-    version: "x.x.x",
-    defaultLanguage: "en",
-    defaultCurrencyCode: "USD",
-  },
-  ai: {
-    models: {
-      gemini: "gemini-3.6-flash",
-      openai: "gpt-4o-mini",
-      demo: "nvidia/nemotron-3-ultra-550b-a55b:free",
-    },
-    demo: { maxForecasts: 5, maxChatMessages: 15, maxMessageLength: 500, cooldownMs: 3000 },
-    // ...
-  },
-  engine: {
-    maxTargetYears: 50,
-    maxTargetMonths: 600,
-    roundingDecimals: 2,
-    defaultParams: { /* ... */ }
-  }
-};
-```
+**How:** Start with the default scenario, ~10 years, and capture the main view (portfolio form + summary cards + table).
 
----
+### 2. Charts
 
-## 📂 Project Structure
+<!-- TODO: docs/screenshots/charts.png — ChartSection with the three Recharts visualizations visible -->
+<img src="docs/screenshots/charts.png" alt="Charts: nominal vs real growth, reference currency, inflation impact" />
 
-```text
-MoneyTrace/
-├── api/                    # Vercel serverless demo proxy (demo.ts) — owns the demo API key
-├── public/                 # Static assets & favicon
-├── src/
-│   ├── components/
-│   │   ├── chat/          # AI Chat FAB widget & panel (AiChat.tsx)
-│   │   ├── layout/        # Header, Footer, Layout wrapper
-│   │   ├── portfolio/     # Portfolio input form & AI Forecast modal
-│   │   ├── projection/    # Summary cards, Recharts section, detail table
-│   │   ├── scenarios/     # Scenario manager & comparison dialog
-│   │   └── ui/            # Base UI primitives (Button, Card, Dialog, Input, Label, Select, Separator, Switch, Tabs, Tooltip)
-│   ├── config/            # Central app configuration (APP_CONFIG)
-│   ├── engine/            # Pure deterministic financial math (compound-growth, inflation-adjust, currency-convert)
-│   ├── hooks/             # Custom hooks (useTheme)
-│   ├── lib/               # AI service, AI chat service, demo-proxy client, formatters, export, i18n, utils
-│   ├── locales/           # Translation dictionaries (en, tr)
-│   ├── store/             # Zustand stores (portfolio-store, settings-store)
-│   ├── types/             # TypeScript interfaces & types
-│   ├── App.tsx            # Main application entry & Settings dialog
-│   ├── index.css          # Tailwind CSS v4 theme & CSS custom properties
-│   └── main.tsx           # React DOM entry point
-├── .env.example           # Demo proxy configuration
-├── vercel.json            # Vercel SPA rewrites (/api/* excluded)
-├── vite.config.ts         # Vite config with React & Tailwind plugins
-├── tsconfig.app.json      # TypeScript config with path alias @/* -> src/*
-├── eslint.config.js       # ESLint flat config
-├── package.json
-└── README.md
-```
+**How:** Scroll to the chart section — growth vs. real balance vs. invested capital, reference currency line, and inflation impact card.
 
----
+### 3. Scenario comparison
 
-## 💻 Prerequisites & Installation
+<!-- TODO: docs/screenshots/scenarios.png — ScenarioComparisonDialog with at least 3 scenarios side by side -->
+<img src="docs/screenshots/scenarios.png" alt="Scenario comparison dialog" />
 
-### Requirements
-- **Node.js**: `>= 20.19`
-- **npm** or preferred package manager
+**How:** Create 2–3 scenarios (e.g. *Market Growth* vs. *Conservative*), open **Compare** and capture the side-by-side table.
 
-### Setup Steps
+### 4. AI Forecast modal
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Metee01/MoneyTrace.git
-   cd MoneyTrace
-   ```
+<!-- TODO: docs/screenshots/ai-forecast.png — AiForecastModal with estimated parameters filled in -->
+<img src="docs/screenshots/ai-forecast.png" alt="AI economic forecast modal" />
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+**How:** Open the **AI Forecast** modal, run a forecast, and capture the filled-in parameters.
 
-3. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
-   Open `http://localhost:5173` in your browser.
+### 5. AI Chat
 
-4. **Build for production:**
-   ```bash
-   npm run build
-   ```
+<!-- TODO: docs/screenshots/ai-chat.png — chat widget with a Q&A session visible -->
+<img src="docs/screenshots/ai-chat.png" alt="AI financial assistant chat" />
 
-5. **Run linters and test suites:**
-   ```bash
-   npm run lint
-   npm run test
-   ```
+**How:** Open the chat FAB (bottom-right), ask one of the question, and capture the conversation.
 
----
+### 6. Settings
 
-## 🔑 Environment Variables
+<!-- TODO: docs/screenshots/settings.png — Settings dialog with the AI provider tab open -->
+<img src="docs/screenshots/settings.png" alt="Settings dialog: AI provider configuration" />
 
-The shared demo API key is **server-only** and never ships in the client bundle. The client only knows the proxy address.
+**How:** Open the Settings dialog and capture the AI configuration (provider, key, model, base URL, Demo API toggle).
 
-### Local development (`.env`)
+## Tech Stack
+
+| Category | Choice |
+| :--- | :--- |
+| Frontend | React 19 · TypeScript · Vite 8 |
+| Styling | Tailwind CSS v4 (`@tailwindcss/vite`) · `@base-ui/react` · CVA + `cn()` |
+| State | Zustand + `persist` (`localStorage`) |
+| Charts | Recharts |
+| i18n | i18next · react-i18next |
+| AI (client) | `src/lib/ai-service.ts` · `ai-chat-service.ts` — Gemini / OpenAI / OpenAI-compatible |
+| Backend (optional) | Vercel Edge Function `api/demo.ts` + Upstash Redis quota counters |
+
+## Getting Started
 
 ```bash
-# Optional: enables the "Use Demo API" option in the UI.
-# Point it at a deployed proxy, e.g. https://your-site.vercel.app/api/demo
-VITE_DEMO_PROXY_URL=
+git clone https://github.com/Metee01/MoneyTrace.git
+cd MoneyTrace
+npm install
+npm run dev      # → http://localhost:5173
 ```
 
-### Vercel deployment
+Useful scripts:
 
-Set these in **Vercel → Project → Settings → Environment Variables**:
+| Script | Purpose |
+| :--- | :--- |
+| `npm run dev` | Start the Vite dev server |
+| `npm run build` | Typecheck (`tsc -b`) + production build |
+| `npm run lint` · `npm run format` | ESLint · Prettier |
+| `npm test` | Deterministic engine + store + AI tools tests (via `tsx`) |
 
-| Variable | Value | Notes |
+<details>
+<summary><b>🔑 Environment variables & demo proxy</b> (for deploying your own instance)</summary>
+
+| Variable | Where | Purpose |
 | :--- | :--- | :--- |
-| `DEMO_API_KEY` | `sk-or-v1-...` | The shared demo API key (server-side only) |
-| `VITE_DEMO_PROXY_URL` | `/api/demo` | Enables the Demo API option (Production) |
+| `VITE_DEMO_PROXY_URL` | `.env` / Vercel | Enables the hosted **Demo API** option; points at `/api/demo` |
+| `DEMO_API_KEY` | Vercel **only** | Shared demo key — lives in the edge function, never ships in the bundle |
 
-Optional: install the **Upstash Redis** integration from the Vercel Marketplace for persistent quota counters. Without it, the proxy falls back to in-memory counters.
+The proxy in `api/demo.ts` enforces per-user quotas (5 forecasts / 15 chat messages), per-IP daily caps, a 3s chat cooldown, and optional persistent counters via Upstash Redis — see `api/demo.ts` for details.
 
----
+</details>
 
-## 🔒 Demo API Architecture
+## Architecture
 
 ```
-Browser ──▶ /api/demo (Vercel Edge Function) ──▶ AI Provider (OpenRouter)
-              │
-              ├─ Owns DEMO_API_KEY (env var, never in the bundle)
-              ├─ Enforces per-user quotas (5 forecasts / 15 chat messages)
-              ├─ Enforces per-IP daily caps and 3s chat cooldown
-              └─ Optional Upstash Redis persistence for counters
+┌──────────────────────────────┐       ┌──────────────────────────────┐
+│           Browser            │       │     Vercel (optional)        │
+│  PortfolioForm → engine/     │  AI   │  /api/demo (Edge Function)   │
+│  (pure, deterministic)       │ ───▶  │  • owns DEMO_API_KEY         │
+│  Zustand persist (local)     │       │  • quota + rate limiting     │
+│  AI service / chat (BYOK)    │       │  • Upstash Redis (optional)  │
+└──────────────────────────────┘       └──────────────────────────────┘
+         ▲ all financial math
+         │ stays on device
 ```
 
-- The demo key lives only in the serverless function's environment and is attached to the upstream request on the server — it cannot be extracted from the site's JavaScript.
-- Quota counters are reserved atomically before each request and rolled back if the provider call fails.
-- The client sends an anonymous persisted `demoUserId`; browser-storage resets no longer reset server-side quotas.
+- `src/engine/` — pure, framework-free financial math (compound growth, inflation adjustment, currency conversion), orchestrated by `calculateProjection`; deterministic, rounded to 2 decimals.
+- `src/config/index.ts` — single source of truth (`APP_CONFIG`): app metadata, AI models, demo quotas, engine limits.
+- UI components never compute financials themselves — they only consume the engine.
 
----
+## Project Structure
 
-## 📄 License
+```text
+src/
+├── components/       UI — portfolio form, projection cards/table/charts,
+│                     scenarios, chat widget, layout
+├── config/           APP_CONFIG — single source of truth (app, AI, engine)
+├── engine/           Pure financial math (compound-growth, inflation-adjust, …)
+├── lib/              AI services, demo-proxy client, formatters, export, i18n
+├── store/            Zustand stores with persist (portfolio, settings)
+├── locales/          en / tr translation dictionaries
+└── types/            Shared TypeScript types
+api/demo.ts           Vercel serverless Demo API proxy
+```
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+## Contributing & License
+
+Found a bug or have an idea? Open an issue or PR — [CONTRIBUTING.md](CONTRIBUTING.md) has the details.
+
+Released under the [MIT License](LICENSE). Made for people who want to know the *real* price of their future 💸
