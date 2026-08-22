@@ -1,0 +1,200 @@
+{
+  "footer": {
+    "license": "Open source under the MIT License.",
+    "summary": "Inflation-adjusted portfolio projections and AI-assisted financial Q&A, designed with local-first data storage.",
+    "legalNavigation": "Information and legal pages",
+    "disclaimer": "MoneyTrace is for informational and educational purposes only. Its calculations and AI outputs are not investment advice."
+  },
+  "legal": {
+    "eyebrow": "MoneyTrace information center",
+    "backToApp": "Back to calculator",
+    "lastUpdated": "Last updated: August 22, 2026",
+    "pageNavigation": "Information page navigation",
+    "nav": {
+      "about": "About",
+      "privacy": "Privacy",
+      "cookies": "Cookies",
+      "contact": "Contact",
+      "financialDisclaimer": "Financial disclaimer"
+    },
+    "actions": {
+      "openCalculator": "Open calculator",
+      "sourceCode": "View source code",
+      "githubIssues": "Open a GitHub issue",
+      "developerWebsite": "Developer website",
+      "analyticsPrivacy": "Vercel Analytics privacy"
+    },
+    "pages": {
+      "about": {
+        "title": "About MoneyTrace",
+        "description": "MoneyTrace is an open-source portfolio projection tool that helps you explore the effects of compound returns, regular contributions, inflation, exchange rates, withdrawals, and withholding tax.",
+        "sections": {
+          "purpose": {
+            "title": "Why it exists",
+            "body": "Financial projections often look encouraging in nominal terms while hiding the loss of purchasing power caused by inflation. MoneyTrace presents nominal, inflation-adjusted real, and reference-currency outcomes together so assumptions are easier to inspect."
+          },
+          "features": {
+            "title": "What you can do",
+            "body": "The application combines a deterministic calculation engine with optional AI assistance.",
+            "bullets": {
+              "0": "Model lump-sum capital, monthly contributions, contribution growth, withdrawals, and withholding tax.",
+              "1": "Compare nominal value, today's purchasing power, and a reference-currency value over time.",
+              "2": "Save and compare scenarios locally in your browser, then export or import them.",
+              "3": "Optionally ask an AI provider for macroeconomic assumptions or discuss your portfolio context."
+            }
+          },
+          "privacy": {
+            "title": "Local-first by design",
+            "body": "MoneyTrace requires no account. Portfolio inputs, scenarios, settings, and chat history are stored in your browser's localStorage. Network requests occur only for deployed analytics and when you choose to use an AI feature; the Privacy page explains those flows in detail."
+          },
+          "openSource": {
+            "title": "Open source and transparent",
+            "body": "The project is published under the MIT License. Its calculation engine, application code, configuration limits, and console-assert tests can be inspected in the public GitHub repository. MoneyTrace is developed by Mete as an independent software project."
+          }
+        }
+      },
+      "privacy": {
+        "title": "Privacy notice",
+        "description": "This notice explains what MoneyTrace stores in your browser, what may leave your device, and which choices remain under your control.",
+        "sections": {
+          "localData": {
+            "title": "Data stored on your device",
+            "body": "The core application works without an account or a MoneyTrace database. The following data is persisted in localStorage so it remains available after you close the tab:",
+            "bullets": {
+              "0": "Portfolio parameters, saved portfolios, scenarios, and custom withdrawals.",
+              "1": "Language, currency, theme, AI provider configuration, model, base URL, and optional CORS proxy settings.",
+              "2": "Your AI API key, if you enter one, and your locally saved chat sessions.",
+              "3": "Demo usage counters and a randomly generated anonymous demo user ID when the demo feature is used."
+            }
+          },
+          "aiData": {
+            "title": "When you use your own AI provider",
+            "body": "AI features are optional. When you invoke them, MoneyTrace builds a request in your browser and sends it to the provider you selected. Review that provider's privacy and retention terms before use.",
+            "bullets": {
+              "0": "Forecast requests include the selected currency and the financial assumptions needed to generate suggested rates.",
+              "1": "Chat requests may include your message, recent conversation, portfolio inputs, projection summaries, and tool results so the assistant can answer in context.",
+              "2": "Your API key is used to authenticate the request. If you enable a custom CORS proxy, the request and key may also pass through that proxy."
+            }
+          },
+          "demo": {
+            "title": "When you use the Demo API",
+            "body": "Demo requests are sent to MoneyTrace's Vercel serverless proxy and then forwarded to the configured upstream AI provider. The shared demo key stays on the server.",
+            "bullets": {
+              "0": "The proxy receives the prompt payload and your anonymous demo user ID.",
+              "1": "Your network IP address is used for daily abuse-prevention limits; user and IP-based counters may be kept in Upstash Redis or temporary server memory.",
+              "2": "Approved request content is forwarded to the configured upstream AI provider, whose own privacy and retention terms apply."
+            }
+          },
+          "analytics": {
+            "title": "Vercel Web Analytics",
+            "body": "The deployed application uses Vercel Web Analytics to understand aggregate usage. According to Vercel's documentation, Web Analytics does not use cookies and stores anonymized data rather than personal identifiers.",
+            "bullets": {
+              "0": "Data points may include the page URL, referrer, timestamp, coarse location, operating system, browser, and device type.",
+              "1": "A request-derived visitor hash is valid for one day and is not intended to track you across days or websites.",
+              "2": "MoneyTrace does not send portfolio values, AI prompts, chat content, or API keys as custom analytics events."
+            }
+          },
+          "control": {
+            "title": "Your choices and deletion",
+            "body": "You can use the calculator without enabling AI. You can remove MoneyTrace's local data—including a saved API key—through your browser's site-data or localStorage controls. Clearing browser data cannot delete information already sent to an AI provider; contact that provider for its access or deletion process."
+          },
+          "security": {
+            "title": "Security considerations",
+            "body": "Browser localStorage is not an encrypted secret vault. Avoid saving an API key on a shared or untrusted device, restrict the key at the provider when possible, and revoke it immediately if you believe it has been exposed. MoneyTrace cannot control browser extensions, custom proxies, or third-party providers you choose."
+          }
+        }
+      },
+      "cookies": {
+        "title": "Cookie and local storage notice",
+        "description": "MoneyTrace does not currently set advertising, personalization, or analytics cookies. It does use browser localStorage for application functionality.",
+        "sections": {
+          "cookies": {
+            "title": "Cookies",
+            "body": "MoneyTrace itself does not set first-party cookies and does not include cookie-based advertising or cross-site tracking. If this changes, this notice will be updated and any consent controls required by applicable law will be provided."
+          },
+          "localStorage": {
+            "title": "LocalStorage is not a cookie",
+            "body": "LocalStorage is a browser storage mechanism that keeps data on your device without attaching it to every web request. MoneyTrace uses it for essential application continuity:",
+            "bullets": {
+              "0": "Portfolio inputs, saved scenarios, and custom withdrawals.",
+              "1": "Application language, currency, theme, and AI configuration.",
+              "2": "Optional AI chat history and an API key you choose to save.",
+              "3": "Demo counters and the anonymous demo identifier used for quota enforcement."
+            }
+          },
+          "analytics": {
+            "title": "Cookie-free analytics",
+            "body": "The deployed site includes Vercel Web Analytics. Vercel documents this service as cookie-free: it uses anonymized, aggregate data and a visitor hash that resets daily. See the Privacy notice and Vercel's official Analytics privacy documentation for the data-point details."
+          },
+          "control": {
+            "title": "How to control stored data",
+            "body": "You can inspect or clear MoneyTrace data from your browser's privacy, storage, or developer settings. Blocking localStorage may prevent preferences, scenarios, API settings, and chats from persisting, but the core calculator can still operate for the current session."
+          }
+        }
+      },
+      "contact": {
+        "title": "Contact",
+        "description": "Use the public project channels for questions, bug reports, feature requests, and privacy concerns. Do not include secrets or sensitive financial information.",
+        "sections": {
+          "channels": {
+            "title": "Contact channels",
+            "body": "MoneyTrace is an independent open-source project. The most reliable contact routes are:",
+            "bullets": {
+              "0": "GitHub Issues for reproducible bugs, feature suggestions, documentation corrections, and security-safe technical questions.",
+              "1": "The developer website for general information about the developer and related projects."
+            }
+          },
+          "report": {
+            "title": "What to include in a report",
+            "body": "A clear report makes investigation faster. Please include only what is necessary:",
+            "bullets": {
+              "0": "MoneyTrace version, browser, operating system, and the page where the issue occurred.",
+              "1": "Steps to reproduce, expected behavior, and actual behavior.",
+              "2": "A sanitized example when useful—never post API keys, full AI conversations, or sensitive portfolio details."
+            }
+          },
+          "privacy": {
+            "title": "Privacy and security messages",
+            "body": "For a suspected security vulnerability, avoid publishing exploit details or live credentials in a public issue. Start with a minimal, sanitized report through the developer website. For privacy questions, identify the feature and provider involved, because local browser data, Vercel Analytics, and external AI providers have different data flows."
+          }
+        }
+      },
+      "financialDisclaimer": {
+        "title": "Financial disclaimer",
+        "description": "MoneyTrace provides educational calculations and AI-assisted explanations. It does not provide investment, tax, legal, accounting, or other professional advice.",
+        "sections": {
+          "notAdvice": {
+            "title": "Information, not advice",
+            "body": "Nothing in MoneyTrace is a recommendation to buy, sell, hold, or allocate any security, currency, fund, deposit, digital asset, or other financial instrument. The application does not assess your objectives, income, obligations, risk tolerance, tax status, or personal circumstances."
+          },
+          "simulations": {
+            "title": "Projections are assumption-based simulations",
+            "body": "Calculation results are deterministic outputs from the values you enter; they are not predictions or guarantees of future performance.",
+            "bullets": {
+              "0": "Return, inflation, exchange-rate growth, and contribution rates may differ materially from real-world outcomes.",
+              "1": "Markets can be volatile, returns can be negative, and invested capital can be lost.",
+              "2": "Taxes, fees, spreads, liquidity, timing, regulation, and product-specific risks may be simplified or absent.",
+              "3": "Rounding and constant-rate assumptions make long-horizon results illustrative rather than exact."
+            }
+          },
+          "ai": {
+            "title": "AI output can be wrong",
+            "body": "AI forecasts and chat responses are generated by third-party models and may be inaccurate, incomplete, outdated, inconsistent, or fabricated. They are visually and logically separate from the deterministic calculation engine. Verify every material claim with current primary sources before relying on it."
+          },
+          "risk": {
+            "title": "Past and expected performance",
+            "body": "Past performance does not guarantee future results, and an expected rate is not a promised return. Inflation and currency movements can reduce purchasing power even when a portfolio rises in nominal value. Diversification does not eliminate loss."
+          },
+          "professional": {
+            "title": "Seek qualified advice",
+            "body": "Before making a financial decision, consider consulting appropriately licensed financial, tax, legal, or accounting professionals who can evaluate your circumstances and jurisdiction. Confirm current laws, tax rates, product documents, costs, and risks independently."
+          },
+          "responsibility": {
+            "title": "Your responsibility",
+            "body": "You are responsible for the assumptions you enter, the providers you connect, and decisions you make using the application. To the extent permitted by applicable law, the project and its contributors make no warranty about the accuracy, completeness, availability, or fitness of results for a particular purpose."
+          }
+        }
+      }
+    }
+  }
+}

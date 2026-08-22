@@ -3,13 +3,15 @@ import { initReactI18next } from "react-i18next"
 import { useSettingsStore } from "../store/settings-store"
 import trTranslations from "../locales/tr/translation.json"
 import enTranslations from "../locales/en/translation.json"
+import trLegalTranslations from "../locales/tr/legal.json"
+import enLegalTranslations from "../locales/en/legal.json"
 
 const resources = {
   en: {
-    translation: enTranslations,
+    translation: { ...enTranslations, ...enLegalTranslations },
   },
   tr: {
-    translation: trTranslations,
+    translation: { ...trTranslations, ...trLegalTranslations },
   },
 }
 

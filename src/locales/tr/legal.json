@@ -1,0 +1,200 @@
+{
+  "footer": {
+    "license": "MIT Lisansı altında açık kaynaklıdır.",
+    "summary": "Yerel veri saklama yaklaşımıyla enflasyondan arındırılmış portföy projeksiyonları ve AI destekli finansal soru-cevap.",
+    "legalNavigation": "Bilgi ve yasal sayfalar",
+    "disclaimer": "MoneyTrace yalnızca bilgilendirme ve eğitim amaçlıdır. Hesaplamaları ve AI çıktıları yatırım tavsiyesi değildir."
+  },
+  "legal": {
+    "eyebrow": "MoneyTrace bilgi merkezi",
+    "backToApp": "Hesaplayıcıya dön",
+    "lastUpdated": "Son güncelleme: 22 Ağustos 2026",
+    "pageNavigation": "Bilgi sayfaları navigasyonu",
+    "nav": {
+      "about": "Hakkında",
+      "privacy": "Gizlilik",
+      "cookies": "Çerezler",
+      "contact": "İletişim",
+      "financialDisclaimer": "Finansal uyarı"
+    },
+    "actions": {
+      "openCalculator": "Hesaplayıcıyı aç",
+      "sourceCode": "Kaynak kodunu incele",
+      "githubIssues": "GitHub bildirimi aç",
+      "developerWebsite": "Geliştirici sitesi",
+      "analyticsPrivacy": "Vercel Analytics gizliliği"
+    },
+    "pages": {
+      "about": {
+        "title": "MoneyTrace Hakkında",
+        "description": "MoneyTrace; bileşik getiri, düzenli katkı, enflasyon, döviz kuru, çekim ve stopaj etkilerini incelemenize yardımcı olan açık kaynaklı bir portföy projeksiyon aracıdır.",
+        "sections": {
+          "purpose": {
+            "title": "Neden var?",
+            "body": "Finansal projeksiyonlar nominal olarak umut verici görünürken enflasyonun neden olduğu satın alma gücü kaybını gizleyebilir. MoneyTrace; nominal, enflasyondan arındırılmış reel ve referans döviz bazlı sonuçları birlikte sunarak varsayımların daha kolay değerlendirilmesini sağlar."
+          },
+          "features": {
+            "title": "Neler yapabilirsiniz?",
+            "body": "Uygulama, deterministik bir hesaplama motorunu isteğe bağlı AI desteğiyle bir araya getirir.",
+            "bullets": {
+              "0": "Başlangıç sermayesi, aylık katkı, katkı artışı, çekimler ve stopajı modelleyebilirsiniz.",
+              "1": "Nominal değeri, bugünkü satın alma gücünü ve referans döviz değerini zaman içinde karşılaştırabilirsiniz.",
+              "2": "Senaryoları tarayıcınızda yerel olarak kaydedip karşılaştırabilir, dışa veya içe aktarabilirsiniz.",
+              "3": "İsteğe bağlı olarak bir AI sağlayıcısından makroekonomik varsayımlar isteyebilir veya portföy bağlamınızı konuşabilirsiniz."
+            }
+          },
+          "privacy": {
+            "title": "Yerel veri odaklı tasarım",
+            "body": "MoneyTrace hesap gerektirmez. Portföy girdileri, senaryolar, ayarlar ve sohbet geçmişi tarayıcınızın localStorage alanında tutulur. Ağ istekleri yalnızca yayındaki analitik için ve bir AI özelliğini kullanmayı seçtiğinizde gerçekleşir; Gizlilik sayfası bu akışları ayrıntılı açıklar."
+          },
+          "openSource": {
+            "title": "Açık kaynak ve şeffaflık",
+            "body": "Proje MIT Lisansı altında yayımlanır. Hesaplama motoru, uygulama kodu, yapılandırma sınırları ve console.assert testleri herkese açık GitHub deposunda incelenebilir. MoneyTrace, Mete tarafından bağımsız bir yazılım projesi olarak geliştirilmektedir."
+          }
+        }
+      },
+      "privacy": {
+        "title": "Gizlilik bildirimi",
+        "description": "Bu bildirim MoneyTrace'in tarayıcınızda ne sakladığını, hangi verilerin cihazınızdan çıkabileceğini ve hangi seçimlerin sizin kontrolünüzde olduğunu açıklar.",
+        "sections": {
+          "localData": {
+            "title": "Cihazınızda saklanan veriler",
+            "body": "Temel uygulama bir hesap veya MoneyTrace veritabanı olmadan çalışır. Aşağıdaki veriler, sekmeyi kapattıktan sonra kullanılabilmeleri için localStorage alanında saklanır:",
+            "bullets": {
+              "0": "Portföy parametreleri, kayıtlı portföyler, senaryolar ve özel çekimler.",
+              "1": "Dil, para birimi, tema, AI sağlayıcı yapılandırması, model, temel URL ve isteğe bağlı CORS proxy ayarları.",
+              "2": "Girdiyseniz AI API anahtarınız ve yerel olarak kaydedilen sohbet oturumlarınız.",
+              "3": "Demo kullanım sayaçları ve demo özelliği kullanıldığında rastgele üretilen anonim demo kullanıcı kimliği."
+            }
+          },
+          "aiData": {
+            "title": "Kendi AI sağlayıcınızı kullandığınızda",
+            "body": "AI özellikleri isteğe bağlıdır. Bu özellikleri çağırdığınızda MoneyTrace isteği tarayıcınızda oluşturur ve seçtiğiniz sağlayıcıya gönderir. Kullanmadan önce ilgili sağlayıcının gizlilik ve saklama koşullarını inceleyin.",
+            "bullets": {
+              "0": "Tahmin istekleri, seçilen para birimini ve önerilen oranların üretilebilmesi için gereken finansal varsayımları içerir.",
+              "1": "Sohbet istekleri; bağlama uygun yanıt için mesajınızı, yakın konuşmayı, portföy girdilerini, projeksiyon özetlerini ve araç sonuçlarını içerebilir.",
+              "2": "API anahtarınız isteğin kimlik doğrulamasında kullanılır. Özel bir CORS proxy etkinleştirirseniz istek ve anahtar bu proxy üzerinden de geçebilir."
+            }
+          },
+          "demo": {
+            "title": "Demo API'yi kullandığınızda",
+            "body": "Demo istekleri MoneyTrace'in Vercel sunucusuz proxy'sine gönderilir ve ardından yapılandırılmış üst AI sağlayıcısına iletilir. Paylaşılan demo anahtarı sunucuda kalır.",
+            "bullets": {
+              "0": "Proxy, istem yükünü ve anonim demo kullanıcı kimliğinizi alır.",
+              "1": "Ağ IP adresiniz günlük kötüye kullanım sınırları için kullanılır; kullanıcı ve IP sayaçları Upstash Redis'te veya geçici sunucu belleğinde tutulabilir.",
+              "2": "Onaylanan istek içeriği, kendi gizlilik ve saklama koşulları geçerli olan yapılandırılmış üst AI sağlayıcısına iletilir."
+            }
+          },
+          "analytics": {
+            "title": "Vercel Web Analytics",
+            "body": "Yayındaki uygulama, toplu kullanımı anlamak için Vercel Web Analytics kullanır. Vercel belgelerine göre Web Analytics çerez kullanmaz ve kişisel tanımlayıcılar yerine anonimleştirilmiş veriler saklar.",
+            "bullets": {
+              "0": "Veri noktaları sayfa URL'si, yönlendiren adres, zaman damgası, yaklaşık konum, işletim sistemi, tarayıcı ve cihaz türünü içerebilir.",
+              "1": "İstekten türetilen ziyaretçi karması bir gün geçerlidir ve sizi günler veya siteler arasında izlemek amacıyla kullanılmaz.",
+              "2": "MoneyTrace; portföy değerlerini, AI istemlerini, sohbet içeriğini veya API anahtarlarını özel analitik olayı olarak göndermez."
+            }
+          },
+          "control": {
+            "title": "Seçimleriniz ve silme",
+            "body": "Hesaplayıcıyı AI etkinleştirmeden kullanabilirsiniz. Kaydedilmiş API anahtarı dahil MoneyTrace yerel verilerini tarayıcınızın site verisi veya localStorage kontrollerinden silebilirsiniz. Tarayıcı verilerini temizlemek, daha önce bir AI sağlayıcısına gönderilmiş bilgileri silemez; erişim veya silme süreci için ilgili sağlayıcıyla iletişime geçin."
+          },
+          "security": {
+            "title": "Güvenlik hususları",
+            "body": "Tarayıcı localStorage alanı şifrelenmiş bir gizli kasa değildir. Paylaşılan veya güvenilmeyen cihazlarda API anahtarı kaydetmeyin, mümkünse anahtarı sağlayıcı tarafında kısıtlayın ve açığa çıktığını düşünüyorsanız hemen iptal edin. MoneyTrace; seçtiğiniz tarayıcı eklentilerini, özel proxy'leri veya üçüncü taraf sağlayıcıları kontrol edemez."
+          }
+        }
+      },
+      "cookies": {
+        "title": "Çerez ve yerel depolama bildirimi",
+        "description": "MoneyTrace şu anda reklam, kişiselleştirme veya analitik çerezi yerleştirmez. Uygulama işlevleri için tarayıcı localStorage alanını kullanır.",
+        "sections": {
+          "cookies": {
+            "title": "Çerezler",
+            "body": "MoneyTrace kendi adına birinci taraf çerez yerleştirmez; çerez tabanlı reklam veya siteler arası izleme içermez. Bu durum değişirse bildirim güncellenecek ve yürürlükteki hukukun gerektirdiği onay kontrolleri sağlanacaktır."
+          },
+          "localStorage": {
+            "title": "LocalStorage bir çerez değildir",
+            "body": "LocalStorage, verileri her web isteğine eklemeden cihazınızda tutan bir tarayıcı depolama mekanizmasıdır. MoneyTrace bunu temel uygulama sürekliliği için kullanır:",
+            "bullets": {
+              "0": "Portföy girdileri, kayıtlı senaryolar ve özel çekimler.",
+              "1": "Uygulama dili, para birimi, tema ve AI yapılandırması.",
+              "2": "İsteğe bağlı AI sohbet geçmişi ve kaydetmeyi seçtiğiniz API anahtarı.",
+              "3": "Kota uygulaması için demo sayaçları ve anonim demo kimliği."
+            }
+          },
+          "analytics": {
+            "title": "Çerezsiz analitik",
+            "body": "Yayındaki site Vercel Web Analytics içerir. Vercel bu hizmeti çerezsiz olarak belgeler: anonimleştirilmiş toplu veriler ve her gün sıfırlanan bir ziyaretçi karması kullanır. Veri noktalarının ayrıntıları için Gizlilik bildirimini ve Vercel'in resmî Analytics gizlilik belgesini inceleyin."
+          },
+          "control": {
+            "title": "Saklanan veriler nasıl kontrol edilir?",
+            "body": "MoneyTrace verilerini tarayıcınızın gizlilik, depolama veya geliştirici ayarlarından inceleyebilir ya da temizleyebilirsiniz. LocalStorage'ı engellemek tercihlerin, senaryoların, API ayarlarının ve sohbetlerin kalıcı olmasını önleyebilir; temel hesaplayıcı mevcut oturumda yine çalışabilir."
+          }
+        }
+      },
+      "contact": {
+        "title": "İletişim",
+        "description": "Sorular, hata bildirimleri, özellik talepleri ve gizlilik konuları için herkese açık proje kanallarını kullanın. Gizli veya hassas finansal bilgi paylaşmayın.",
+        "sections": {
+          "channels": {
+            "title": "İletişim kanalları",
+            "body": "MoneyTrace bağımsız ve açık kaynaklı bir projedir. En güvenilir iletişim yolları şunlardır:",
+            "bullets": {
+              "0": "Tekrarlanabilir hatalar, özellik önerileri, dokümantasyon düzeltmeleri ve güvenli teknik sorular için GitHub Issues.",
+              "1": "Geliştirici ve ilgili projeler hakkında genel bilgi için geliştirici sitesi."
+            }
+          },
+          "report": {
+            "title": "Bir bildirime neler eklenmeli?",
+            "body": "Açık bir bildirim incelemeyi hızlandırır. Yalnızca gerekli bilgileri paylaşın:",
+            "bullets": {
+              "0": "MoneyTrace sürümü, tarayıcı, işletim sistemi ve sorunun oluştuğu sayfa.",
+              "1": "Tekrarlama adımları, beklenen davranış ve gerçekleşen davranış.",
+              "2": "Yararlıysa hassas verilerden arındırılmış bir örnek; API anahtarlarını, tam AI konuşmalarını veya hassas portföy ayrıntılarını asla yayımlamayın."
+            }
+          },
+          "privacy": {
+            "title": "Gizlilik ve güvenlik mesajları",
+            "body": "Şüpheli bir güvenlik açığı için istismar ayrıntılarını veya çalışan kimlik bilgilerini herkese açık bir bildirimde yayımlamayın. Geliştirici sitesi üzerinden asgari ve hassas verilerden arındırılmış bir bildirimle başlayın. Gizlilik sorularında ilgili özelliği ve sağlayıcıyı belirtin; yerel tarayıcı verisi, Vercel Analytics ve harici AI sağlayıcılarının veri akışları farklıdır."
+          }
+        }
+      },
+      "financialDisclaimer": {
+        "title": "Finansal uyarı",
+        "description": "MoneyTrace eğitim amaçlı hesaplamalar ve AI destekli açıklamalar sunar. Yatırım, vergi, hukuk, muhasebe veya başka bir profesyonel danışmanlık hizmeti vermez.",
+        "sections": {
+          "notAdvice": {
+            "title": "Bilgi, tavsiye değil",
+            "body": "MoneyTrace'teki hiçbir içerik; bir menkul kıymeti, dövizi, fonu, mevduatı, dijital varlığı veya başka bir finansal aracı alma, satma, elde tutma ya da bunlara dağılım yapma önerisi değildir. Uygulama hedeflerinizi, gelirinizi, yükümlülüklerinizi, risk toleransınızı, vergi durumunuzu veya kişisel koşullarınızı değerlendirmez."
+          },
+          "simulations": {
+            "title": "Projeksiyonlar varsayıma dayalı simülasyonlardır",
+            "body": "Hesaplama sonuçları girdiğiniz değerlerden üretilen deterministik çıktılardır; geleceğe ilişkin tahmin veya garanti değildir.",
+            "bullets": {
+              "0": "Getiri, enflasyon, döviz kuru artışı ve katkı oranları gerçek sonuçlardan önemli ölçüde farklı olabilir.",
+              "1": "Piyasalar dalgalanabilir, getiriler negatif olabilir ve yatırılan sermaye kaybedilebilir.",
+              "2": "Vergiler, ücretler, makaslar, likidite, zamanlama, mevzuat ve ürüne özgü riskler basitleştirilmiş veya eksik olabilir.",
+              "3": "Yuvarlama ve sabit oran varsayımları, uzun vadeli sonuçları kesin değil örnek niteliğinde kılar."
+            }
+          },
+          "ai": {
+            "title": "AI çıktısı hatalı olabilir",
+            "body": "AI tahminleri ve sohbet yanıtları üçüncü taraf modellerce üretilir; yanlış, eksik, güncelliğini yitirmiş, tutarsız veya uydurma olabilir. Bunlar deterministik hesaplama motorundan görsel ve mantıksal olarak ayrıdır. Önemli her iddiayı kullanmadan önce güncel birincil kaynaklarla doğrulayın."
+          },
+          "risk": {
+            "title": "Geçmiş ve beklenen performans",
+            "body": "Geçmiş performans gelecekteki sonuçları garanti etmez; beklenen oran taahhüt edilmiş getiri değildir. Bir portföy nominal olarak büyüse bile enflasyon ve kur hareketleri satın alma gücünü azaltabilir. Çeşitlendirme kayıp riskini ortadan kaldırmaz."
+          },
+          "professional": {
+            "title": "Yetkin uzman görüşü alın",
+            "body": "Finansal karar vermeden önce koşullarınızı ve tabi olduğunuz hukuku değerlendirebilecek lisanslı finans, vergi, hukuk veya muhasebe uzmanlarına danışmayı değerlendirin. Güncel mevzuatı, vergi oranlarını, ürün belgelerini, maliyetleri ve riskleri bağımsız olarak doğrulayın."
+          },
+          "responsibility": {
+            "title": "Sorumluluğunuz",
+            "body": "Girdiğiniz varsayımlardan, bağladığınız sağlayıcılardan ve uygulamayı kullanarak aldığınız kararlardan siz sorumlusunuz. Yürürlükteki hukukun izin verdiği ölçüde proje ve katkıda bulunanlar sonuçların doğruluğu, eksiksizliği, kullanılabilirliği veya belirli bir amaca uygunluğu konusunda garanti vermez."
+          }
+        }
+      }
+    }
+  }
+}

@@ -38,6 +38,8 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { AiChat } from "@/components/chat/AiChat"
 import type { AiModelProvider } from "@/types"
+import { LegalPage } from "@/components/legal/LegalPage"
+import { getLegalPage } from "@/components/legal/legal-pages"
 
 // Lazy loaded integrated chart section
 const ChartSection = lazy(() =>
@@ -55,7 +57,7 @@ function ChartFallback() {
   )
 }
 
-function App() {
+function Dashboard() {
   const { t, i18n } = useTranslation()
   const { theme } = useTheme()
   const {
@@ -462,6 +464,20 @@ function App() {
       </Dialog>
     </Layout>
   )
+}
+
+function App() {
+  const legalPage = getLegalPage(window.location.pathname)
+
+  if (legalPage) {
+    return (
+      <Layout>
+        <LegalPage page={legalPage} />
+      </Layout>
+    )
+  }
+
+  return <Dashboard />
 }
 
 export default App

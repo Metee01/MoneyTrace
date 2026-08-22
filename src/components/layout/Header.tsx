@@ -16,7 +16,11 @@ export function Header({ onOpenSettings }: HeaderProps) {
     <header className="border-b bg-card text-card-foreground">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo & Brand */}
-        <div className="flex items-center gap-2">
+        <a
+          href="/"
+          className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={t("common.appName")}
+        >
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <TrendingUp className="h-6 w-6" />
           </div>
@@ -26,7 +30,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
               v{APP_CONFIG.app.version}
             </span>
           </div>
-        </div>
+        </a>
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
@@ -74,14 +78,16 @@ export function Header({ onOpenSettings }: HeaderProps) {
           </div>
 
           {/* Settings Button */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onOpenSettings}
-            title={t("common.settings")}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+          {onOpenSettings ? (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onOpenSettings}
+              title={t("common.settings")}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          ) : null}
         </div>
       </div>
     </header>
