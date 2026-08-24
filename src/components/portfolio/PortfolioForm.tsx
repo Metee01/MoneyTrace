@@ -17,6 +17,7 @@ import {
   CardContent,
 } from "../ui/card"
 import { Input } from "../ui/input"
+import { NumericInput } from "../ui/numeric-input"
 import { Label } from "../ui/label"
 import { Button } from "../ui/button"
 import { Switch } from "../ui/switch"
@@ -44,6 +45,10 @@ import type { ProjectionParams } from "../../types"
 import { cn } from "../../lib/utils"
 
 type RateInputPeriod = NonNullable<ProjectionParams["rateInputPeriod"]>
+type NumericParamKey = Exclude<
+  keyof ProjectionParams,
+  "rateInputPeriod" | "customWithdrawals"
+>
 
 export const PortfolioForm: React.FC = () => {
   const { t } = useTranslation()
@@ -67,29 +72,8 @@ export const PortfolioForm: React.FC = () => {
   const rateKey = (base: string) => (isMonthly ? `${base}Monthly` : base)
   const rateStep = isMonthly ? 0.05 : 0.5
 
-  // Field change handler with validation
-  const handleChange = (field: keyof ProjectionParams, value: string) => {
-    const num = parseFloat(value)
-    if (isNaN(num)) {
-      setParams({ [field]: 0 })
-      return
-    }
-
-    // Boundary constraints
-    if (field === "targetYears") {
-      const clamped = Math.max(1, Math.min(50, Math.floor(num)))
-      setParams({ [field]: clamped })
-    } else if (field === "usdRate") {
-      setParams({ [field]: Math.max(0.01, num) })
-    } else if (
-      field === "initialCapital" ||
-      field === "monthlyDca" ||
-      field === "monthlyWithdrawal"
-    ) {
-      setParams({ [field]: Math.max(0, num) })
-    } else {
-      setParams({ [field]: num })
-    }
+  const handleChange = (field: NumericParamKey, value: number) => {
+    setParams({ [field]: value })
   }
 
   // Switch between annual and monthly rate input modes, converting existing
@@ -300,13 +284,12 @@ export const PortfolioForm: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
+              <NumericInput
                 id="initialCapital"
-                type="number"
-                min="0"
+                min={0}
                 step="100"
-                value={currentParams.initialCapital || ""}
-                onChange={(e) => handleChange("initialCapital", e.target.value)}
+                value={currentParams.initialCapital}
+                onValueChange={(value) => handleChange("initialCapital", value)}
                 placeholder="10000"
               />
             </div>
@@ -326,13 +309,13 @@ export const PortfolioForm: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
+              <NumericInput
                 id="targetYears"
-                type="number"
-                min="1"
-                max="50"
-                value={currentParams.targetYears || ""}
-                onChange={(e) => handleChange("targetYears", e.target.value)}
+                min={1}
+                max={50}
+                integer
+                value={currentParams.targetYears}
+                onValueChange={(value) => handleChange("targetYears", value)}
                 placeholder="10"
               />
             </div>
@@ -352,13 +335,12 @@ export const PortfolioForm: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
+              <NumericInput
                 id="monthlyDca"
-                type="number"
-                min="0"
+                min={0}
                 step="50"
-                value={currentParams.monthlyDca || ""}
-                onChange={(e) => handleChange("monthlyDca", e.target.value)}
+                value={currentParams.monthlyDca}
+                onValueChange={(value) => handleChange("monthlyDca", value)}
                 placeholder="500"
               />
             </div>
@@ -383,14 +365,13 @@ export const PortfolioForm: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
+              <NumericInput
                 id="monthlyWithdrawal"
-                type="number"
-                min="0"
+                min={0}
                 step="50"
-                value={currentParams.monthlyWithdrawal || ""}
-                onChange={(e) =>
-                  handleChange("monthlyWithdrawal", e.target.value)
+                value={currentParams.monthlyWithdrawal ?? 0}
+                onValueChange={(value) =>
+                  handleChange("monthlyWithdrawal", value)
                 }
                 placeholder="0"
               />
@@ -414,13 +395,12 @@ export const PortfolioForm: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
+              <NumericInput
                 id="dcaIncreaseRate"
-                type="number"
                 step="0.5"
-                value={currentParams.dcaIncreaseRate ?? ""}
-                onChange={(e) =>
-                  handleChange("dcaIncreaseRate", e.target.value)
+                value={currentParams.dcaIncreaseRate}
+                onValueChange={(value) =>
+                  handleChange("dcaIncreaseRate", value)
                 }
                 placeholder="5"
               />
@@ -444,13 +424,12 @@ export const PortfolioForm: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
+              <NumericInput
                 id="expectedReturnRate"
-                type="number"
                 step={rateStep}
-                value={currentParams.expectedReturnRate ?? ""}
-                onChange={(e) =>
-                  handleChange("expectedReturnRate", e.target.value)
+                value={currentParams.expectedReturnRate}
+                onValueChange={(value) =>
+                  handleChange("expectedReturnRate", value)
                 }
                 placeholder={isMonthly ? "0.64" : "8"}
               />
@@ -474,13 +453,12 @@ export const PortfolioForm: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
+              <NumericInput
                 id="expectedInflationRate"
-                type="number"
                 step={rateStep}
-                value={currentParams.expectedInflationRate ?? ""}
-                onChange={(e) =>
-                  handleChange("expectedInflationRate", e.target.value)
+                value={currentParams.expectedInflationRate}
+                onValueChange={(value) =>
+                  handleChange("expectedInflationRate", value)
                 }
                 placeholder={isMonthly ? "0.25" : "3"}
               />
@@ -501,13 +479,12 @@ export const PortfolioForm: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
+              <NumericInput
                 id="usdRate"
-                type="number"
                 step="0.01"
-                min="0.01"
-                value={currentParams.usdRate || ""}
-                onChange={(e) => handleChange("usdRate", e.target.value)}
+                min={0.01}
+                value={currentParams.usdRate}
+                onValueChange={(value) => handleChange("usdRate", value)}
                 placeholder="1.0"
               />
             </div>
@@ -530,13 +507,12 @@ export const PortfolioForm: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
+              <NumericInput
                 id="expectedUsdGrowthRate"
-                type="number"
                 step={rateStep}
-                value={currentParams.expectedUsdGrowthRate ?? ""}
-                onChange={(e) =>
-                  handleChange("expectedUsdGrowthRate", e.target.value)
+                value={currentParams.expectedUsdGrowthRate}
+                onValueChange={(value) =>
+                  handleChange("expectedUsdGrowthRate", value)
                 }
                 placeholder="0"
               />
@@ -560,15 +536,14 @@ export const PortfolioForm: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
+              <NumericInput
                 id="withholdingTaxRate"
-                type="number"
                 step="0.5"
-                min="0"
-                max="100"
-                value={currentParams.withholdingTaxRate ?? ""}
-                onChange={(e) =>
-                  handleChange("withholdingTaxRate", e.target.value)
+                min={0}
+                max={100}
+                value={currentParams.withholdingTaxRate ?? 0}
+                onValueChange={(value) =>
+                  handleChange("withholdingTaxRate", value)
                 }
                 placeholder="0"
               />
