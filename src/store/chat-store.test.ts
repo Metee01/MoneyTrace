@@ -95,6 +95,31 @@ console.assert(
   "Session 1 should be active again",
 )
 
+useChatStore.getState().addMessageToSession(session2.id, {
+  id: "targeted-message",
+  role: "assistant",
+  content: "Belongs to session 2",
+  timestamp: Date.now(),
+})
+console.assert(
+  useChatStore.getState().activeSessionId === session1.id,
+  "Targeted message should not change the active session",
+)
+console.assert(
+  useChatStore
+    .getState()
+    .getSession(session2.id)
+    ?.messages.some((message) => message.id === "targeted-message"),
+  "Targeted message should be written only to the requested session",
+)
+console.assert(
+  !useChatStore
+    .getState()
+    .getSession(session1.id)
+    ?.messages.some((message) => message.id === "targeted-message"),
+  "Targeted message must not leak into the active session",
+)
+
 // Test 5: Delete Session
 console.log("\n--- Test 5: Delete Session ---")
 useChatStore.getState().deleteSession(session1.id)

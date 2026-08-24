@@ -12,7 +12,7 @@
 
 import { calculateProjection } from "../engine"
 import { APP_CONFIG } from "../config"
-import { forecastEconomics } from "./ai-service"
+import { forecastEconomics, isAbortError, throwIfAborted } from "./ai-service"
 import { isDemoAvailable } from "./demo-proxy"
 import { usePortfolioStore } from "../store/portfolio-store"
 import { useSettingsStore } from "../store/settings-store"
@@ -380,7 +380,7 @@ export interface ToolDeps {
     params?: ProjectionParams,
   ) => unknown
   resetParams: () => void
-  forecastEconomics: () => Promise<AiForecastResult>
+  forecastEconomics: (signal?: AbortSignal) => Promise<AiForecastResult>
 }
 
 /**
@@ -394,7 +394,9 @@ export async function executeToolCall(
   call: AiToolCall,
   deps: ToolDeps,
   allowMutation: boolean,
+  signal?: AbortSignal,
 ): Promise<AiToolCallResult> {
+  throwIfAborted(signal)
   const schema = TOOL_SCHEMAS.find((s) => s.name === call.tool)
   if (!schema) {
     return { tool: call.tool, ok: false, output: `Unknown tool: ${call.tool}` }
@@ -417,9 +419,10 @@ export async function executeToolCall(
 
     case "forecast_economics": {
       try {
-        const forecast = await deps.forecastEconomics()
+        const forecast = await deps.forecastEconomics(signal)
         return { tool: call.tool, ok: true, output: JSON.stringify(forecast) }
       } catch (err) {
+        if (isAbortError(err, signal)) throw err
         return {
           tool: call.tool,
           ok: false,
@@ -562,7 +565,7 @@ export function createDefaultToolDeps(): ToolDeps {
     addScenario: (name, color, params) =>
       usePortfolioStore.getState().addScenario(name, color, params),
     resetParams: () => usePortfolioStore.getState().resetParams(),
-    forecastEconomics: async () => {
+    forecastEconomics: async (signal) => {
       const s = useSettingsStore.getState()
       const isDemo = (s.useDemoApi ?? false) && isDemoAvailable()
       const key = isDemo ? "" : (s.aiApiKey ?? "")
@@ -585,6 +588,7 @@ export function createDefaultToolDeps(): ToolDeps {
         targetYears: APP_CONFIG.engine.defaultParams.targetYears,
         language: s.language,
         isDemo,
+        signal,
       })
     },
   }

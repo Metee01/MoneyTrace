@@ -211,6 +211,8 @@
     "title": "MoneyTrace AI Asistan",
     "subtitle": "Portföyünüz hakkında sorular sorun",
     "placeholder": "Bir mesaj yazın...",
+    "stopGenerating": "Yanıtı durdur",
+    "close": "Sohbeti kapat",
     "send": "Gönder",
     "thinking": "Düşünüyor...",
     "welcome": "Merhaba! 👋 Ben MoneyTrace yapay zekâ finans asistanınızım. Mevcut portföy verilerinizi, hesaplanan tablo ve grafik kırılımlarınızı görebiliyorum. Yatırımlarınız hakkında her şeyi sorabilirsiniz!",

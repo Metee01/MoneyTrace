@@ -224,7 +224,17 @@ export default async function handler(req: Request): Promise<Response> {
     stream: false,
     reasoning: APP_CONFIG.ai.demo.reasoning,
   }
+  if (req.signal.aborted) {
+    return json(499, { error: { message: "Request cancelled by client." } })
+  }
+
+  const upstreamController = new AbortController()
+  const abortUpstream = () => upstreamController.abort()
+  const timeoutId = setTimeout(abortUpstream, UPSTREAM_TIMEOUT_MS)
+  req.signal.addEventListener("abort", abortUpstream, { once: true })
+
   let upstream: Response
+  let upstreamText: string
   try {
     upstream = await fetch(PROVIDER_ENDPOINT, {
       method: "POST",
@@ -235,14 +245,20 @@ export default async function handler(req: Request): Promise<Response> {
         "X-Title": APP_CONFIG.app.name,
       },
       body: JSON.stringify(upstreamBody),
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+      signal: upstreamController.signal,
     })
+    upstreamText = await upstream.text()
   } catch {
-    await rollbackQuota()
+    if (!req.signal.aborted) await rollbackQuota()
+    if (req.signal.aborted) {
+      return json(499, { error: { message: "Request cancelled by client." } })
+    }
     return json(502, { error: { message: "Upstream provider unreachable." } })
+  } finally {
+    clearTimeout(timeoutId)
+    req.signal.removeEventListener("abort", abortUpstream)
   }
 
-  const upstreamText = await upstream.text()
   if (!upstream.ok) {
     await rollbackQuota()
     return new Response(upstreamText, {

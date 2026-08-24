@@ -36,10 +36,18 @@ export interface ForecastRequest {
   language?: string
   /** Whether the request is using the Demo API key */
   isDemo?: boolean
+  signal?: AbortSignal
 }
 
 export type AiForecastErrorCode =
-  "auth" | "network" | "quota" | "parse" | "config" | "cors" | "unknown"
+  | "aborted"
+  | "auth"
+  | "network"
+  | "quota"
+  | "parse"
+  | "config"
+  | "cors"
+  | "unknown"
 
 export class AiForecastError extends Error {
   readonly code: AiForecastErrorCode
@@ -49,6 +57,25 @@ export class AiForecastError extends Error {
     this.name = "AiForecastError"
     this.code = code
   }
+}
+
+export function isAbortError(error: unknown, signal?: AbortSignal): boolean {
+  if (signal?.aborted) return true
+  if (error instanceof AiForecastError) return error.code === "aborted"
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "AbortError"
+  )
+}
+
+export function createAbortError(): AiForecastError {
+  return new AiForecastError("aborted", "The AI request was cancelled.")
+}
+
+export function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw createAbortError()
 }
 
 function buildSystemPrompt(
@@ -196,6 +223,7 @@ async function callGemini(
   apiKey: string,
   model: string,
   systemPrompt: string,
+  signal?: AbortSignal,
 ): Promise<AiForecastResult> {
   const endpoint = `${GEMINI_API_BASE}/${model}:generateContent`
   let response: Response
@@ -211,8 +239,10 @@ async function callGemini(
           responseMimeType: "application/json",
         },
       }),
+      signal,
     })
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError(
       "network",
       "Network error while calling Gemini API.",
@@ -226,7 +256,8 @@ async function callGemini(
   let data: unknown
   try {
     data = await response.json()
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError("parse", "Invalid JSON response from Gemini API.")
   }
 
@@ -309,6 +340,7 @@ async function callOpenAiCompatible(
   model: string,
   systemPrompt: string,
   label: string,
+  signal?: AbortSignal,
 ): Promise<AiForecastResult> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -336,8 +368,10 @@ async function callOpenAiCompatible(
         temperature: 0.7,
         response_format: { type: "json_object" },
       }),
+      signal,
     })
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw toNetworkError(endpoint, label)
   }
 
@@ -348,7 +382,8 @@ async function callOpenAiCompatible(
   let data: unknown
   try {
     data = await response.json()
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError("parse", `Invalid JSON response from ${label}.`)
   }
 
@@ -372,6 +407,7 @@ async function callOpenAiCompatible(
 export async function forecastEconomics(
   request: ForecastRequest,
 ): Promise<AiForecastResult> {
+  throwIfAborted(request.signal)
   if (request.isDemo) {
     // Reserve the quota slot BEFORE the API call so concurrent requests
     // cannot race past the limit. Rolled back if the call fails.
@@ -394,17 +430,21 @@ export async function forecastEconomics(
   try {
     if (request.isDemo) {
       const model = APP_CONFIG.ai.models.demo
-      const data = await callDemoProxy("forecast", {
-        model,
-        stream: false,
-        reasoning: APP_CONFIG.ai.demo.reasoning,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: "Generate the forecast." },
-        ],
-        temperature: 0.7,
-        response_format: { type: "json_object" },
-      })
+      const data = await callDemoProxy(
+        "forecast",
+        {
+          model,
+          stream: false,
+          reasoning: APP_CONFIG.ai.demo.reasoning,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: "Generate the forecast." },
+          ],
+          temperature: 0.7,
+          response_format: { type: "json_object" },
+        },
+        request.signal,
+      )
       const content = extractOpenAiResponseText(data)
       if (!content) {
         throw new AiForecastError(
@@ -437,6 +477,7 @@ export async function forecastEconomics(
         model,
         systemPrompt,
         "custom provider",
+        request.signal,
       )
     } else if (!request.apiKey.trim()) {
       throw new AiForecastError("auth", "No API key provided.")
@@ -444,7 +485,12 @@ export async function forecastEconomics(
       const model =
         (request.model ?? "").trim() ||
         (request.isDemo ? APP_CONFIG.ai.models.demo : GEMINI_MODEL)
-      result = await callGemini(request.apiKey.trim(), model, systemPrompt)
+      result = await callGemini(
+        request.apiKey.trim(),
+        model,
+        systemPrompt,
+        request.signal,
+      )
     } else {
       const model =
         (request.model ?? "").trim() ||
@@ -455,10 +501,11 @@ export async function forecastEconomics(
         model,
         systemPrompt,
         "OpenAI API",
+        request.signal,
       )
     }
   } catch (err) {
-    if (request.isDemo) {
+    if (request.isDemo && !isAbortError(err, request.signal)) {
       useSettingsStore.getState().decrementDemoForecastCount()
     }
     throw err

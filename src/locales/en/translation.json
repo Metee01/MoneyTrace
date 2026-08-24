@@ -211,6 +211,8 @@
     "title": "MoneyTrace AI Assistant",
     "subtitle": "Ask questions about your portfolio",
     "placeholder": "Type a message...",
+    "stopGenerating": "Stop generating",
+    "close": "Close chat",
     "send": "Send",
     "thinking": "Thinking...",
     "welcome": "Hello! 👋 I'm your MoneyTrace AI financial assistant. I can see your current portfolio data, calculated projection tables, and charts. Ask me anything about your investments!",

@@ -21,6 +21,7 @@ import {
   Plus,
   ChevronLeft,
   Wrench,
+  Square,
 } from "lucide-react"
 import { Button } from "../ui/button"
 import {
@@ -36,7 +37,12 @@ import {
   type PortfolioContext,
   type ChatServiceResponse,
 } from "../../lib/ai-chat-service"
-import { AiForecastError } from "../../lib/ai-service"
+import {
+  AiForecastError,
+  createAbortError,
+  isAbortError,
+  throwIfAborted,
+} from "../../lib/ai-service"
 import { isDemoAvailable } from "../../lib/demo-proxy"
 import {
   createDefaultToolDeps,
@@ -59,8 +65,29 @@ interface AiChatProps {
   onOpenSettings: () => void
 }
 
+interface GenerationOperation {
+  id: number
+  sessionId: string
+  controller: AbortController
+}
+
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+function abortableDelay(delayMs: number, signal: AbortSignal): Promise<void> {
+  if (signal.aborted) return Promise.reject(createAbortError())
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      signal.removeEventListener("abort", handleAbort)
+      resolve()
+    }, delayMs)
+    const handleAbort = () => {
+      clearTimeout(timeoutId)
+      reject(createAbortError())
+    }
+    signal.addEventListener("abort", handleAbort, { once: true })
+  })
 }
 
 /**
@@ -180,7 +207,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     createSession,
     selectSession,
     deleteSession,
-    addMessageToActiveSession,
+    addMessageToSession,
     clearActiveSession,
   } = useChatStore()
 
@@ -194,6 +221,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   const [panelSize, setPanelSize] = useState({ width: 420, height: 580 })
   const [pendingProposals, setPendingProposals] = useState<{
     calls: AiToolCall[]
+    sessionId: string
   } | null>(null)
 
   const toolDeps = useMemo(() => createDefaultToolDeps(), [])
@@ -239,6 +267,8 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const chatPanelRef = useRef<HTMLDivElement>(null)
+  const activeGenerationRef = useRef<GenerationOperation | null>(null)
+  const nextGenerationIdRef = useRef(0)
 
   // Ensure an active chat session exists
   useEffect(() => {
@@ -290,6 +320,52 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     [currentParams, projectionResult, currencyCode, i18n.language],
   )
 
+  const startGeneration = useCallback((sessionId: string) => {
+    activeGenerationRef.current?.controller.abort()
+    const operation: GenerationOperation = {
+      id: ++nextGenerationIdRef.current,
+      sessionId,
+      controller: new AbortController(),
+    }
+    activeGenerationRef.current = operation
+    setIsLoading(true)
+    return operation
+  }, [])
+
+  const isCurrentGeneration = useCallback(
+    (operation: GenerationOperation) =>
+      activeGenerationRef.current?.id === operation.id &&
+      !operation.controller.signal.aborted,
+    [],
+  )
+
+  const finishGeneration = useCallback((operation: GenerationOperation) => {
+    if (activeGenerationRef.current?.id !== operation.id) return
+    activeGenerationRef.current = null
+    setIsLoading(false)
+  }, [])
+
+  const stopGeneration = useCallback(() => {
+    const operation = activeGenerationRef.current
+    if (!operation) return
+    activeGenerationRef.current = null
+    operation.controller.abort()
+    setIsLoading(false)
+  }, [])
+
+  const handleClose = useCallback(() => {
+    stopGeneration()
+    setIsOpen(false)
+  }, [stopGeneration])
+
+  useEffect(
+    () => () => {
+      activeGenerationRef.current?.controller.abort()
+      activeGenerationRef.current = null
+    },
+    [],
+  )
+
   // Auto-scroll to bottom
   useEffect(() => {
     if (!isHistoryOpen) {
@@ -308,20 +384,20 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
-        setIsOpen(false)
+        handleClose()
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [isOpen])
+  }, [isOpen, handleClose])
 
   // ── Tool Call Flow ─────────────────────────────────────────────────────────
 
   const appendToolResults = useCallback(
-    (results: AiToolCallResult[]) => {
+    (sessionId: string, results: AiToolCallResult[]) => {
       const now = Date.now()
       for (const r of results) {
-        addMessageToActiveSession({
+        addMessageToSession(sessionId, {
           id: generateId(),
           role: "user",
           content: `[Tool result for ${r.tool}]${r.ok ? "" : " — ERROR"}\n${r.output}`,
@@ -330,12 +406,12 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
         })
       }
     },
-    [addMessageToActiveSession],
+    [addMessageToSession],
   )
 
   const addInternalNote = useCallback(
-    (note: string) => {
-      addMessageToActiveSession({
+    (sessionId: string, note: string) => {
+      addMessageToSession(sessionId, {
         id: generateId(),
         role: "user",
         content: note,
@@ -343,11 +419,12 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
         internal: true,
       })
     },
-    [addMessageToActiveSession],
+    [addMessageToSession],
   )
 
   const reportError = useCallback(
     (err: unknown) => {
+      if (isAbortError(err)) return
       if (err instanceof AiForecastError) {
         if (err.code === "quota") {
           setError(err.message || t("chat.demoQuotaExceeded"))
@@ -366,7 +443,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   )
 
   const buildRequest = useCallback(
-    (requestMessages: ChatMessage[]) => ({
+    (requestMessages: ChatMessage[], signal: AbortSignal) => ({
       provider: activeProvider,
       apiKey: activeApiKey,
       model: activeModel,
@@ -375,6 +452,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
       messages: requestMessages,
       context: portfolioContext,
       isDemo: isUsingDemo,
+      signal,
     }),
     [
       activeProvider,
@@ -389,90 +467,119 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   )
 
   const appendAssistant = useCallback(
-    (response: ChatServiceResponse) => {
-      addMessageToActiveSession({
+    (sessionId: string, response: ChatServiceResponse) => {
+      addMessageToSession(sessionId, {
         id: generateId(),
         role: "assistant",
         content: response.text,
         timestamp: Date.now(),
       })
     },
-    [addMessageToActiveSession],
+    [addMessageToSession],
   )
 
   const executeReadOnlyTools = useCallback(
-    async (calls: AiToolCall[]) => {
+    async (operation: GenerationOperation, calls: AiToolCall[]) => {
       for (const call of calls) {
-        appendToolResults([await executeToolCall(call, toolDeps, false)])
+        const result = await executeToolCall(
+          call,
+          toolDeps,
+          false,
+          operation.controller.signal,
+        )
+        throwIfAborted(operation.controller.signal)
+        if (!isCurrentGeneration(operation)) throw createAbortError()
+        appendToolResults(operation.sessionId, [result])
       }
     },
-    [appendToolResults, toolDeps],
+    [appendToolResults, isCurrentGeneration, toolDeps],
   )
 
-  const waitForDemoChatCooldown = useCallback(async () => {
-    if (!isUsingDemo) return
+  const waitForDemoChatCooldown = useCallback(
+    async (signal: AbortSignal) => {
+      if (!isUsingDemo) return
 
-    const lastCallTime = useSettingsStore.getState().demoLastChatCallTime ?? 0
-    const remaining =
-      APP_CONFIG.ai.demo.cooldownMs - (Date.now() - lastCallTime)
-    if (remaining > 0) {
-      await new Promise((resolve) => setTimeout(resolve, remaining + 50))
-    }
-  }, [isUsingDemo])
+      const lastCallTime = useSettingsStore.getState().demoLastChatCallTime ?? 0
+      const remaining =
+        APP_CONFIG.ai.demo.cooldownMs - (Date.now() - lastCallTime)
+      if (remaining > 0) {
+        await abortableDelay(remaining + 50, signal)
+      }
+    },
+    [isUsingDemo],
+  )
 
   /**
    * Sends follow-up rounds after tool results were injected into the session.
    * Read-only tool calls are executed automatically; any mutation call pauses
    * the flow again for user approval (bounded by MAX_TOOL_ROUNDS).
    */
-  const runFollowUpRound = useCallback(async () => {
-    let rounds = 0
-    while (rounds < MAX_TOOL_ROUNDS) {
-      rounds += 1
-      await waitForDemoChatCooldown()
-      const session = useChatStore.getState().getActiveSession()
-      const response = await sendChatMessage(
-        buildRequest(session?.messages ?? []),
-      )
-      addMessageToActiveSession({
-        id: generateId(),
-        role: "assistant",
-        content: response.text,
-        timestamp: Date.now(),
-      })
+  const runFollowUpRound = useCallback(
+    async (operation: GenerationOperation) => {
+      let rounds = 0
+      while (rounds < MAX_TOOL_ROUNDS) {
+        rounds += 1
+        throwIfAborted(operation.controller.signal)
+        await waitForDemoChatCooldown(operation.controller.signal)
+        const session = useChatStore.getState().getSession(operation.sessionId)
+        if (!session) throw createAbortError()
+        const response = await sendChatMessage(
+          buildRequest(session.messages, operation.controller.signal),
+        )
+        throwIfAborted(operation.controller.signal)
+        if (!isCurrentGeneration(operation)) throw createAbortError()
+        appendAssistant(operation.sessionId, response)
 
-      const disposition = getToolCallDisposition(response.toolCalls)
-      if (disposition === "none") return
-      if (disposition === "approval") {
-        setPendingProposals({ calls: response.toolCalls })
-        return
+        const disposition = getToolCallDisposition(response.toolCalls)
+        if (disposition === "none") return
+        if (disposition === "approval") {
+          setPendingProposals({
+            calls: response.toolCalls,
+            sessionId: operation.sessionId,
+          })
+          return
+        }
+        if (rounds >= MAX_TOOL_ROUNDS) return
+
+        await executeReadOnlyTools(operation, response.toolCalls)
       }
-      if (rounds >= MAX_TOOL_ROUNDS) return
-
-      await executeReadOnlyTools(response.toolCalls)
-    }
-  }, [
-    waitForDemoChatCooldown,
-    buildRequest,
-    addMessageToActiveSession,
-    executeReadOnlyTools,
-  ])
+    },
+    [
+      waitForDemoChatCooldown,
+      buildRequest,
+      isCurrentGeneration,
+      appendAssistant,
+      executeReadOnlyTools,
+    ],
+  )
 
   const handleApproveProposals = useCallback(async () => {
     if (!pendingProposals || isLoading) return
-    const calls = pendingProposals.calls
+    const { calls, sessionId } = pendingProposals
+    if (!useChatStore.getState().getSession(sessionId)) {
+      setPendingProposals(null)
+      return
+    }
+    const operation = startGeneration(sessionId)
     setPendingProposals(null)
     setError(null)
-    setIsLoading(true)
     try {
       for (const call of calls) {
-        appendToolResults([await executeToolCall(call, toolDeps, true)])
+        const result = await executeToolCall(
+          call,
+          toolDeps,
+          true,
+          operation.controller.signal,
+        )
+        throwIfAborted(operation.controller.signal)
+        if (!isCurrentGeneration(operation)) throw createAbortError()
+        appendToolResults(sessionId, [result])
       }
-      await runFollowUpRound()
+      await runFollowUpRound(operation)
     } catch (err) {
-      reportError(err)
+      if (isCurrentGeneration(operation)) reportError(err)
     } finally {
-      setIsLoading(false)
+      finishGeneration(operation)
     }
   }, [
     pendingProposals,
@@ -481,22 +588,31 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     appendToolResults,
     runFollowUpRound,
     reportError,
+    startGeneration,
+    isCurrentGeneration,
+    finishGeneration,
   ])
 
   const handleRejectProposals = useCallback(async () => {
     if (!pendingProposals || isLoading) return
+    const { sessionId } = pendingProposals
+    if (!useChatStore.getState().getSession(sessionId)) {
+      setPendingProposals(null)
+      return
+    }
+    const operation = startGeneration(sessionId)
     setPendingProposals(null)
     setError(null)
-    setIsLoading(true)
     try {
       addInternalNote(
+        sessionId,
         "The user REJECTED the proposed tool calls above. Do NOT apply any proposed changes. State briefly that no changes were applied, without an offer or follow-up question.",
       )
-      await runFollowUpRound()
+      await runFollowUpRound(operation)
     } catch (err) {
-      reportError(err)
+      if (isCurrentGeneration(operation)) reportError(err)
     } finally {
-      setIsLoading(false)
+      finishGeneration(operation)
     }
   }, [
     pendingProposals,
@@ -504,6 +620,9 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     addInternalNote,
     runFollowUpRound,
     reportError,
+    startGeneration,
+    isCurrentGeneration,
+    finishGeneration,
   ])
 
   const handleSendMessage = useCallback(async () => {
@@ -522,27 +641,38 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
       timestamp: Date.now(),
     }
 
-    addMessageToActiveSession(userMessage)
+    const sessionId =
+      activeSessionId && useChatStore.getState().getSession(activeSessionId)
+        ? activeSessionId
+        : createSession(t("chat.welcome")).id
+    addMessageToSession(sessionId, userMessage)
+    const operation = startGeneration(sessionId)
     setInputValue("")
     setError(null)
-    setIsLoading(true)
 
     try {
-      const allMessages = [...messages, userMessage]
-      const response = await sendChatMessage(buildRequest(allMessages))
-      appendAssistant(response)
+      const session = useChatStore.getState().getSession(sessionId)
+      const response = await sendChatMessage(
+        buildRequest(
+          session?.messages ?? [userMessage],
+          operation.controller.signal,
+        ),
+      )
+      throwIfAborted(operation.controller.signal)
+      if (!isCurrentGeneration(operation)) throw createAbortError()
+      appendAssistant(sessionId, response)
 
       const disposition = getToolCallDisposition(response.toolCalls)
       if (disposition === "approval") {
-        setPendingProposals({ calls: response.toolCalls })
+        setPendingProposals({ calls: response.toolCalls, sessionId })
       } else if (disposition === "execute") {
-        await executeReadOnlyTools(response.toolCalls)
-        await runFollowUpRound()
+        await executeReadOnlyTools(operation, response.toolCalls)
+        await runFollowUpRound(operation)
       }
     } catch (err) {
-      reportError(err)
+      if (isCurrentGeneration(operation)) reportError(err)
     } finally {
-      setIsLoading(false)
+      finishGeneration(operation)
     }
   }, [
     inputValue,
@@ -550,13 +680,17 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     pendingProposals,
     hasActiveKey,
     isQuotaExceeded,
-    messages,
+    activeSessionId,
     buildRequest,
     appendAssistant,
     executeReadOnlyTools,
     runFollowUpRound,
     reportError,
-    addMessageToActiveSession,
+    addMessageToSession,
+    createSession,
+    startGeneration,
+    isCurrentGeneration,
+    finishGeneration,
     t,
   ])
 
@@ -568,6 +702,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   }
 
   const handleNewChat = () => {
+    stopGeneration()
     createSession(t("chat.welcome"))
     setIsHistoryOpen(false)
     setPendingProposals(null)
@@ -575,6 +710,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   }
 
   const handleClearCurrentChat = () => {
+    stopGeneration()
     clearActiveSession(t("chat.welcome"))
     setPendingProposals(null)
     setError(null)
@@ -582,6 +718,26 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
 
   const handleUseDemoApi = () => {
     setLocalDemoOverride(true)
+  }
+
+  const handleSelectSession = (sessionId: string) => {
+    stopGeneration()
+    selectSession(sessionId)
+    setPendingProposals(null)
+    setError(null)
+    setIsHistoryOpen(false)
+  }
+
+  const handleDeleteSession = (sessionId: string) => {
+    stopGeneration()
+    deleteSession(sessionId)
+    setPendingProposals(null)
+    setError(null)
+  }
+
+  const handleOpenHistory = () => {
+    stopGeneration()
+    setIsHistoryOpen(true)
   }
 
   return (
@@ -656,7 +812,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
                     <Plus className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => setIsHistoryOpen(true)}
+                    onClick={handleOpenHistory}
                     className="p-1.5 rounded-lg hover:bg-primary-foreground/15 transition-colors"
                     title={t("chat.history")}
                   >
@@ -672,8 +828,9 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
                 </>
               )}
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 className="p-1.5 rounded-lg hover:bg-primary-foreground/15 transition-colors"
+                title={t("chat.close")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -743,11 +900,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
                   return (
                     <div
                       key={s.id}
-                      onClick={() => {
-                        selectSession(s.id)
-                        setPendingProposals(null)
-                        setIsHistoryOpen(false)
-                      }}
+                      onClick={() => handleSelectSession(s.id)}
                       className={`group flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
                         isActive
                           ? "border-primary/50 bg-primary/10 text-foreground"
@@ -772,7 +925,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
-                          deleteSession(s.id)
+                          handleDeleteSession(s.id)
                         }}
                         className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-80 group-hover:opacity-100 shrink-0"
                         title={t("chat.deleteSession")}
@@ -891,90 +1044,100 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
           )}
 
           {/* No API Key / Quota Exceeded State */}
-          {!isHistoryOpen && (!hasActiveKey || isQuotaExceeded) && (
-            <div className="px-4 py-3 border-t border-border bg-muted/30 space-y-2">
-              <p className="text-xs text-muted-foreground text-center">
-                {isQuotaExceeded
-                  ? t("chat.demoQuotaExceeded")
-                  : t("chat.noApiKey")}
-              </p>
-              <div className="flex items-center justify-center gap-2">
-                {hasDemoKey && !isUsingDemo && (
+          {!isHistoryOpen &&
+            (!hasActiveKey || (isQuotaExceeded && !isLoading)) && (
+              <div className="px-4 py-3 border-t border-border bg-muted/30 space-y-2">
+                <p className="text-xs text-muted-foreground text-center">
+                  {isQuotaExceeded
+                    ? t("chat.demoQuotaExceeded")
+                    : t("chat.noApiKey")}
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  {hasDemoKey && !isUsingDemo && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={handleUseDemoApi}
+                      className="text-xs gap-1.5"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {t("chat.useDemoApi")}
+                    </Button>
+                  )}
                   <Button
                     size="sm"
-                    variant="secondary"
-                    onClick={handleUseDemoApi}
+                    variant="outline"
+                    onClick={() => {
+                      handleClose()
+                      onOpenSettings()
+                    }}
                     className="text-xs gap-1.5"
                   >
-                    <Sparkles className="w-3 h-3" />
-                    {t("chat.useDemoApi")}
+                    <Settings className="w-3 h-3" />
+                    {t("chat.configureInSettings")}
                   </Button>
+                </div>
+                {hasDemoKey && !isUsingDemo && (
+                  <p className="text-[10px] text-muted-foreground/70 text-center">
+                    {t("chat.demoApiNote")}
+                  </p>
                 )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setIsOpen(false)
-                    onOpenSettings()
-                  }}
-                  className="text-xs gap-1.5"
-                >
-                  <Settings className="w-3 h-3" />
-                  {t("chat.configureInSettings")}
-                </Button>
               </div>
-              {hasDemoKey && !isUsingDemo && (
-                <p className="text-[10px] text-muted-foreground/70 text-center">
-                  {t("chat.demoApiNote")}
-                </p>
-              )}
-            </div>
-          )}
+            )}
 
           {/* Input Area */}
-          {!isHistoryOpen && hasActiveKey && !isQuotaExceeded && (
-            <div className="flex items-end gap-2 px-3 py-3 border-t border-border bg-card">
-              <textarea
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={t("chat.placeholder")}
-                rows={1}
-                className="flex-1 resize-none bg-muted border border-border rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 max-h-24 scrollbar-thin"
-                style={{
-                  height: "auto",
-                  minHeight: "40px",
-                }}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement
-                  target.style.height = "auto"
-                  target.style.height = `${Math.min(target.scrollHeight, 96)}px`
-                }}
-                disabled={isLoading || pendingProposals !== null}
-              />
-              <Button
-                size="icon"
-                onClick={handleSendMessage}
-                disabled={
-                  !inputValue.trim() || isLoading || pendingProposals !== null
-                }
-                className="shrink-0 rounded-xl h-10 w-10"
-              >
+          {!isHistoryOpen &&
+            hasActiveKey &&
+            (!isQuotaExceeded || isLoading) && (
+              <div className="flex items-end gap-2 px-3 py-3 border-t border-border bg-card">
+                <textarea
+                  ref={inputRef}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t("chat.placeholder")}
+                  rows={1}
+                  className="flex-1 resize-none bg-muted border border-border rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 max-h-24 scrollbar-thin"
+                  style={{
+                    height: "auto",
+                    minHeight: "40px",
+                  }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement
+                    target.style.height = "auto"
+                    target.style.height = `${Math.min(target.scrollHeight, 96)}px`
+                  }}
+                  disabled={isLoading || pendingProposals !== null}
+                />
                 {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={stopGeneration}
+                    className="shrink-0 rounded-xl h-10 w-10"
+                    title={t("chat.stopGenerating")}
+                    aria-label={t("chat.stopGenerating")}
+                  >
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                  </Button>
                 ) : (
-                  <Send className="w-4 h-4" />
+                  <Button
+                    size="icon"
+                    onClick={handleSendMessage}
+                    disabled={!inputValue.trim() || pendingProposals !== null}
+                    className="shrink-0 rounded-xl h-10 w-10"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
                 )}
-              </Button>
-            </div>
-          )}
+              </div>
+            )}
         </div>
       </div>
 
       {/* FAB (Floating Action Button) */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => (isOpen ? handleClose() : setIsOpen(true))}
         className={`fixed bottom-4 right-4 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 ${
           isOpen
             ? "bg-muted text-muted-foreground hover:bg-muted/80 rotate-0"

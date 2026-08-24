@@ -14,8 +14,10 @@ export interface ChatState {
   createSession: (welcomeMessageText?: string) => ChatSession
   selectSession: (id: string) => void
   deleteSession: (id: string) => void
+  addMessageToSession: (id: string, message: ChatMessage) => void
   addMessageToActiveSession: (message: ChatMessage) => void
   clearActiveSession: (welcomeMessageText?: string) => void
+  getSession: (id: string) => ChatSession | null
   getActiveSession: () => ChatSession | null
 }
 
@@ -24,6 +26,24 @@ function generateId(): string {
     return crypto.randomUUID()
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+function appendMessage(
+  session: ChatSession,
+  message: ChatMessage,
+  now: number,
+): ChatSession {
+  const messages = [...session.messages, message]
+  let title = session.title
+  if (!title) {
+    const firstUserMessage = messages.find((item) => item.role === "user")
+    if (firstUserMessage) {
+      const cleaned = firstUserMessage.content.trim().slice(0, 30)
+      title = firstUserMessage.content.length > 30 ? `${cleaned}...` : cleaned
+    }
+  }
+
+  return { ...session, title, updatedAt: now, messages }
 }
 
 const getLocalStorage = () => ({
@@ -99,6 +119,15 @@ export const useChatStore = create<ChatState>()(
         })
       },
 
+      addMessageToSession: (id, message) => {
+        const now = Date.now()
+        set((state) => ({
+          sessions: state.sessions.map((session) =>
+            session.id === id ? appendMessage(session, message, now) : session,
+          ),
+        }))
+      },
+
       addMessageToActiveSession: (message) => {
         const activeId = get().activeSessionId
         const now = Date.now()
@@ -123,31 +152,11 @@ export const useChatStore = create<ChatState>()(
             targetSessionId = newSession.id
           }
 
-          const updatedSessions = sessions.map((session) => {
-            if (session.id !== targetSessionId) return session
-
-            const updatedMessages = [...session.messages, message]
-
-            // Auto-generate title from the first user message if title is empty
-            let title = session.title
-            if (!title) {
-              const firstUserMsg = updatedMessages.find(
-                (m) => m.role === "user",
-              )
-              if (firstUserMsg) {
-                const cleaned = firstUserMsg.content.trim().slice(0, 30)
-                title =
-                  firstUserMsg.content.length > 30 ? `${cleaned}...` : cleaned
-              }
-            }
-
-            return {
-              ...session,
-              title,
-              updatedAt: now,
-              messages: updatedMessages,
-            }
-          })
+          const updatedSessions = sessions.map((session) =>
+            session.id === targetSessionId
+              ? appendMessage(session, message, now)
+              : session,
+          )
 
           return {
             sessions: updatedSessions,
@@ -184,6 +193,8 @@ export const useChatStore = create<ChatState>()(
           ),
         }))
       },
+
+      getSession: (id) => get().sessions.find((s) => s.id === id) || null,
 
       getActiveSession: () => {
         const { sessions, activeSessionId } = get()

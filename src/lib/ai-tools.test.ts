@@ -41,6 +41,7 @@ import {
   usePortfolioStore,
   DEFAULT_PROJECTION_PARAMS,
 } from "../store/portfolio-store"
+import { AiForecastError, createAbortError } from "./ai-service"
 
 function fakeDeps(overrides: Partial<ToolDeps> = {}): ToolDeps {
   let params: ProjectionParams = { ...DEFAULT_PROJECTION_PARAMS }
@@ -367,6 +368,32 @@ async function runToolTests() {
   console.assert(forecastResult.ok, "forecast tool failed")
   const parsed = JSON.parse(forecastResult.output) as AiForecastResult
   console.assert(parsed.usdRate === 36.4, "forecast payload mismatch")
+
+  const abortController = new AbortController()
+  const pendingForecast = executeToolCall(
+    { tool: "forecast_economics", args: {} },
+    fakeDeps({
+      forecastEconomics: async (signal) =>
+        new Promise((_resolve, reject) => {
+          signal?.addEventListener("abort", () => reject(createAbortError()), {
+            once: true,
+          })
+        }),
+    }),
+    false,
+    abortController.signal,
+  )
+  abortController.abort()
+  let abortError: unknown
+  try {
+    await pendingForecast
+  } catch (error) {
+    abortError = error
+  }
+  console.assert(
+    abortError instanceof AiForecastError && abortError.code === "aborted",
+    "forecast tool must propagate cancellation instead of returning a tool error",
+  )
 
   // Test 15: unknown tool
   console.log("\n--- Test 15: Unknown Tool ---")

@@ -14,7 +14,14 @@ import type {
   ProjectionSummary,
   ProjectionResult,
 } from "../types"
-import { GEMINI_MODEL, OPENAI_MODEL, AiForecastError } from "./ai-service"
+import {
+  GEMINI_MODEL,
+  OPENAI_MODEL,
+  AiForecastError,
+  createAbortError,
+  isAbortError,
+  throwIfAborted,
+} from "./ai-service"
 import { TOOL_SCHEMAS, parseToolCalls } from "./ai-tools"
 import { callDemoProxy } from "./demo-proxy"
 import { extractOpenAiResponseText } from "./ai-response"
@@ -241,6 +248,7 @@ export interface ChatRequest {
   messages: ChatMessage[]
   context: PortfolioContext
   isDemo?: boolean
+  signal?: AbortSignal
 }
 
 import { APP_CONFIG } from "../config"
@@ -271,6 +279,7 @@ async function chatWithGemini(
   model: string,
   systemPrompt: string,
   messages: ChatMessage[],
+  signal?: AbortSignal,
 ): Promise<string> {
   const endpoint = `${GEMINI_API_BASE}/${model}:generateContent`
 
@@ -295,8 +304,10 @@ async function chatWithGemini(
           maxOutputTokens: APP_CONFIG.ai.maxTokens,
         },
       }),
+      signal,
     })
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError(
       "network",
       "Network error while calling Gemini API.",
@@ -310,7 +321,8 @@ async function chatWithGemini(
   let data: unknown
   try {
     data = await response.json()
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError("parse", "Invalid JSON response from Gemini API.")
   }
 
@@ -337,6 +349,7 @@ async function chatWithOpenAi(
   systemPrompt: string,
   messages: ChatMessage[],
   label: string,
+  signal?: AbortSignal,
 ): Promise<string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -371,8 +384,10 @@ async function chatWithOpenAi(
         temperature: 0.8,
         max_tokens: APP_CONFIG.ai.maxTokens,
       }),
+      signal,
     })
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw toNetworkError(endpoint, label)
   }
 
@@ -383,7 +398,8 @@ async function chatWithOpenAi(
   let data: unknown
   try {
     data = await response.json()
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError("parse", `Invalid JSON response from ${label}.`)
   }
 
@@ -416,6 +432,7 @@ export interface ChatServiceResponse {
 export async function sendChatMessage(
   request: ChatRequest,
 ): Promise<ChatServiceResponse> {
+  throwIfAborted(request.signal)
   if (request.isDemo) {
     // Cooldown rate limit (persisted so a page reload cannot reset it)
     const now = Date.now()
@@ -470,22 +487,26 @@ export async function sendChatMessage(
 
   try {
     if (request.isDemo) {
-      const data = await callDemoProxy("chat", {
-        model: APP_CONFIG.ai.models.demo,
-        stream: false,
-        reasoning: APP_CONFIG.ai.demo.reasoning,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...sanitizeMessages
-            .filter((m) => m.role !== "system")
-            .map((m) => ({
-              role: m.role as "user" | "assistant",
-              content: m.content,
-            })),
-        ],
-        temperature: 0.8,
-        max_tokens: APP_CONFIG.ai.maxTokens,
-      })
+      const data = await callDemoProxy(
+        "chat",
+        {
+          model: APP_CONFIG.ai.models.demo,
+          stream: false,
+          reasoning: APP_CONFIG.ai.demo.reasoning,
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...sanitizeMessages
+              .filter((m) => m.role !== "system")
+              .map((m) => ({
+                role: m.role as "user" | "assistant",
+                content: m.content,
+              })),
+          ],
+          temperature: 0.8,
+          max_tokens: APP_CONFIG.ai.maxTokens,
+        },
+        request.signal,
+      )
       const rawContent = extractOpenAiResponseText(data)
       const cleanedContent = cleanReasoningTokens(rawContent)
       if (!cleanedContent) {
@@ -520,6 +541,7 @@ export async function sendChatMessage(
         systemPrompt,
         sanitizeMessages,
         "custom provider",
+        request.signal,
       )
     } else if (!request.apiKey.trim()) {
       throw new AiForecastError("auth", "No API key provided.")
@@ -532,6 +554,7 @@ export async function sendChatMessage(
         model,
         systemPrompt,
         sanitizeMessages,
+        request.signal,
       )
     } else {
       const model =
@@ -544,10 +567,11 @@ export async function sendChatMessage(
         systemPrompt,
         sanitizeMessages,
         "OpenAI API",
+        request.signal,
       )
     }
   } catch (err) {
-    if (request.isDemo) {
+    if (request.isDemo && !isAbortError(err, request.signal)) {
       useSettingsStore.getState().decrementDemoChatCount()
     }
     throw err

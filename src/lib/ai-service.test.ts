@@ -3,7 +3,7 @@
  * Run with: npx tsx src/lib/ai-service.test.ts
  */
 
-import { forecastEconomics } from "./ai-service"
+import { AiForecastError, forecastEconomics } from "./ai-service"
 
 function assert(condition: boolean, message: string): void {
   if (!condition) throw new Error(message)
@@ -77,6 +77,42 @@ async function run(): Promise<void> {
   } finally {
     globalThis.fetch = originalFetch
   }
+
+  const abortController = new AbortController()
+  globalThis.fetch = async (_input, init) =>
+    new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener(
+        "abort",
+        () => {
+          const error = new Error("aborted")
+          error.name = "AbortError"
+          reject(error)
+        },
+        { once: true },
+      )
+    })
+  const pendingForecast = forecastEconomics({
+    provider: "openai",
+    apiKey: "test-key",
+    model: "test-model",
+    currencyCode: "TRY",
+    targetYears: 10,
+    signal: abortController.signal,
+  })
+  abortController.abort()
+
+  let abortError: unknown
+  try {
+    await pendingForecast
+  } catch (error) {
+    abortError = error
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+  assert(
+    abortError instanceof AiForecastError && abortError.code === "aborted",
+    "An aborted forecast should preserve the aborted error code",
+  )
 
   console.log("All AI forecast service tests passed.")
 }

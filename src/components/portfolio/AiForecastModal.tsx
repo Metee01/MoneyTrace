@@ -33,6 +33,7 @@ interface AiForecastModalProps {
 }
 
 const ERROR_CODE_KEYS: Record<AiForecastErrorCode, string> = {
+  aborted: "ai.errorUnknown",
   auth: "ai.errorAuth",
   network: "ai.errorNetwork",
   quota: "ai.errorQuota",

@@ -13,6 +13,7 @@ import {
   sendChatMessage,
   type PortfolioContext,
 } from "./ai-chat-service"
+import { AiForecastError } from "./ai-service"
 
 const context: PortfolioContext = {
   params: { ...DEFAULT_PROJECTION_PARAMS },
@@ -140,6 +141,43 @@ async function run(): Promise<void> {
   assert(
     requestBody.messages?.length === 2,
     "UI welcome message should not be sent to the provider",
+  )
+
+  const abortController = new AbortController()
+  globalThis.fetch = async (_input, init) =>
+    new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener(
+        "abort",
+        () => {
+          const error = new Error("aborted")
+          error.name = "AbortError"
+          reject(error)
+        },
+        { once: true },
+      )
+    })
+
+  const pendingRequest = sendChatMessage({
+    provider: "openai",
+    apiKey: "test-key",
+    model: "test-model",
+    messages,
+    context,
+    signal: abortController.signal,
+  })
+  abortController.abort()
+
+  let abortError: unknown
+  try {
+    await pendingRequest
+  } catch (error) {
+    abortError = error
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+  assert(
+    abortError instanceof AiForecastError && abortError.code === "aborted",
+    "An aborted provider request should preserve the aborted error code",
   )
 
   console.log("All AI chat service tests passed.")

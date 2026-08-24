@@ -7,7 +7,12 @@
  */
 
 import { useSettingsStore } from "../store/settings-store"
-import { AiForecastError } from "./ai-service"
+import {
+  AiForecastError,
+  createAbortError,
+  isAbortError,
+  throwIfAborted,
+} from "./ai-service"
 
 function readProxyUrl(): string {
   try {
@@ -55,6 +60,7 @@ function mapProxyError(status: number, body: unknown): AiForecastError {
   const message =
     (body as { error?: { message?: unknown } })?.error?.message?.toString() ??
     ""
+  if (status === 499) return createAbortError()
   if (status === 429) {
     return new AiForecastError(
       "quota",
@@ -90,7 +96,9 @@ function mapProxyError(status: number, body: unknown): AiForecastError {
 export async function callDemoProxy(
   mode: "forecast" | "chat",
   payload: unknown,
+  signal?: AbortSignal,
 ): Promise<unknown> {
+  throwIfAborted(signal)
   const endpoint = getDemoProxyUrl()
   if (!endpoint) {
     throw new AiForecastError(
@@ -109,8 +117,10 @@ export async function callDemoProxy(
         userId: getDemoUserId(),
         payload,
       }),
+      signal,
     })
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError(
       "network",
       "Network error while calling the Demo API proxy.",
@@ -120,7 +130,8 @@ export async function callDemoProxy(
   let data: unknown
   try {
     data = await response.json()
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError(
       "parse",
       "Invalid JSON response from the Demo API proxy.",
