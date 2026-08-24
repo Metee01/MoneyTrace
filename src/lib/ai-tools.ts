@@ -95,6 +95,21 @@ export const TOOL_SCHEMAS: AiToolSchema[] = [
   },
 ]
 
+export type ToolCallDisposition = "none" | "execute" | "approval"
+
+export function isMutationTool(call: AiToolCall): boolean {
+  return TOOL_SCHEMAS.some(
+    (schema) => schema.name === call.tool && schema.kind === "mutate",
+  )
+}
+
+export function getToolCallDisposition(
+  calls: AiToolCall[],
+): ToolCallDisposition {
+  if (calls.length === 0) return "none"
+  return calls.some(isMutationTool) ? "approval" : "execute"
+}
+
 // ─── Argument Sanitization ──────────────────────────────────────────────────
 
 type ParamLimits = typeof APP_CONFIG.engine.limits

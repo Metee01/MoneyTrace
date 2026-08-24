@@ -50,7 +50,7 @@ export const APP_CONFIG = {
       /** Maximum allowed chat messages using Demo API */
       maxChatMessages: 15,
       /** Maximum allowed user prompt character length per chat message on Demo API */
-      maxMessageLength: 500,
+      maxMessageLength: 2000,
       /** Rate-limiting cooldown period between messages in milliseconds */
       cooldownMs: 3000,
     },

@@ -28,6 +28,7 @@ const mockStorage = {
 import type { AiForecastResult, AiToolCall, ProjectionParams } from "../types"
 import {
   TOOL_SCHEMAS,
+  getToolCallDisposition,
   parseToolCalls,
   stripToolCalls,
   sanitizeParams,
@@ -94,6 +95,24 @@ async function runToolTests() {
       (s) => s.name === "calculate_projection" && s.kind === "read",
     ),
     "calculate_projection must be a read tool",
+  )
+  console.assert(
+    getToolCallDisposition([]) === "none",
+    "No tool calls should require no action",
+  )
+  console.assert(
+    getToolCallDisposition([
+      { tool: "forecast_economics", args: {} },
+      { tool: "calculate_projection", args: {} },
+    ]) === "execute",
+    "Read-only tool calls should execute automatically",
+  )
+  console.assert(
+    getToolCallDisposition([
+      { tool: "forecast_economics", args: {} },
+      { tool: "apply_params", args: { monthlyDca: 700 } },
+    ]) === "approval",
+    "Any mutation tool should require approval",
   )
 
   // Test 2: parseToolCalls — single object block

@@ -39,10 +39,11 @@ import {
 import { AiForecastError } from "../../lib/ai-service"
 import { isDemoAvailable } from "../../lib/demo-proxy"
 import {
-  TOOL_SCHEMAS,
   createDefaultToolDeps,
   describeMutationCall,
   executeToolCall,
+  getToolCallDisposition,
+  isMutationTool,
   stripToolCalls,
 } from "../../lib/ai-tools"
 import type {
@@ -53,10 +54,6 @@ import type {
 } from "../../types"
 
 const MAX_TOOL_ROUNDS = APP_CONFIG.ai.toolCall.maxRounds
-
-function isMutationTool(call: AiToolCall): boolean {
-  return TOOL_SCHEMAS.find((s) => s.name === call.tool)?.kind === "mutate"
-}
 
 interface AiChatProps {
   onOpenSettings: () => void
@@ -399,14 +396,29 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
         content: response.text,
         timestamp: Date.now(),
       })
-      if (response.toolCalls.length > 0) {
-        setPendingProposals({
-          calls: response.toolCalls,
-        })
-      }
     },
     [addMessageToActiveSession],
   )
+
+  const executeReadOnlyTools = useCallback(
+    async (calls: AiToolCall[]) => {
+      for (const call of calls) {
+        appendToolResults([await executeToolCall(call, toolDeps, false)])
+      }
+    },
+    [appendToolResults, toolDeps],
+  )
+
+  const waitForDemoChatCooldown = useCallback(async () => {
+    if (!isUsingDemo) return
+
+    const lastCallTime = useSettingsStore.getState().demoLastChatCallTime ?? 0
+    const remaining =
+      APP_CONFIG.ai.demo.cooldownMs - (Date.now() - lastCallTime)
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining + 50))
+    }
+  }, [isUsingDemo])
 
   /**
    * Sends follow-up rounds after tool results were injected into the session.
@@ -417,6 +429,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     let rounds = 0
     while (rounds < MAX_TOOL_ROUNDS) {
       rounds += 1
+      await waitForDemoChatCooldown()
       const session = useChatStore.getState().getActiveSession()
       const response = await sendChatMessage(
         buildRequest(session?.messages ?? []),
@@ -428,18 +441,22 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
         timestamp: Date.now(),
       })
 
-      if (response.toolCalls.length === 0) return
-      if (response.toolCalls.some(isMutationTool)) {
+      const disposition = getToolCallDisposition(response.toolCalls)
+      if (disposition === "none") return
+      if (disposition === "approval") {
         setPendingProposals({ calls: response.toolCalls })
         return
       }
       if (rounds >= MAX_TOOL_ROUNDS) return
 
-      for (const call of response.toolCalls) {
-        appendToolResults([await executeToolCall(call, toolDeps, false)])
-      }
+      await executeReadOnlyTools(response.toolCalls)
     }
-  }, [buildRequest, appendToolResults, addMessageToActiveSession, toolDeps])
+  }, [
+    waitForDemoChatCooldown,
+    buildRequest,
+    addMessageToActiveSession,
+    executeReadOnlyTools,
+  ])
 
   const handleApproveProposals = useCallback(async () => {
     if (!pendingProposals || isLoading) return
@@ -514,6 +531,14 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
       const allMessages = [...messages, userMessage]
       const response = await sendChatMessage(buildRequest(allMessages))
       appendAssistant(response)
+
+      const disposition = getToolCallDisposition(response.toolCalls)
+      if (disposition === "approval") {
+        setPendingProposals({ calls: response.toolCalls })
+      } else if (disposition === "execute") {
+        await executeReadOnlyTools(response.toolCalls)
+        await runFollowUpRound()
+      }
     } catch (err) {
       reportError(err)
     } finally {
@@ -528,6 +553,8 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     messages,
     buildRequest,
     appendAssistant,
+    executeReadOnlyTools,
+    runFollowUpRound,
     reportError,
     addMessageToActiveSession,
     t,
@@ -760,15 +787,25 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
           ) : (
             /* Active Messages View */
             <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 scroll-smooth">
-              {messages.map((msg) =>
-                msg.internal ? (
-                  <div key={msg.id} className="flex justify-center">
-                    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/80 bg-muted/60 px-2 py-0.5 rounded-full">
-                      <Wrench className="w-2.5 h-2.5" />
-                      {t("chat.toolExecuted")}
-                    </span>
-                  </div>
-                ) : (
+              {messages.map((msg) => {
+                if (msg.internal) {
+                  return (
+                    <div key={msg.id} className="flex justify-center">
+                      <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/80 bg-muted/60 px-2 py-0.5 rounded-full">
+                        <Wrench className="w-2.5 h-2.5" />
+                        {t("chat.toolExecuted")}
+                      </span>
+                    </div>
+                  )
+                }
+
+                const visibleContent =
+                  msg.role === "assistant"
+                    ? stripToolCalls(msg.content)
+                    : msg.content
+                if (!visibleContent) return null
+
+                return (
                   <div
                     key={msg.id}
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
@@ -781,12 +818,12 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
                       }`}
                     >
                       {msg.role === "assistant"
-                        ? formatMessageContent(stripToolCalls(msg.content))
+                        ? formatMessageContent(visibleContent)
                         : msg.content}
                     </div>
                   </div>
-                ),
-              )}
+                )
+              })}
 
               {/* Tool Call Approval Card */}
               {pendingProposals !== null &&
