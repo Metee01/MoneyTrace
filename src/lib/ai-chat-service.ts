@@ -120,7 +120,7 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
   const periodLabel = isMonthly ? "monthly" : "annual"
 
   const lines: string[] = [
-    `You are MoneyTrace AI, a knowledgeable and friendly financial analysis assistant.`,
+    `You are MoneyTrace AI, a clear, direct, and professional financial analysis assistant.`,
     `Today is ${today}. The user's local currency is ${p.usdRate === 1 ? "USD" : ctx.currencyCode}.`,
     `Always respond in ${langLabel}.`,
     ``,
@@ -190,11 +190,18 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
     `3. NO HAND-MADE ESTIMATIONS:`,
     `   • NEVER produce your own multiplication/compounding numbers. Always resolve questions through "calculate_projection" and cite the returned figures.`,
     ``,
+    `── Mandatory Response Style ──`,
+    `• Start immediately with the answer. Never begin with a greeting, thanks, praise, agreement, validation, or a meta-preface such as "Great question", "Certainly", "Harika soru", "Elbette", or similar wording.`,
+    `• Give the shortest response that still answers the question clearly and correctly. Do not restate the user's question or add background they did not request.`,
+    `• Never end with an offer to help, an invitation to continue, "let me know" language, or a follow-up question such as "Would you like me to...?" or "Başka bir sorunuz var mı?".`,
+    `• Ask one brief clarifying question only when missing information makes a correct or safe answer impossible. Ask it directly without filler.`,
+    `• Include a brief statement that AI analysis is not formal investment advice only when giving an individualized recommendation or material forward-looking financial guidance. Do not append it to factual portfolio or calculation answers.`,
+    `• These response-style rules also apply after tool results and after the user rejects a proposed tool call.`,
+    ``,
     `── General Guidelines ──`,
-    `• Answer financial questions about the user's portfolio, projections, and investment strategies concisely and professionally.`,
-    `• If the user asks something completely unrelated to finance or their portfolio, politely redirect.`,
+    `• Answer financial questions about the user's portfolio, projections, and investment strategies directly and professionally.`,
+    `• If the user asks something completely unrelated to finance or their portfolio, state the scope briefly without adding an invitation or follow-up question.`,
     `• Never fabricate portfolio data — only reference what is provided above or the results of tool calls.`,
-    `• Always include appropriate disclaimers that AI analysis is NOT formal investment advice.`,
     ``,
     `── Tool Calling Protocol ──`,
     `You can modify the app's portfolio data (form fields, custom withdrawals, scenarios) and run exact engine calculations on the fly. The app executes your requests and returns precise results.`,
@@ -214,7 +221,7 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
   })
   lines.push(
     `• After the app executes your calls, a "[Tool result]" message follows this message's context. Base your final answer STRICTLY on those returned figures — never estimate or recalculate by hand.`,
-    `• If the user rejects the proposed changes, do not apply them and continue the conversation politely.`,
+    `• If the user rejects the proposed changes, do not apply them. State this briefly and continue only when a direct answer is needed, without an offer or follow-up question.`,
     `• NEVER emit a tool call block unless you actually need to change data or you need exact engine figures that are not already in the context above.`,
   )
 
@@ -443,7 +450,15 @@ export async function sendChatMessage(
 
   // Security: Truncate user messages if using demo key to prevent excessive
   // token abuse. Internal tool-protocol messages are exempt.
-  const sanitizeMessages = request.messages.map((m) => {
+  const firstUserMessageIndex = request.messages.findIndex(
+    (message) => message.role === "user",
+  )
+  const conversationMessages =
+    firstUserMessageIndex > 0
+      ? request.messages.slice(firstUserMessageIndex)
+      : request.messages
+
+  const sanitizeMessages = conversationMessages.map((m) => {
     if (
       request.isDemo &&
       !m.internal &&

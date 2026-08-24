@@ -473,7 +473,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     setIsLoading(true)
     try {
       addInternalNote(
-        "The user REJECTED the proposed tool calls above. Acknowledge this politely and continue the conversation; do NOT apply any of the proposed changes.",
+        "The user REJECTED the proposed tool calls above. Do NOT apply any proposed changes. State briefly that no changes were applied, without an offer or follow-up question.",
       )
       await runFollowUpRound()
     } catch (err) {
