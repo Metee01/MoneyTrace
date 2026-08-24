@@ -110,15 +110,15 @@ export const ScenarioManager: React.FC = () => {
   return (
     <Card className="w-full shadow-sm border border-border bg-card">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start 2xl:flex-row 2xl:items-center">
+          <div className="flex min-w-0 items-center gap-2">
             <Layers className="w-5 h-5 text-primary" />
             <CardTitle className="text-xl font-bold text-foreground">
               {t("scenarios.title")}
             </CardTitle>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end lg:w-full lg:justify-start 2xl:w-auto 2xl:justify-end">
             <Button
               variant="outline"
               size="sm"
@@ -142,11 +142,11 @@ export const ScenarioManager: React.FC = () => {
         </div>
 
         {/* JSON Import/Export Bar */}
-        <div className="flex items-center justify-between pt-3 border-t border-border/60 mt-3">
+        <div className="mt-3 flex flex-col items-start gap-2 border-t border-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start 2xl:flex-row 2xl:items-center">
           <span className="text-xs text-muted-foreground">
             {scenarios.length} Scenarios
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end lg:w-full lg:justify-start 2xl:w-auto 2xl:justify-end">
             <input
               type="file"
               ref={fileInputRef}
@@ -194,16 +194,16 @@ export const ScenarioManager: React.FC = () => {
               return (
                 <div
                   key={scenario.id}
-                  className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors"
+                  className="flex flex-col items-start gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start 2xl:flex-row 2xl:items-center"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <span
                       className="w-3.5 h-3.5 rounded-full shrink-0"
                       style={{ backgroundColor: scenario.color }}
                     />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-foreground">
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <span className="min-w-0 break-words text-sm font-semibold text-foreground">
                           {scenario.name}
                         </span>
                         {isBaseline && (
@@ -220,7 +220,7 @@ export const ScenarioManager: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto sm:justify-end lg:w-full lg:justify-start 2xl:w-auto 2xl:justify-end">
                     {!isBaseline && (
                       <Button
                         variant="ghost"

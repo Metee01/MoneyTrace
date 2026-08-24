@@ -147,8 +147,8 @@ export const PortfolioForm: React.FC = () => {
   return (
     <Card className="w-full shadow-sm border border-border bg-card">
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between lg:flex-col lg:items-stretch 2xl:flex-row 2xl:items-start">
+          <div className="min-w-0">
             <CardTitle className="text-xl font-bold text-foreground">
               {t("portfolio.title")}
             </CardTitle>
@@ -157,7 +157,7 @@ export const PortfolioForm: React.FC = () => {
             </CardDescription>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end lg:w-full lg:justify-start 2xl:w-auto 2xl:justify-end">
             <Button
               variant="outline"
               size="sm"
@@ -189,11 +189,11 @@ export const PortfolioForm: React.FC = () => {
         </div>
 
         {/* Input Mode Toggle */}
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start lg:justify-start 2xl:flex-row 2xl:items-center 2xl:justify-between">
           <Label className="text-xs font-medium text-muted-foreground block">
             {t("portfolio.inputPeriod")}
           </Label>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span
               className={cn(
                 "text-xs font-medium transition-colors",
@@ -268,7 +268,7 @@ export const PortfolioForm: React.FC = () => {
 
       <CardContent className="space-y-5">
         <TooltipProvider>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
             {/* 1. Initial Capital */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
