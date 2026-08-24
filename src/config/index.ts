@@ -9,7 +9,7 @@ export const APP_CONFIG = {
   /** Application metadata */
   app: {
     name: "MoneyTrace",
-    version: "1.5.2",
+    version: "1.5.3",
     defaultLanguage: "en",
     defaultCurrencyCode: "USD",
     defaultCurrencySymbol: "$",
