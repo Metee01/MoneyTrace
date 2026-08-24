@@ -10,6 +10,7 @@
 import { APP_CONFIG } from "../config"
 import type { AiForecastResult, AiModelProvider } from "../types"
 import { callDemoProxy } from "./demo-proxy"
+import { extractOpenAiResponseText } from "./ai-response"
 
 /** Default model names (update in src/config/index.ts) */
 export const GEMINI_MODEL = APP_CONFIG.ai.models.gemini
@@ -80,7 +81,11 @@ function extractJsonObject(text: string): unknown {
   if (start === -1 || end === -1 || end <= start) {
     throw new AiForecastError("parse", "No JSON object found in AI response.")
   }
-  return JSON.parse(withoutFences.slice(start, end + 1))
+  try {
+    return JSON.parse(withoutFences.slice(start, end + 1))
+  } catch {
+    throw new AiForecastError("parse", "Invalid JSON object in AI response.")
+  }
 }
 
 function toFiniteNumber(value: unknown, key: string): number {
@@ -127,6 +132,39 @@ function parseForecast(payload: unknown): AiForecastResult {
   }
 
   return result
+}
+
+const FORECAST_NUMBER_KEYS = [
+  "expectedInflationRate",
+  "expectedUsdGrowthRate",
+  "expectedReturnRate",
+  "usdRate",
+] as const
+
+function parseForecastText(text: string): AiForecastResult {
+  let jsonError: AiForecastError
+  try {
+    return parseForecast(extractJsonObject(text))
+  } catch (err) {
+    jsonError =
+      err instanceof AiForecastError
+        ? err
+        : new AiForecastError("parse", "Invalid AI forecast response.")
+  }
+
+  const looseRecord: Record<string, unknown> = {}
+  for (const key of FORECAST_NUMBER_KEYS) {
+    const match = text.match(
+      new RegExp(`["']?${key}["']?\\s*[:=]\\s*["']?(-?\\d+(?:[.,]\\d+)?)`, "i"),
+    )
+    if (match) looseRecord[key] = match[1].replace(",", ".")
+  }
+
+  try {
+    return parseForecast(looseRecord)
+  } catch {
+    throw jsonError
+  }
 }
 
 function mapHttpError(status: number, providerLabel: string): AiForecastError {
@@ -202,7 +240,7 @@ async function callGemini(
     throw new AiForecastError("parse", "Gemini response has no text content.")
   }
 
-  return parseForecast(extractJsonObject(text))
+  return parseForecastText(text)
 }
 
 /**
@@ -314,17 +352,12 @@ async function callOpenAiCompatible(
     throw new AiForecastError("parse", `Invalid JSON response from ${label}.`)
   }
 
-  const choices = (
-    data as {
-      choices?: Array<{ message?: { content?: string } }>
-    }
-  ).choices
-  const content = choices?.[0]?.message?.content
-  if (typeof content !== "string") {
+  const content = extractOpenAiResponseText(data)
+  if (!content) {
     throw new AiForecastError("parse", `${label} response has no text content.`)
   }
 
-  return parseForecast(extractJsonObject(content))
+  return parseForecastText(content)
 }
 
 // ─── Public API ──────────────────────────────────────────────────────────────
@@ -363,6 +396,8 @@ export async function forecastEconomics(
       const model = APP_CONFIG.ai.models.demo
       const data = await callDemoProxy("forecast", {
         model,
+        stream: false,
+        reasoning: APP_CONFIG.ai.demo.reasoning,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: "Generate the forecast." },
@@ -370,19 +405,14 @@ export async function forecastEconomics(
         temperature: 0.7,
         response_format: { type: "json_object" },
       })
-      const choices = (
-        data as {
-          choices?: Array<{ message?: { content?: string } }>
-        }
-      ).choices
-      const content = choices?.[0]?.message?.content
-      if (typeof content !== "string") {
+      const content = extractOpenAiResponseText(data)
+      if (!content) {
         throw new AiForecastError(
           "parse",
           "Demo API response has no text content.",
         )
       }
-      result = parseForecast(extractJsonObject(content))
+      result = parseForecastText(content)
     } else if (request.provider === "custom") {
       const baseUrl = (request.baseUrl ?? "").trim()
       const model =

@@ -9,7 +9,7 @@ export const APP_CONFIG = {
   /** Application metadata */
   app: {
     name: "MoneyTrace",
-    version: "1.5.3",
+    version: "1.5.4",
     defaultLanguage: "en",
     defaultCurrencyCode: "USD",
     defaultCurrencySymbol: "$",
@@ -53,6 +53,11 @@ export const APP_CONFIG = {
       maxMessageLength: 2000,
       /** Rate-limiting cooldown period between messages in milliseconds */
       cooldownMs: 3000,
+      /** Keep reasoning models from exhausting the output budget before their final answer. */
+      reasoning: {
+        effort: "medium" as const,
+        exclude: true,
+      },
     },
     /** Direct links to acquire API keys */
     links: {

@@ -4,7 +4,10 @@
  */
 
 import type { ChatMessage } from "../types"
+import { calculateProjection } from "../engine"
 import { DEFAULT_PROJECTION_PARAMS } from "../store/portfolio-store"
+import { APP_CONFIG } from "../config"
+import { extractOpenAiResponseText } from "./ai-response"
 import {
   buildSystemPrompt,
   sendChatMessage,
@@ -44,6 +47,39 @@ async function run(): Promise<void> {
   assertIncludes(prompt, "only when giving an individualized recommendation")
   assertExcludes(prompt, "knowledgeable and friendly")
   assertExcludes(prompt, "Always include appropriate disclaimers")
+
+  const projection = calculateProjection(DEFAULT_PROJECTION_PARAMS)
+  const compactPrompt = buildSystemPrompt({
+    ...context,
+    summary: projection.summary,
+    projection,
+  })
+  assertIncludes(compactPrompt, "They are intentionally omitted")
+  assertExcludes(compactPrompt, "• Month 1 (Y1M1)")
+  assert(
+    compactPrompt.length < 15_000,
+    "System prompt should not embed the full monthly projection table",
+  )
+  assert(
+    APP_CONFIG.ai.demo.reasoning.effort === "medium" &&
+      APP_CONFIG.ai.demo.reasoning.exclude,
+    "Demo model should reserve output budget for the final answer",
+  )
+  assert(
+    extractOpenAiResponseText({
+      choices: [
+        {
+          message: {
+            content: [
+              { type: "text", text: "Part one. " },
+              { type: "text", text: "Part two." },
+            ],
+          },
+        },
+      ],
+    }) === "Part one. Part two.",
+    "OpenAI-compatible content part arrays should be joined",
+  )
 
   const messages: ChatMessage[] = [
     {

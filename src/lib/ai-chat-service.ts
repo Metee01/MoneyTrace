@@ -17,6 +17,7 @@ import type {
 import { GEMINI_MODEL, OPENAI_MODEL, AiForecastError } from "./ai-service"
 import { TOOL_SCHEMAS, parseToolCalls } from "./ai-tools"
 import { callDemoProxy } from "./demo-proxy"
+import { extractOpenAiResponseText } from "./ai-response"
 
 // ─── Helpers shared with ai-service ──────────────────────────────────────────
 
@@ -165,23 +166,19 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
   if (ctx.projection && ctx.projection.rows.length > 0) {
     lines.push(
       ``,
-      `── Full Month-by-Month Calculated Projection Data (${ctx.projection.rows.length} months) ──`,
-      `Below is the complete, exact monthly calculation table rendered in the user's UI data tables and charts:`,
+      `── Monthly Projection Data ──`,
+      `The projection contains ${ctx.projection.rows.length} calculated monthly rows. They are intentionally omitted from this prompt to keep the context focused.`,
+      `For any exact month or year value, call "calculate_projection" with the required month numbers in "highlightMonths" and use only the returned figures.`,
     )
-    ctx.projection.rows.forEach((r) => {
-      lines.push(
-        `• Month ${r.month} (Y${r.yearIndex}M${r.monthInYear}): MonthlyDCA: ${formatCurrency(r.monthlyDca)} ${ctx.currencyCode} | TotalInvested: ${formatCurrency(r.totalInvested)} ${ctx.currencyCode} | RealTotalInvested: ${formatCurrency(r.realTotalInvested)} ${ctx.currencyCode} | NominalValue: ${formatCurrency(r.nominalValue)} ${ctx.currencyCode} | RealValue: ${formatCurrency(r.realValue)} ${ctx.currencyCode} | NominalProfit: ${formatCurrency(r.nominalProfit)} ${ctx.currencyCode} | NominalProfitChange(Delta): ${formatCurrency(r.nominalProfitChange)} ${ctx.currencyCode} | RealProfit: ${formatCurrency(r.realProfit)} ${ctx.currencyCode} | RealProfitChange(Delta): ${formatCurrency(r.realProfitChange)} ${ctx.currencyCode} | GrossWithdrawal: ${formatCurrency(r.withdrawal)} ${ctx.currencyCode} | WithholdingTax(Stopaj): ${formatCurrency(r.withholdingTax)} ${ctx.currencyCode} | NetWithdrawal(ElineGecen): ${formatCurrency(r.netWithdrawal)} ${ctx.currencyCode} | SafeWithdrawal(Nominal): ${formatCurrency(r.safeWithdrawal)} ${ctx.currencyCode} | SafeWithdrawal(Real): ${formatCurrency(r.realSafeWithdrawal)} ${ctx.currencyCode} | CumInflationFactor: ${r.cumulativeInflationFactor.toFixed(4)} | USDValue: $${formatCurrency(r.usdValue)} | USDRate: ${r.usdRate.toFixed(2)}`,
-      )
-    })
   }
 
   lines.push(
     ``,
     `── Strict Calculation & Data Integrity Protocol ──`,
     `1. DO NOT PERFORM CUSTOM CALCULATIONS BY DEFAULT:`,
-    `   • You must rely STRICTLY on the exact figures provided in the "Current Portfolio Parameters", "Projection Summary", and "Full Month-by-Month Calculated Projection Data" sections above.`,
-    `   • The dataset includes all monthly calculated values from the user's projection table: Monthly DCA, Total Invested (Nominal & Real), Portfolio Values (Nominal, Real, USD), Profits & Deltas, Gross Withdrawals, Withholding Tax (Stopaj), Net Withdrawals Landed in Hand (Eline Geçecek Net Tutar), Safe Withdrawals (Nominal & Real), Inflation Factors, and USD Exchange Rates.`,
-    `   • All monthly figures including withholding tax (stopaj), gross withdrawals, and net withdrawals landed in hand ARE pre-calculated and explicitly listed in the monthly data above. Do NOT state that monthly stopaj or net withdrawal data is missing.`,
+    `   • You must rely STRICTLY on the exact figures provided in "Current Portfolio Parameters", "Projection Summary", and tool results.`,
+    `   • Monthly rows are available through "calculate_projection", including DCA, invested totals, portfolio values, profits, withdrawals, withholding tax, net withdrawals, inflation factors, and exchange rates.`,
+    `   • When a requested monthly figure is not already in a tool result, retrieve it with "calculate_projection". Do not claim it is unavailable and do not estimate it yourself.`,
     ``,
     `2. PROTOCOL WHEN REQUIRED DATA IS OUTSIDE THE PROJECTION HORIZON:`,
     `   • If the user asks for a month/year beyond the current projection horizon (${p.targetYears} years) or for hypothetical parameters not in the current portfolio, call "calculate_projection" with the requested updates/highlightMonths to get the exact engine output.`,
@@ -390,12 +387,7 @@ async function chatWithOpenAi(
     throw new AiForecastError("parse", `Invalid JSON response from ${label}.`)
   }
 
-  const choices = (
-    data as {
-      choices?: Array<{ message?: { content?: string } }>
-    }
-  ).choices
-  const rawContent = choices?.[0]?.message?.content ?? ""
+  const rawContent = extractOpenAiResponseText(data)
   const cleanedContent = cleanReasoningTokens(rawContent)
   if (!cleanedContent) {
     throw new AiForecastError("parse", `${label} response has no text content.`)
@@ -480,6 +472,8 @@ export async function sendChatMessage(
     if (request.isDemo) {
       const data = await callDemoProxy("chat", {
         model: APP_CONFIG.ai.models.demo,
+        stream: false,
+        reasoning: APP_CONFIG.ai.demo.reasoning,
         messages: [
           { role: "system", content: systemPrompt },
           ...sanitizeMessages
@@ -492,12 +486,7 @@ export async function sendChatMessage(
         temperature: 0.8,
         max_tokens: APP_CONFIG.ai.maxTokens,
       })
-      const choices = (
-        data as {
-          choices?: Array<{ message?: { content?: string } }>
-        }
-      ).choices
-      const rawContent = choices?.[0]?.message?.content ?? ""
+      const rawContent = extractOpenAiResponseText(data)
       const cleanedContent = cleanReasoningTokens(rawContent)
       if (!cleanedContent) {
         throw new AiForecastError(

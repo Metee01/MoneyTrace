@@ -218,7 +218,12 @@ export default async function handler(req: Request): Promise<Response> {
     })
   }
 
-  const upstreamBody = { ...(payload as Record<string, unknown>), model: MODEL }
+  const upstreamBody = {
+    ...(payload as Record<string, unknown>),
+    model: MODEL,
+    stream: false,
+    reasoning: APP_CONFIG.ai.demo.reasoning,
+  }
   let upstream: Response
   try {
     upstream = await fetch(PROVIDER_ENDPOINT, {
