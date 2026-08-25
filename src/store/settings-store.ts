@@ -22,6 +22,7 @@ export interface SettingsState extends Settings {
     baseUrl?: string
     corsProxy?: string
     corsProxyEnabled?: boolean
+    autoApproveMutations?: boolean
     useDemoApi?: boolean
   }) => void
   setUseDemoApi: (enabled: boolean) => void
@@ -45,6 +46,7 @@ const DEFAULT_SETTINGS: Settings = {
   aiBaseUrl: "",
   aiCorsProxy: "",
   aiCorsProxyEnabled: false,
+  aiAutoApproveMutations: false,
   useDemoApi: false,
   demoForecastCount: 0,
   demoChatCount: 0,
@@ -84,6 +86,7 @@ export const useSettingsStore = create<SettingsState>()(
         baseUrl,
         corsProxy,
         corsProxyEnabled,
+        autoApproveMutations,
         useDemoApi,
       }) =>
         set((state) => ({
@@ -96,6 +99,10 @@ export const useSettingsStore = create<SettingsState>()(
             corsProxyEnabled !== undefined
               ? corsProxyEnabled
               : state.aiCorsProxyEnabled,
+          aiAutoApproveMutations:
+            autoApproveMutations !== undefined
+              ? autoApproveMutations
+              : state.aiAutoApproveMutations,
           useDemoApi: useDemoApi !== undefined ? useDemoApi : state.useDemoApi,
         })),
       setUseDemoApi: (useDemoApi) => set({ useDemoApi }),

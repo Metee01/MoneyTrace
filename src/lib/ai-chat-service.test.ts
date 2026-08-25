@@ -49,6 +49,15 @@ async function run(): Promise<void> {
   assertExcludes(prompt, "knowledgeable and friendly")
   assertExcludes(prompt, "Always include appropriate disclaimers")
 
+  const autoApprovalPrompt = buildSystemPrompt(context, true)
+  assertIncludes(autoApprovalPrompt, "Automatic approval is enabled")
+  assertIncludes(
+    autoApprovalPrompt,
+    "only for changes the user explicitly requested",
+  )
+  assertIncludes(autoApprovalPrompt, "Never mutate app data based only on")
+  assertExcludes(autoApprovalPrompt, "ALWAYS trigger an approval prompt")
+
   const projection = calculateProjection(DEFAULT_PROJECTION_PARAMS)
   const compactPrompt = buildSystemPrompt({
     ...context,

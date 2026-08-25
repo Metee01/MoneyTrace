@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   Wrench,
   Square,
+  ShieldAlert,
 } from "lucide-react"
 import { Button } from "../ui/button"
 import {
@@ -68,6 +69,7 @@ interface AiChatProps {
 interface GenerationOperation {
   id: number
   sessionId: string
+  autoApproveMutations: boolean
   controller: AbortController
 }
 
@@ -196,6 +198,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     aiBaseUrl,
     aiCorsProxy,
     aiCorsProxyEnabled,
+    aiAutoApproveMutations,
     useDemoApi,
     demoChatCount = 0,
     currencyCode,
@@ -320,17 +323,25 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     [currentParams, projectionResult, currencyCode, i18n.language],
   )
 
-  const startGeneration = useCallback((sessionId: string) => {
-    activeGenerationRef.current?.controller.abort()
-    const operation: GenerationOperation = {
-      id: ++nextGenerationIdRef.current,
-      sessionId,
-      controller: new AbortController(),
-    }
-    activeGenerationRef.current = operation
-    setIsLoading(true)
-    return operation
-  }, [])
+  const startGeneration = useCallback(
+    (
+      sessionId: string,
+      autoApproveMutations = useSettingsStore.getState()
+        .aiAutoApproveMutations ?? false,
+    ) => {
+      activeGenerationRef.current?.controller.abort()
+      const operation: GenerationOperation = {
+        id: ++nextGenerationIdRef.current,
+        sessionId,
+        autoApproveMutations,
+        controller: new AbortController(),
+      }
+      activeGenerationRef.current = operation
+      setIsLoading(true)
+      return operation
+    },
+    [],
+  )
 
   const isCurrentGeneration = useCallback(
     (operation: GenerationOperation) =>
@@ -443,7 +454,11 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   )
 
   const buildRequest = useCallback(
-    (requestMessages: ChatMessage[], signal: AbortSignal) => ({
+    (
+      requestMessages: ChatMessage[],
+      signal: AbortSignal,
+      autoApproveMutations: boolean,
+    ) => ({
       provider: activeProvider,
       apiKey: activeApiKey,
       model: activeModel,
@@ -452,6 +467,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
       messages: requestMessages,
       context: portfolioContext,
       isDemo: isUsingDemo,
+      autoApproveMutations,
       signal,
     }),
     [
@@ -478,19 +494,39 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     [addMessageToSession],
   )
 
-  const executeReadOnlyTools = useCallback(
-    async (operation: GenerationOperation, calls: AiToolCall[]) => {
-      for (const call of calls) {
+  const executeTools = useCallback(
+    async (
+      operation: GenerationOperation,
+      calls: AiToolCall[],
+      allowMutation: boolean,
+      requireAutoApproval = false,
+    ): Promise<boolean> => {
+      for (const [index, call] of calls.entries()) {
+        throwIfAborted(operation.controller.signal)
+        if (!isCurrentGeneration(operation)) throw createAbortError()
+        if (
+          isMutationTool(call) &&
+          requireAutoApproval &&
+          !useSettingsStore.getState().aiAutoApproveMutations
+        ) {
+          setPendingProposals({
+            calls: calls.slice(index),
+            sessionId: operation.sessionId,
+          })
+          return false
+        }
         const result = await executeToolCall(
           call,
           toolDeps,
-          false,
+          allowMutation,
           operation.controller.signal,
+          requireAutoApproval,
         )
         throwIfAborted(operation.controller.signal)
         if (!isCurrentGeneration(operation)) throw createAbortError()
         appendToolResults(operation.sessionId, [result])
       }
+      return true
     },
     [appendToolResults, isCurrentGeneration, toolDeps],
   )
@@ -511,8 +547,8 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
 
   /**
    * Sends follow-up rounds after tool results were injected into the session.
-   * Read-only tool calls are executed automatically; any mutation call pauses
-   * the flow again for user approval (bounded by MAX_TOOL_ROUNDS).
+   * Read-only tools run immediately. Mutation tools either pause for approval
+   * or execute under the user's auto-approval setting.
    */
   const runFollowUpRound = useCallback(
     async (operation: GenerationOperation) => {
@@ -523,14 +559,27 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
         await waitForDemoChatCooldown(operation.controller.signal)
         const session = useChatStore.getState().getSession(operation.sessionId)
         if (!session) throw createAbortError()
+        const promptAutoApproval =
+          operation.autoApproveMutations &&
+          (useSettingsStore.getState().aiAutoApproveMutations ?? false)
         const response = await sendChatMessage(
-          buildRequest(session.messages, operation.controller.signal),
+          buildRequest(
+            session.messages,
+            operation.controller.signal,
+            promptAutoApproval,
+          ),
         )
         throwIfAborted(operation.controller.signal)
         if (!isCurrentGeneration(operation)) throw createAbortError()
         appendAssistant(operation.sessionId, response)
 
-        const disposition = getToolCallDisposition(response.toolCalls)
+        const autoApproveMutations =
+          operation.autoApproveMutations &&
+          (useSettingsStore.getState().aiAutoApproveMutations ?? false)
+        const disposition = getToolCallDisposition(
+          response.toolCalls,
+          autoApproveMutations,
+        )
         if (disposition === "none") return
         if (disposition === "approval") {
           setPendingProposals({
@@ -541,7 +590,14 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
         }
         if (rounds >= MAX_TOOL_ROUNDS) return
 
-        await executeReadOnlyTools(operation, response.toolCalls)
+        const hasMutations = response.toolCalls.some(isMutationTool)
+        const completed = await executeTools(
+          operation,
+          response.toolCalls,
+          hasMutations,
+          hasMutations,
+        )
+        if (!completed) return
       }
     },
     [
@@ -549,7 +605,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
       buildRequest,
       isCurrentGeneration,
       appendAssistant,
-      executeReadOnlyTools,
+      executeTools,
     ],
   )
 
@@ -564,17 +620,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     setPendingProposals(null)
     setError(null)
     try {
-      for (const call of calls) {
-        const result = await executeToolCall(
-          call,
-          toolDeps,
-          true,
-          operation.controller.signal,
-        )
-        throwIfAborted(operation.controller.signal)
-        if (!isCurrentGeneration(operation)) throw createAbortError()
-        appendToolResults(sessionId, [result])
-      }
+      await executeTools(operation, calls, true)
       await runFollowUpRound(operation)
     } catch (err) {
       if (isCurrentGeneration(operation)) reportError(err)
@@ -584,8 +630,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
   }, [
     pendingProposals,
     isLoading,
-    toolDeps,
-    appendToolResults,
+    executeTools,
     runFollowUpRound,
     reportError,
     startGeneration,
@@ -600,7 +645,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
       setPendingProposals(null)
       return
     }
-    const operation = startGeneration(sessionId)
+    const operation = startGeneration(sessionId, false)
     setPendingProposals(null)
     setError(null)
     try {
@@ -656,17 +701,31 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
         buildRequest(
           session?.messages ?? [userMessage],
           operation.controller.signal,
+          operation.autoApproveMutations,
         ),
       )
       throwIfAborted(operation.controller.signal)
       if (!isCurrentGeneration(operation)) throw createAbortError()
       appendAssistant(sessionId, response)
 
-      const disposition = getToolCallDisposition(response.toolCalls)
+      const autoApproveMutations =
+        operation.autoApproveMutations &&
+        (useSettingsStore.getState().aiAutoApproveMutations ?? false)
+      const disposition = getToolCallDisposition(
+        response.toolCalls,
+        autoApproveMutations,
+      )
       if (disposition === "approval") {
         setPendingProposals({ calls: response.toolCalls, sessionId })
       } else if (disposition === "execute") {
-        await executeReadOnlyTools(operation, response.toolCalls)
+        const hasMutations = response.toolCalls.some(isMutationTool)
+        const completed = await executeTools(
+          operation,
+          response.toolCalls,
+          hasMutations,
+          hasMutations,
+        )
+        if (!completed) return
         await runFollowUpRound(operation)
       }
     } catch (err) {
@@ -683,7 +742,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     activeSessionId,
     buildRequest,
     appendAssistant,
-    executeReadOnlyTools,
+    executeTools,
     runFollowUpRound,
     reportError,
     addMessageToSession,
@@ -851,6 +910,15 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
                   used: demoChatCount,
                   max: MAX_DEMO_CHAT_MESSAGES,
                 })}
+              </span>
+            </div>
+          )}
+
+          {aiAutoApproveMutations && !isHistoryOpen && (
+            <div className="flex items-center gap-1.5 border-b border-rose-500/20 bg-rose-500/10 px-3 py-1.5 text-rose-700 dark:text-rose-400">
+              <ShieldAlert className="h-3 w-3 shrink-0" />
+              <span className="truncate text-[10px] font-medium">
+                {t("chat.autoApprovalEnabled")}
               </span>
             </div>
           )}

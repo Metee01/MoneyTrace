@@ -162,6 +162,17 @@ function runTests() {
     Math.abs(annualFromMonthly - 12) < 1e-6,
     "Monthly to annual round trip failed",
   )
+  const negativeMonthly = annualPercentToMonthlyPercent(-12)
+  const negativeAnnual = monthlyPercentToAnnualPercent(negativeMonthly)
+  console.assert(
+    negativeMonthly < 0 && Math.abs(negativeAnnual + 12) < 1e-6,
+    "Negative rate conversion should preserve the loss rate",
+  )
+  console.assert(
+    annualPercentToMonthlyPercent(-100) === -100 &&
+      monthlyPercentToAnnualPercent(-100) === -100,
+    "A total loss rate should remain capped at -100%",
+  )
 
   // Test 7: Monthly Input Mode Projection (rates used directly, no conversion)
   console.log("\n--- Test 7: Monthly Input Mode Projection ---")

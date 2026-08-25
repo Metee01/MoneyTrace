@@ -120,12 +120,21 @@ function formatCurrency(value: number, decimals = 2): string {
   })
 }
 
-export function buildSystemPrompt(ctx: PortfolioContext): string {
+export function buildSystemPrompt(
+  ctx: PortfolioContext,
+  autoApproveMutations = false,
+): string {
   const langLabel = ctx.language === "tr" ? "Turkish" : "English"
   const today = new Date().toISOString().slice(0, 10)
   const p = ctx.params
   const isMonthly = p.rateInputPeriod === "monthly"
   const periodLabel = isMonthly ? "monthly" : "annual"
+  const savedChangeRule = autoApproveMutations
+    ? `   • If the user explicitly asks to save those values, call the appropriate mutating tool. Automatic approval is enabled, so do not ask for confirmation. Never mutate app data based only on an analysis, suggestion, or hypothetical question.`
+    : `   • If the user wants those hypothetical values SAVED into the portfolio, propose the change with a mutating tool call and wait for approval.`
+  const mutationApprovalRule = autoApproveMutations
+    ? `• Mutating tools (apply_params, set_custom_withdrawal, clear_custom_withdrawals, create_scenario, reset_params) are automatically authorized only for changes the user explicitly requested. Never claim data changed before receiving the tool result.`
+    : `• Mutating tools (apply_params, set_custom_withdrawal, clear_custom_withdrawals, create_scenario, reset_params) ALWAYS trigger an approval prompt in the UI — never claim the data was changed before the user approves.`
 
   const lines: string[] = [
     `You are MoneyTrace AI, a clear, direct, and professional financial analysis assistant.`,
@@ -189,7 +198,7 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
     ``,
     `2. PROTOCOL WHEN REQUIRED DATA IS OUTSIDE THE PROJECTION HORIZON:`,
     `   • If the user asks for a month/year beyond the current projection horizon (${p.targetYears} years) or for hypothetical parameters not in the current portfolio, call "calculate_projection" with the requested updates/highlightMonths to get the exact engine output.`,
-    `   • If the user wants those hypothetical values SAVED into the portfolio, propose the change with a mutating tool call and wait for approval.`,
+    savedChangeRule,
     ``,
     `3. NO HAND-MADE ESTIMATIONS:`,
     `   • NEVER produce your own multiplication/compounding numbers. Always resolve questions through "calculate_projection" and cite the returned figures.`,
@@ -213,13 +222,13 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
     `<TOOL_CALLS>[{"tool": "tool_name", "args": {...}}]</TOOL_CALLS>`,
     `• The block must contain RAW JSON only — never wrap it in markdown fences and never split it across multiple blocks.`,
     `• You may call several tools in one block. Tools run in order; later "calculate_projection" calls see earlier mutations that the user approved.`,
-    `• Mutating tools (apply_params, set_custom_withdrawal, clear_custom_withdrawals, create_scenario, reset_params) ALWAYS trigger an approval prompt in the UI — never claim the data was changed before the user approves.`,
+    mutationApprovalRule,
     `• Read-only tools (calculate_projection, forecast_economics) run instantly without approval.`,
     `• AVAILABLE TOOLS:`,
   )
   TOOL_SCHEMAS.forEach((schema) => {
     lines.push(
-      `  - ${schema.name} (${schema.kind === "read" ? "instant" : "requires approval"}): ${schema.description}`,
+      `  - ${schema.name} (${schema.kind === "read" ? "instant" : autoApproveMutations ? "auto-approved for explicit requests" : "requires approval"}): ${schema.description}`,
       `    args: ${schema.argsDoc}`,
     )
   })
@@ -248,6 +257,7 @@ export interface ChatRequest {
   messages: ChatMessage[]
   context: PortfolioContext
   isDemo?: boolean
+  autoApproveMutations?: boolean
   signal?: AbortSignal
 }
 
@@ -482,7 +492,10 @@ export async function sendChatMessage(
     return m
   })
 
-  const systemPrompt = buildSystemPrompt(request.context)
+  const systemPrompt = buildSystemPrompt(
+    request.context,
+    request.autoApproveMutations,
+  )
   let responseText: string
 
   try {

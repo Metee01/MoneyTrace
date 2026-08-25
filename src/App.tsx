@@ -24,6 +24,7 @@ import {
   KeyRound,
   ExternalLink,
   Sparkles,
+  ShieldAlert,
 } from "lucide-react"
 import {
   Dialog,
@@ -70,6 +71,7 @@ function Dashboard() {
     aiBaseUrl,
     aiCorsProxy,
     aiCorsProxyEnabled,
+    aiAutoApproveMutations,
     useDemoApi,
     demoForecastCount = 0,
     demoChatCount = 0,
@@ -90,6 +92,9 @@ function Dashboard() {
   const [localCorsProxy, setLocalCorsProxy] = useState(aiCorsProxy ?? "")
   const [localCorsProxyEnabled, setLocalCorsProxyEnabled] = useState(
     aiCorsProxyEnabled ?? false,
+  )
+  const [localAutoApproveMutations, setLocalAutoApproveMutations] = useState(
+    aiAutoApproveMutations ?? false,
   )
 
   const handleLanguageChange = (lang: string) => {
@@ -113,6 +118,7 @@ function Dashboard() {
     setLocalBaseUrl(aiBaseUrl ?? "")
     setLocalCorsProxy(aiCorsProxy ?? "")
     setLocalCorsProxyEnabled(aiCorsProxyEnabled ?? false)
+    setLocalAutoApproveMutations(aiAutoApproveMutations ?? false)
     setIsSettingsOpen(true)
   }
 
@@ -124,8 +130,14 @@ function Dashboard() {
       baseUrl: localBaseUrl.trim(),
       corsProxy: localCorsProxyEnabled ? localCorsProxy.trim() : "",
       corsProxyEnabled: localCorsProxyEnabled,
+      autoApproveMutations: localAutoApproveMutations,
       useDemoApi: localUseDemoApi,
     })
+  }
+
+  const handleAutoApproveMutationsChange = (enabled: boolean) => {
+    setLocalAutoApproveMutations(enabled)
+    setAiSettings({ autoApproveMutations: enabled })
   }
 
   const handleCloseSettings = () => {
@@ -294,6 +306,34 @@ function Dashboard() {
                   )}
                 </div>
               )}
+
+              <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="settingsAutoApproveMutations"
+                      className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-foreground"
+                    >
+                      <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />
+                      {t("settings.aiAutoApproveMutations")}
+                    </Label>
+                    <p className="text-[10px] leading-relaxed text-muted-foreground">
+                      {t("settings.aiAutoApproveMutationsDesc")}
+                    </p>
+                    {localAutoApproveMutations && (
+                      <p className="text-[10px] font-medium leading-relaxed text-rose-600 dark:text-rose-400">
+                        {t("settings.aiAutoApproveMutationsWarning")}
+                      </p>
+                    )}
+                  </div>
+                  <Switch
+                    id="settingsAutoApproveMutations"
+                    checked={localAutoApproveMutations}
+                    onCheckedChange={handleAutoApproveMutationsChange}
+                    className="shrink-0"
+                  />
+                </div>
+              </div>
 
               {/* Custom API Configuration (Hidden/Disabled when Demo API is ON) */}
               {!localUseDemoApi && (

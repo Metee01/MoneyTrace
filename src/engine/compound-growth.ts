@@ -10,7 +10,7 @@
  * @returns Monthly rate as decimal (e.g., 0.035 for 3.5%)
  */
 export function calculateMonthlyRate(annualRate: number): number {
-  if (annualRate <= 0) return 0
+  if (annualRate <= -100) return -1
   return Math.pow(1 + annualRate / 100, 1 / 12) - 1
 }
 
@@ -37,7 +37,7 @@ export function annualPercentToMonthlyPercent(
 export function monthlyPercentToAnnualPercent(
   monthlyRatePercent: number,
 ): number {
-  if (monthlyRatePercent <= 0) return 0
+  if (monthlyRatePercent <= -100) return -100
   return (Math.pow(1 + monthlyRatePercent / 100, 12) - 1) * 100
 }
 

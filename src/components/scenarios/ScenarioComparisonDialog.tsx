@@ -44,7 +44,7 @@ export const ScenarioComparisonDialog: React.FC<
   ScenarioComparisonDialogProps
 > = ({ open, onOpenChange }) => {
   const { t, i18n } = useTranslation()
-  const { scenarios } = usePortfolioStore()
+  const { scenarios, baselineScenarioId } = usePortfolioStore()
   const { currencyCode } = useSettingsStore()
   const { theme } = useTheme()
 
@@ -242,7 +242,7 @@ export const ScenarioComparisonDialog: React.FC<
                             <span className="text-foreground">
                               {scenario.name}
                             </span>
-                            {scenario.isBaseline && (
+                            {scenario.id === baselineScenarioId && (
                               <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-normal text-primary">
                                 Baseline
                               </span>

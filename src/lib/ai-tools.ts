@@ -105,9 +105,11 @@ export function isMutationTool(call: AiToolCall): boolean {
 
 export function getToolCallDisposition(
   calls: AiToolCall[],
+  autoApproveMutations = false,
 ): ToolCallDisposition {
   if (calls.length === 0) return "none"
-  return calls.some(isMutationTool) ? "approval" : "execute"
+  if (!calls.some(isMutationTool)) return "execute"
+  return autoApproveMutations ? "execute" : "approval"
 }
 
 // ─── Argument Sanitization ──────────────────────────────────────────────────
@@ -152,6 +154,120 @@ function sanitizeMonth(value: unknown): number | null {
   const num = typeof value === "string" ? Number(value) : (value as number)
   if (!Number.isFinite(num) || num < 1 || !Number.isInteger(num)) return null
   return num
+}
+
+function validateStrictParams(updates: unknown): string | null {
+  if (!updates || typeof updates !== "object" || Array.isArray(updates)) {
+    return "parameter updates must be an object"
+  }
+
+  const entries = Object.entries(updates as Record<string, unknown>)
+  if (entries.length === 0) return "at least one parameter update is required"
+
+  for (const [key, value] of entries) {
+    if (key === "rateInputPeriod") {
+      if (value !== "annual" && value !== "monthly") {
+        return "rateInputPeriod must be annual or monthly"
+      }
+      continue
+    }
+
+    const limit = APP_CONFIG.engine.limits[key as keyof ParamLimits]
+    if (!limit) return `unsupported parameter: ${key}`
+    const number = value
+    if (
+      typeof number !== "number" ||
+      !Number.isFinite(number) ||
+      number < limit.min ||
+      number > limit.max
+    ) {
+      return `${key} must be between ${limit.min} and ${limit.max}`
+    }
+  }
+
+  return null
+}
+
+function validateAllowedArgs(
+  args: Record<string, unknown>,
+  allowedKeys: string[],
+): string | null {
+  const unsupportedKey = Object.keys(args).find(
+    (key) => !allowedKeys.includes(key),
+  )
+  return unsupportedKey ? `unsupported argument: ${unsupportedKey}` : null
+}
+
+function validateAutoApprovedMutation(call: AiToolCall): string | null {
+  switch (call.tool) {
+    case "apply_params": {
+      if (Object.hasOwn(call.args, "updates")) {
+        return (
+          validateAllowedArgs(call.args, ["updates"]) ??
+          validateStrictParams(call.args.updates)
+        )
+      }
+      return validateStrictParams(call.args)
+    }
+
+    case "set_custom_withdrawal": {
+      const allowedArgsError = validateAllowedArgs(call.args, [
+        "month",
+        "amount",
+      ])
+      if (allowedArgsError) return allowedArgsError
+      const month =
+        typeof call.args.month === "number"
+          ? sanitizeMonth(call.args.month)
+          : null
+      if (month === null || month > APP_CONFIG.engine.maxTargetMonths) {
+        return `month must be between 1 and ${APP_CONFIG.engine.maxTargetMonths}`
+      }
+      if (call.args.amount === null || call.args.amount === undefined)
+        return null
+      if (typeof call.args.amount !== "number") return "amount must be a number"
+      const amount = call.args.amount
+      const limit = APP_CONFIG.engine.limits.monthlyWithdrawal
+      return Number.isFinite(amount) &&
+        amount >= limit.min &&
+        amount <= limit.max
+        ? null
+        : `amount must be between ${limit.min} and ${limit.max}`
+    }
+
+    case "create_scenario": {
+      const allowedArgsError = validateAllowedArgs(call.args, [
+        "name",
+        "color",
+        "updates",
+      ])
+      if (allowedArgsError) return allowedArgsError
+      if (
+        typeof call.args.name !== "string" ||
+        !call.args.name.trim() ||
+        call.args.name.trim().length > 100
+      ) {
+        return "scenario name must contain 1 to 100 characters"
+      }
+      if (
+        call.args.color !== undefined &&
+        (typeof call.args.color !== "string" ||
+          !/^#[0-9a-f]{6}$/i.test(call.args.color.trim()))
+      ) {
+        return "scenario color must be a six-digit hex color"
+      }
+      return call.args.updates === undefined
+        ? null
+        : validateStrictParams(call.args.updates)
+    }
+
+    case "clear_custom_withdrawals":
+    case "reset_params":
+      return validateAllowedArgs(call.args, [])
+
+    default:
+      return null
+  }
 }
 
 // ─── Tool Call Parsing ──────────────────────────────────────────────────────
@@ -389,12 +505,14 @@ export interface ToolDeps {
  * @param call Parsed tool call
  * @param deps Injected store/engine dependencies (testable without DOM)
  * @param allowMutation When false, every "mutate" tool is denied without effect
+ * @param strictMutation When true, invalid mutation arguments fail instead of being normalized
  */
 export async function executeToolCall(
   call: AiToolCall,
   deps: ToolDeps,
   allowMutation: boolean,
   signal?: AbortSignal,
+  strictMutation = false,
 ): Promise<AiToolCallResult> {
   throwIfAborted(signal)
   const schema = TOOL_SCHEMAS.find((s) => s.name === call.tool)
@@ -406,6 +524,16 @@ export async function executeToolCall(
       tool: call.tool,
       ok: false,
       output: `Mutation denied: user did not approve ${call.tool}.`,
+    }
+  }
+  if (schema.kind === "mutate" && strictMutation) {
+    const validationError = validateAutoApprovedMutation(call)
+    if (validationError) {
+      return {
+        tool: call.tool,
+        ok: false,
+        output: `Auto-approved mutation rejected: ${validationError}.`,
+      }
     }
   }
 

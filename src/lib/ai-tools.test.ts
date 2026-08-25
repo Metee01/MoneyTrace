@@ -115,6 +115,13 @@ async function runToolTests() {
     ]) === "approval",
     "Any mutation tool should require approval",
   )
+  console.assert(
+    getToolCallDisposition(
+      [{ tool: "apply_params", args: { monthlyDca: 700 } }],
+      true,
+    ) === "execute",
+    "Auto-approved mutation tools should execute without pausing",
+  )
 
   // Test 2: parseToolCalls — single object block
   console.log("\n--- Test 2: parseToolCalls ---")
@@ -258,6 +265,82 @@ async function runToolTests() {
     "denial message expected",
   )
   console.assert(callsRecord(deps).length === 0, "store must stay untouched")
+
+  const strictDeps = fakeDeps()
+  const rejectedAutoMutation = await executeToolCall(
+    { tool: "apply_params", args: { monthlyDca: 1e20 } },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    !rejectedAutoMutation.ok &&
+      strictDeps.getParams().monthlyDca ===
+        DEFAULT_PROJECTION_PARAMS.monthlyDca,
+    "Auto-approved out-of-range updates must fail without changing params",
+  )
+  const rejectedAutoScenario = await executeToolCall(
+    { tool: "create_scenario", args: {} },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    !rejectedAutoScenario.ok,
+    "Auto-approved scenario creation must require an explicit name",
+  )
+  const rejectedTypoWithdrawal = await executeToolCall(
+    {
+      tool: "set_custom_withdrawal",
+      args: { month: 13, ammount: 50000 },
+    },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    !rejectedTypoWithdrawal.ok,
+    "Auto-approved mutations must reject unknown argument names",
+  )
+  const rejectedBooleanWithdrawal = await executeToolCall(
+    { tool: "set_custom_withdrawal", args: { month: 13, amount: true } },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    !rejectedBooleanWithdrawal.ok,
+    "Auto-approved mutations must reject non-numeric amount types",
+  )
+  const rejectedScenarioTypo = await executeToolCall(
+    {
+      tool: "create_scenario",
+      args: { name: "Strict Scenario", update: { monthlyDca: 900 } },
+    },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    !rejectedScenarioTypo.ok,
+    "Auto-approved scenario creation must reject misspelled update arguments",
+  )
+  const acceptedAutoMutation = await executeToolCall(
+    { tool: "apply_params", args: { monthlyDca: 800 } },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    acceptedAutoMutation.ok && strictDeps.getParams().monthlyDca === 800,
+    "Valid auto-approved mutations should execute",
+  )
 
   // Test 11: apply_params (approved) via fake deps
   console.log("\n--- Test 11: apply_params (approved) ---")
