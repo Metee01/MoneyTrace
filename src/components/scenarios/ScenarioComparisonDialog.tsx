@@ -22,6 +22,7 @@ import { usePortfolioStore, useSettingsStore } from "../../store"
 import { calculateProjection } from "../../engine"
 import { useTheme } from "../../hooks/useTheme"
 import { formatLocalCurrency, formatPercent } from "../../lib/formatters"
+import { getFormattingLocale } from "../../lib/locales"
 import type { ProjectionResult, Scenario } from "../../types"
 
 interface ScenarioComparisonDialogProps {
@@ -50,7 +51,7 @@ export const ScenarioComparisonDialog: React.FC<
 
   const [valueType, setValueType] = useState<"real" | "nominal">("real")
 
-  const locale = i18n.language === "tr" ? "tr-TR" : "en-US"
+  const locale = getFormattingLocale(i18n.resolvedLanguage ?? i18n.language)
 
   // Calculate projections for each scenario
   const scenarioResults: ScenarioResultItem[] = useMemo(() => {
@@ -113,7 +114,9 @@ export const ScenarioComparisonDialog: React.FC<
                 {t("scenarios.compareScenarios")}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-1">
-                Comparing {scenarios.length} scenarios side-by-side
+                {t("scenarios.comparisonDescription", {
+                  count: scenarios.length,
+                })}
               </DialogDescription>
             </div>
 
@@ -215,13 +218,27 @@ export const ScenarioComparisonDialog: React.FC<
               <table className="w-full min-w-[760px] whitespace-nowrap text-left text-xs">
                 <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border">
                   <tr>
-                    <th className="py-2.5 px-3">Scenario</th>
-                    <th className="py-2.5 px-3 text-right">Return Rate</th>
-                    <th className="py-2.5 px-3 text-right">Inflation Rate</th>
-                    <th className="py-2.5 px-3 text-right">Nominal Value</th>
-                    <th className="py-2.5 px-3 text-right">Real Value</th>
-                    <th className="py-2.5 px-3 text-right">Real ROI</th>
-                    <th className="py-2.5 px-3 text-right">Net Real Profit</th>
+                    <th className="py-2.5 px-3">
+                      {t("scenarios.tableScenario")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableReturnRate")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableInflationRate")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableNominalValue")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableRealValue")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableRealRoi")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableNetRealProfit")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40 font-mono">

@@ -241,7 +241,7 @@ export default async function handler(req: Request): Promise<Response> {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${DEMO_KEY}`,
-        "HTTP-Referer": "https://moneytrace.metee.com.tr",
+        "HTTP-Referer": APP_CONFIG.app.siteUrl,
         "X-Title": APP_CONFIG.app.name,
       },
       body: JSON.stringify(upstreamBody),

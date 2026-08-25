@@ -25,6 +25,7 @@ import {
 import { TOOL_SCHEMAS, parseToolCalls } from "./ai-tools"
 import { callDemoProxy } from "./demo-proxy"
 import { extractOpenAiResponseText } from "./ai-response"
+import { getLanguageDisplayName } from "./locales"
 
 // ─── Helpers shared with ai-service ──────────────────────────────────────────
 
@@ -124,7 +125,7 @@ export function buildSystemPrompt(
   ctx: PortfolioContext,
   autoApproveMutations = false,
 ): string {
-  const langLabel = ctx.language === "tr" ? "Turkish" : "English"
+  const langLabel = getLanguageDisplayName(ctx.language)
   const today = new Date().toISOString().slice(0, 10)
   const p = ctx.params
   const isMonthly = p.rateInputPeriod === "monthly"
@@ -174,7 +175,7 @@ export function buildSystemPrompt(
       `• Total Actual Withdrawals (Gross Nominal): ${formatCurrency(s.totalWithdrawals)} ${ctx.currencyCode}`,
       `• Total Net Withdrawals Landed in Hand (Nominal): ${formatCurrency(s.totalNetWithdrawals)} ${ctx.currencyCode}`,
       `• Total Actual Withdrawals (Real): ${formatCurrency(s.totalRealWithdrawals)} ${ctx.currencyCode}`,
-      `• Total Withholding Tax (Stopaj): ${formatCurrency(s.totalWithholdingTax)} ${ctx.currencyCode}`,
+      `• Total Withholding Tax: ${formatCurrency(s.totalWithholdingTax)} ${ctx.currencyCode}`,
       `• Final Exchange Rate: ${s.finalUsdRate.toFixed(4)}`,
     )
   }
@@ -204,9 +205,9 @@ export function buildSystemPrompt(
     `   • NEVER produce your own multiplication/compounding numbers. Always resolve questions through "calculate_projection" and cite the returned figures.`,
     ``,
     `── Mandatory Response Style ──`,
-    `• Start immediately with the answer. Never begin with a greeting, thanks, praise, agreement, validation, or a meta-preface such as "Great question", "Certainly", "Harika soru", "Elbette", or similar wording.`,
+    `• Start immediately with the answer. Never begin with a greeting, thanks, praise, agreement, validation, conversational filler, or a meta-preface, regardless of the response language.`,
     `• Give the shortest response that still answers the question clearly and correctly. Do not restate the user's question or add background they did not request.`,
-    `• Never end with an offer to help, an invitation to continue, "let me know" language, or a follow-up question such as "Would you like me to...?" or "Başka bir sorunuz var mı?".`,
+    `• Never end with an offer to help, an invitation to continue, or an unnecessary follow-up question, regardless of the response language.`,
     `• Ask one brief clarifying question only when missing information makes a correct or safe answer impossible. Ask it directly without filler.`,
     `• Include a brief statement that AI analysis is not formal investment advice only when giving an individualized recommendation or material forward-looking financial guidance. Do not append it to factual portfolio or calculation answers.`,
     `• These response-style rules also apply after tool results and after the user rejects a proposed tool call.`,
@@ -366,7 +367,7 @@ async function chatWithOpenAi(
     "HTTP-Referer":
       typeof window !== "undefined"
         ? window.location.origin
-        : "https://moneytrace.metee.com.tr",
+        : APP_CONFIG.app.siteUrl,
     "X-Title": "MoneyTrace",
   }
   if (apiKey.trim()) {

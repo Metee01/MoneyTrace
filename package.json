@@ -1,9 +1,9 @@
 {
   "name": "moneytrace",
   "private": true,
-  "version": "1.6.0",
+  "version": "1.7.0",
   "type": "module",
-  "description": "A personal finance management application built with React, TypeScript, and Tailwind CSS.",
+  "description": "An open-source, inflation-adjusted portfolio projection calculator with scenario analysis and optional AI assistance.",
   "license": "MIT",
   "author": "",
   "engines": {
@@ -15,7 +15,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && tsx --tsconfig tsconfig.app.json scripts/generate-static-pages.tsx && tsx --tsconfig tsconfig.app.json scripts/verify-seo.ts",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

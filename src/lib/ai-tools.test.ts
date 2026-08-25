@@ -69,7 +69,7 @@ function fakeDeps(overrides: Partial<ToolDeps> = {}): ToolDeps {
       expectedInflationRate: 3.2,
       expectedUsdGrowthRate: 1.1,
       expectedReturnRate: 8.5,
-      usdRate: 36.4,
+      usdRate: 0.92,
       rationale: "Test forecast",
     }),
     ...overrides,
@@ -450,7 +450,7 @@ async function runToolTests() {
   console.log(`Forecast ok: ${forecastResult.ok}`)
   console.assert(forecastResult.ok, "forecast tool failed")
   const parsed = JSON.parse(forecastResult.output) as AiForecastResult
-  console.assert(parsed.usdRate === 36.4, "forecast payload mismatch")
+  console.assert(parsed.usdRate === 0.92, "forecast payload mismatch")
 
   const abortController = new AbortController()
   const pendingForecast = executeToolCall(

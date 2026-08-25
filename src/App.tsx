@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Sparkles,
   ShieldAlert,
+  MessageCircle,
 } from "lucide-react"
 import {
   Dialog,
@@ -37,15 +38,27 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { AiChat } from "@/components/chat/AiChat"
 import type { AiModelProvider } from "@/types"
 import { LegalPage } from "@/components/legal/LegalPage"
 import { getLegalPage } from "@/components/legal/legal-pages"
+import { SeoGuide, SeoHero } from "@/components/seo/SeoLanding"
+import { NotFoundPage } from "@/components/seo/NotFoundPage"
+import {
+  getAlternatePath,
+  resolveSiteRoute,
+  type SiteLanguage,
+} from "@/seo/site"
 
 // Lazy loaded integrated chart section
 const ChartSection = lazy(() =>
   import("@/components/projection/ChartSection").then((module) => ({
     default: module.ChartSection,
+  })),
+)
+
+const AiChat = lazy(() =>
+  import("@/components/chat/AiChat").then((module) => ({
+    default: module.AiChat,
   })),
 )
 
@@ -78,6 +91,7 @@ function Dashboard() {
     setAiSettings,
   } = useSettingsStore()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isChatLoaded, setIsChatLoaded] = useState(false)
 
   const hasDemoKey = isDemoAvailable()
 
@@ -98,8 +112,10 @@ function Dashboard() {
   )
 
   const handleLanguageChange = (lang: string) => {
-    i18n.changeLanguage(lang)
     setLanguage(lang)
+    window.location.assign(
+      getAlternatePath(window.location.pathname, lang as SiteLanguage),
+    )
   }
 
   const handleCurrencyChange = (code: string) => {
@@ -162,45 +178,68 @@ function Dashboard() {
   return (
     <Layout onOpenSettings={handleOpenSettings}>
       <div className="space-y-6">
-        {/* 1. Projection Summary Cards */}
-        <ProjectionSummaryCards />
+        <SeoHero />
 
-        {/* 2. Main Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Inputs & Scenarios */}
-          <div className="space-y-6 lg:col-span-1">
-            {/* Portfolio Inputs Form */}
-            <PortfolioForm />
+        <div id="calculator" className="scroll-mt-6 space-y-6">
+          {/* 1. Projection Summary Cards */}
+          <ProjectionSummaryCards />
 
-            {/* Scenario Manager */}
-            <ScenarioManager />
-          </div>
+          {/* 2. Main Dashboard Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column: Inputs & Scenarios */}
+            <div className="space-y-6 lg:col-span-1">
+              {/* Portfolio Inputs Form */}
+              <PortfolioForm />
 
-          {/* Right Column: Chart & Table */}
-          <div className="space-y-6 lg:col-span-2">
-            {/* Integrated Growth & Inflation Chart */}
-            <Suspense fallback={<ChartFallback />}>
-              <ChartSection />
-            </Suspense>
+              {/* Scenario Manager */}
+              <ScenarioManager />
+            </div>
 
-            {/* Monthly Projection Detail Table */}
-            <ProjectionTable />
+            {/* Right Column: Chart & Table */}
+            <div className="space-y-6 lg:col-span-2">
+              {/* Integrated Growth & Inflation Chart */}
+              <Suspense fallback={<ChartFallback />}>
+                <ChartSection />
+              </Suspense>
+
+              {/* Monthly Projection Detail Table */}
+              <ProjectionTable />
+            </div>
           </div>
         </div>
+
+        <SeoGuide />
       </div>
 
       {/* AI Chat FAB + Panel */}
-      <AiChat onOpenSettings={handleOpenSettings} />
+      {isChatLoaded ? (
+        <Suspense
+          fallback={
+            <div className="fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
+              <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+            </div>
+          }
+        >
+          <AiChat onOpenSettings={handleOpenSettings} initiallyOpen />
+        </Suspense>
+      ) : (
+        <Button
+          type="button"
+          size="icon"
+          className="fixed bottom-6 right-6 z-50 size-14 rounded-full shadow-lg"
+          onClick={() => setIsChatLoaded(true)}
+          aria-label={t("chat.open")}
+        >
+          <MessageCircle className="size-6" aria-hidden="true" />
+        </Button>
+      )}
 
       {/* Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent className="sm:max-w-[480px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("settings.title")}</DialogTitle>
-            <DialogDescription>
-              Configure application language, currency, AI provider, and view
-              system info.
-            </DialogDescription>
+            <DialogDescription>{t("settings.description")}</DialogDescription>
           </DialogHeader>
 
           <div className="py-4 space-y-4 text-sm">
@@ -496,9 +535,7 @@ function Dashboard() {
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={handleCloseSettings}>
-              {t("common.cancel") === "İptal" ? "Kapat" : "Close"}
-            </Button>
+            <Button onClick={handleCloseSettings}>{t("common.close")}</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -507,6 +544,16 @@ function Dashboard() {
 }
 
 function App() {
+  const route = resolveSiteRoute(window.location.pathname)
+
+  if (!route) {
+    return (
+      <Layout>
+        <NotFoundPage />
+      </Layout>
+    )
+  }
+
   const legalPage = getLegalPage(window.location.pathname)
 
   if (legalPage) {

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react"
+import React, { lazy, Suspense, useState, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import {
   Plus,
@@ -28,13 +28,18 @@ import {
 } from "../ui/dialog"
 import { usePortfolioStore, useSettingsStore } from "../../store"
 import { exportToJson, importFromJson } from "../../lib/export"
-import { ScenarioComparisonDialog } from "./ScenarioComparisonDialog"
 import {
   annualPercentToMonthlyPercent,
   monthlyPercentToAnnualPercent,
 } from "../../engine"
 import { APP_CONFIG } from "../../config"
 import type { ProjectionParams, Scenario } from "../../types"
+
+const ScenarioComparisonDialog = lazy(() =>
+  import("./ScenarioComparisonDialog").then((module) => ({
+    default: module.ScenarioComparisonDialog,
+  })),
+)
 
 const PRESET_COLORS = [
   "#3b82f6", // Blue
@@ -582,10 +587,14 @@ export const ScenarioManager: React.FC = () => {
       </Dialog>
 
       {/* Comparison Overlay Dialog */}
-      <ScenarioComparisonDialog
-        open={compareDialogOpen}
-        onOpenChange={setCompareDialogOpen}
-      />
+      {compareDialogOpen ? (
+        <Suspense fallback={null}>
+          <ScenarioComparisonDialog
+            open={compareDialogOpen}
+            onOpenChange={setCompareDialogOpen}
+          />
+        </Suspense>
+      ) : null}
     </Card>
   )
 }

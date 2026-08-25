@@ -45,6 +45,7 @@ import {
   throwIfAborted,
 } from "../../lib/ai-service"
 import { isDemoAvailable } from "../../lib/demo-proxy"
+import { getFormattingLocale } from "../../lib/locales"
 import {
   createDefaultToolDeps,
   describeMutationCall,
@@ -64,6 +65,7 @@ const MAX_TOOL_ROUNDS = APP_CONFIG.ai.toolCall.maxRounds
 
 interface AiChatProps {
   onOpenSettings: () => void
+  initiallyOpen?: boolean
 }
 
 interface GenerationOperation {
@@ -189,7 +191,10 @@ function formatInlineText(text: string, lineIdx: number): React.ReactNode[] {
   return nodes
 }
 
-export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
+export const AiChat: React.FC<AiChatProps> = ({
+  onOpenSettings,
+  initiallyOpen = false,
+}) => {
   const { t, i18n } = useTranslation()
   const {
     aiApiKey,
@@ -214,7 +219,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
     clearActiveSession,
   } = useChatStore()
 
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(initiallyOpen)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -956,7 +961,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
                       ? firstUserMsg.content.slice(0, 35)
                       : t("chat.untitledChat"))
                   const dateStr = new Date(s.updatedAt).toLocaleDateString(
-                    i18n.language === "tr" ? "tr-TR" : "en-US",
+                    getFormattingLocale(i18n.resolvedLanguage ?? i18n.language),
                     {
                       month: "short",
                       day: "numeric",
@@ -1211,7 +1216,7 @@ export const AiChat: React.FC<AiChatProps> = ({ onOpenSettings }) => {
             ? "bg-muted text-muted-foreground hover:bg-muted/80 rotate-0"
             : "bg-primary text-primary-foreground hover:bg-primary/90 rotate-0"
         } hover:scale-105 active:scale-95`}
-        aria-label={isOpen ? "Close chat" : "Open chat"}
+        aria-label={isOpen ? t("chat.close") : t("chat.open")}
       >
         <div className="relative w-6 h-6">
           <MessageCircle

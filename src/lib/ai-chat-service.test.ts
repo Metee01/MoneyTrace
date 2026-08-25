@@ -40,14 +40,15 @@ async function run(): Promise<void> {
 
   const prompt = buildSystemPrompt(context)
   assertIncludes(prompt, "clear, direct, and professional")
+  assertIncludes(prompt, "Always respond in Turkish")
   assertIncludes(prompt, "Never begin with a greeting")
-  assertIncludes(prompt, '"Great question"')
-  assertIncludes(prompt, '"Harika soru"')
+  assertIncludes(prompt, "regardless of the response language")
   assertIncludes(prompt, "Never end with an offer to help")
   assertIncludes(prompt, "Ask one brief clarifying question only when")
   assertIncludes(prompt, "only when giving an individualized recommendation")
   assertExcludes(prompt, "knowledgeable and friendly")
   assertExcludes(prompt, "Always include appropriate disclaimers")
+  assertExcludes(prompt, "meta-preface such as")
 
   const autoApprovalPrompt = buildSystemPrompt(context, true)
   assertIncludes(autoApprovalPrompt, "Automatic approval is enabled")

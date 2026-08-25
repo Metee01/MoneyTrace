@@ -56,14 +56,14 @@ console.log("\n--- Test 3: Add Messages & Auto Title ---")
 useChatStore.getState().addMessageToActiveSession({
   id: "msg-1",
   role: "user",
-  content: "10 Yıllık Dolar Projeksiyonu yapabilir misin?",
+  content: "Can you project 10 years of portfolio growth?",
   timestamp: Date.now(),
 })
 
 const updatedSession1 = useChatStore.getState().getActiveSession()
 console.log(`Auto Generated Title: "${updatedSession1?.title}"`)
 console.assert(
-  updatedSession1?.title.startsWith("10 Yıllık Dolar Projeksiyonu"),
+  updatedSession1?.title.startsWith("Can you project 10 years"),
   "Title should auto-generate from first user message",
 )
 console.assert(

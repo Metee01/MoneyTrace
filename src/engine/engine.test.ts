@@ -39,10 +39,10 @@ function runTests() {
   const dcaM12 = calculateDcaForMonth(1000, 20, 12)
   const dcaM13 = calculateDcaForMonth(1000, 20, 13)
   const dcaM25 = calculateDcaForMonth(1000, 20, 25)
-  console.log(`Month 1 (Year 1): ${dcaM1} TL (Expected: 1000 TL)`)
-  console.log(`Month 12 (Year 1): ${dcaM12} TL (Expected: 1000 TL)`)
-  console.log(`Month 13 (Year 2, +20%): ${dcaM13} TL (Expected: 1200 TL)`)
-  console.log(`Month 25 (Year 3, +20%): ${dcaM25} TL (Expected: 1440 TL)`)
+  console.log(`Month 1 (Year 1): ${dcaM1} units (Expected: 1000 units)`)
+  console.log(`Month 12 (Year 1): ${dcaM12} units (Expected: 1000 units)`)
+  console.log(`Month 13 (Year 2, +20%): ${dcaM13} units (Expected: 1200 units)`)
+  console.log(`Month 25 (Year 3, +20%): ${dcaM25} units (Expected: 1440 units)`)
   console.assert(dcaM1 === 1000 && dcaM12 === 1000, "Year 1 DCA failed")
   console.assert(dcaM13 === 1200, "Year 2 DCA failed")
   console.assert(dcaM25 === 1440, "Year 3 DCA failed")
@@ -51,7 +51,7 @@ function runTests() {
   console.log("\n--- Test 3: calculateCompoundStep ---")
   const mRate = calculateMonthlyRate(50) // ~3.4366%
   const step1 = calculateCompoundStep(100000, 10000, mRate)
-  console.log(`Initial 100k + 10k DCA @ 50% annual: ${step1.toFixed(2)} TL`)
+  console.log(`Initial 100k + 10k DCA @ 50% annual: ${step1.toFixed(2)} units`)
   console.assert(step1 > 110000, "Compound step failed")
 
   // Test 4: Inflation Adjust & Safe Withdrawal
@@ -68,7 +68,7 @@ function runTests() {
 
   const realValue = adjustForInflation(130000, inflFactor12)
   console.log(
-    `130,000 TL nominal @ 1.3 inflFactor -> Real: ${realValue.toFixed(2)} TL (Expected: 100000.00 TL)`,
+    `130,000 units nominal @ 1.3 inflFactor -> Real: ${realValue.toFixed(2)} units (Expected: 100000.00 units)`,
   )
   console.assert(
     Math.abs(realValue - 100000) < 1e-2,
@@ -78,7 +78,7 @@ function runTests() {
   // Safe Withdrawal Test: 3.4366% return vs 2.2104% inflation on 100k capital
   const safeW = calculateSafeWithdrawal(100000, mRate, inflMonthly)
   console.log(
-    `Safe withdrawal on 100k @ 50% return vs 30% infl: ${safeW.toFixed(2)} TL`,
+    `Safe withdrawal on 100k @ 50% return vs 30% infl: ${safeW.toFixed(2)} units`,
   )
   console.assert(
     safeW > 0,
@@ -96,29 +96,29 @@ function runTests() {
     initialCapital: 100000,
     monthlyDca: 10000,
     dcaIncreaseRate: 20,
-    expectedReturnRate: 50,
-    expectedInflationRate: 30,
-    usdRate: 35.0,
-    expectedUsdGrowthRate: 25,
+    expectedReturnRate: 8,
+    expectedInflationRate: 3,
+    usdRate: 0.92,
+    expectedUsdGrowthRate: 1,
     targetYears: 3,
   }
 
   const result = calculateProjection(sampleParams)
   console.log(`Total Months: ${result.summary.totalMonths}`)
   console.log(
-    `Total Invested: ${result.summary.totalInvested.toLocaleString("tr-TR")} TL`,
+    `Total Invested: ${result.summary.totalInvested.toLocaleString("en-US")} units`,
   )
   console.log(
-    `Final Nominal Value: ${result.summary.finalNominalValue.toLocaleString("tr-TR")} TL`,
+    `Final Nominal Value: ${result.summary.finalNominalValue.toLocaleString("en-US")} units`,
   )
   console.log(
-    `Final Real Value: ${result.summary.finalRealValue.toLocaleString("tr-TR")} TL`,
+    `Final Real Value: ${result.summary.finalRealValue.toLocaleString("en-US")} units`,
   )
   console.log(
-    `Total Safe Withdrawal (Nominal): ${result.summary.totalSafeWithdrawal.toLocaleString("tr-TR")} TL`,
+    `Total Safe Withdrawal (Nominal): ${result.summary.totalSafeWithdrawal.toLocaleString("en-US")} units`,
   )
   console.log(
-    `Total Safe Withdrawal (Real): ${result.summary.totalRealSafeWithdrawal.toLocaleString("tr-TR")} TL`,
+    `Total Safe Withdrawal (Real): ${result.summary.totalRealSafeWithdrawal.toLocaleString("en-US")} units`,
   )
   console.log(
     `Final USD Value: $${result.summary.finalUsdValue.toLocaleString("en-US")}`,
@@ -128,7 +128,7 @@ function runTests() {
   console.log(
     `Purchasing Power Loss: ${result.summary.purchasingPowerLossRate}%`,
   )
-  console.log(`Final USD Rate: ${result.summary.finalUsdRate} TL`)
+  console.log(`Final USD Rate: ${result.summary.finalUsdRate} units per USD`)
 
   console.assert(result.rows.length === 36, "Rows length mismatch")
   console.assert(
@@ -182,7 +182,7 @@ function runTests() {
     dcaIncreaseRate: 0,
     expectedReturnRate: 1, // 1% monthly
     expectedInflationRate: 0.5, // 0.5% monthly
-    usdRate: 35,
+    usdRate: 0.92,
     expectedUsdGrowthRate: 1, // 1% monthly
     targetYears: 1,
     rateInputPeriod: "monthly",
@@ -190,7 +190,7 @@ function runTests() {
   const monthlyResult = calculateProjection(monthlyParams)
   const expectedFinal = 1000 * Math.pow(1.01, 12)
   const expectedReal = expectedFinal / Math.pow(1.005, 12)
-  const expectedUsdRate = 35 * Math.pow(1.01, 12)
+  const expectedUsdRate = 0.92 * Math.pow(1.01, 12)
   console.log(
     `Final Nominal: ${monthlyResult.summary.finalNominalValue} (Expected: ~${expectedFinal.toFixed(2)})`,
   )
@@ -272,7 +272,7 @@ function runTests() {
     initialCapital: 10000,
     monthlyDca: 0,
     dcaIncreaseRate: 0,
-    monthlyWithdrawal: 1000, // 1000 TL withdrawal
+    monthlyWithdrawal: 1000, // 1000-unit withdrawal
     expectedReturnRate: 10, // 10% annual return
     expectedInflationRate: 0,
     usdRate: 1,
@@ -282,10 +282,10 @@ function runTests() {
   }
   const taxResult = calculateProjection(taxParams)
   console.log(
-    `Total Withholding Tax Paid: ${taxResult.summary.totalWithholdingTax} TL`,
+    `Total Withholding Tax Paid: ${taxResult.summary.totalWithholdingTax} units`,
   )
   console.log(
-    `Total Net Withdrawals: ${taxResult.summary.totalNetWithdrawals} TL`,
+    `Total Net Withdrawals: ${taxResult.summary.totalNetWithdrawals} units`,
   )
   console.assert(
     taxResult.summary.totalWithholdingTax > 0,
@@ -298,15 +298,15 @@ function runTests() {
 
   const row1 = taxResult.rows[0]
   console.log(
-    `Month 1 Gross Withdrawal: ${row1.withdrawal} TL, Stopaj: ${row1.withholdingTax} TL, Net: ${row1.netWithdrawal} TL`,
+    `Month 1 Gross Withdrawal: ${row1.withdrawal} units, Withholding tax: ${row1.withholdingTax} units, Net: ${row1.netWithdrawal} units`,
   )
   console.assert(
     row1.netWithdrawal === row1.withdrawal - row1.withholdingTax,
     "Month 1 net withdrawal should equal gross withdrawal minus withholding tax",
   )
 
-  // Test 11: Withdrawal Tax (Stopaj) Calculator
-  console.log("\n--- Test 11: Withdrawal Tax (Stopaj) Calculator ---")
+  // Test 11: Withholding Tax Calculator
+  console.log("\n--- Test 11: Withholding Tax Calculator ---")
 
   // Case 1: Profitable portfolio — 100k nominal, 60k invested, 15% tax
   const taxCalc1 = calculateWithdrawalTax(50000, 100000, 60000, 15)

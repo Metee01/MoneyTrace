@@ -18,6 +18,7 @@ import {
   formatPercent,
   formatNumber,
 } from "../../lib/formatters"
+import { getFormattingLocale } from "../../lib/locales"
 
 export const ProjectionSummaryCards: React.FC = () => {
   const { t, i18n } = useTranslation()
@@ -32,7 +33,7 @@ export const ProjectionSummaryCards: React.FC = () => {
 
   const isRealProfitPositive = summary.totalRealProfit >= 0
   const isNominalProfitPositive = summary.totalNominalProfit >= 0
-  const locale = i18n.language === "tr" ? "tr-TR" : "en-US"
+  const locale = getFormattingLocale(i18n.resolvedLanguage ?? i18n.language)
 
   const cardsData = [
     {

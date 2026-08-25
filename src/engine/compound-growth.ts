@@ -90,8 +90,8 @@ export interface WithdrawalTaxResult {
 }
 
 /**
- * Calculates withholding tax (stopaj) on a cash withdrawal from portfolio.
- * Stopaj is only levied on the profit portion of the withdrawal.
+ * Calculates withholding tax on a cash withdrawal from a portfolio.
+ * Withholding tax is only levied on the profit portion of the withdrawal.
  *
  * @param requestedWithdrawal Target amount to withdraw
  * @param nominalValue Total portfolio nominal value

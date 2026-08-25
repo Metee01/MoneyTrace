@@ -89,13 +89,6 @@ export function getCurrencySymbol(currencyCode: string): string {
 }
 
 /**
- * Backward compatibility alias for formatLocalCurrency
- */
-export function formatTL(amount: number, compact = false): string {
-  return formatLocalCurrency(amount, "USD", "en-US", compact)
-}
-
-/**
  * Formats amount in Reference Currency (USD)
  */
 export function formatUSD(amount: number, compact = false): string {

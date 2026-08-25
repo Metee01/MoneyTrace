@@ -19,7 +19,7 @@ async function run(): Promise<void> {
         {
           message: {
             content:
-              '```json\n{"expectedInflationRate":3.2,"expectedUsdGrowthRate":1.1,"expectedReturnRate":8.5,"usdRate":36.4,"rationale":"Test"}\n```',
+              '```json\n{"expectedInflationRate":3.2,"expectedUsdGrowthRate":1.1,"expectedReturnRate":8.5,"usdRate":0.92,"rationale":"Test"}\n```',
           },
         },
       ],
@@ -35,7 +35,7 @@ async function run(): Promise<void> {
                   "expectedInflationRate: 4,2",
                   "expectedUsdGrowthRate: 2.1",
                   "expectedReturnRate: 9.5",
-                  "usdRate: 40.25",
+                  "usdRate: 0.79",
                 ].join("\n"),
               },
             ],
@@ -45,7 +45,14 @@ async function run(): Promise<void> {
     },
   ]
 
-  globalThis.fetch = async () => {
+  const requestBodies: Array<{
+    messages?: Array<{ role?: string; content?: string }>
+  }> = []
+
+  globalThis.fetch = async (_input, init) => {
+    requestBodies.push(
+      JSON.parse(String(init?.body)) as (typeof requestBodies)[number],
+    )
     const body = responses.shift()
     return new Response(JSON.stringify(body), {
       status: 200,
@@ -58,7 +65,7 @@ async function run(): Promise<void> {
       provider: "openai",
       apiKey: "test-key",
       model: "test-model",
-      currencyCode: "TRY",
+      currencyCode: "EUR",
       targetYears: 10,
       language: "tr",
     })
@@ -68,12 +75,18 @@ async function run(): Promise<void> {
       provider: "openai",
       apiKey: "test-key",
       model: "test-model",
-      currencyCode: "TRY",
+      currencyCode: "GBP",
       targetYears: 10,
-      language: "tr",
+      language: "en",
     })
     assert(loose.expectedInflationRate === 4.2, "Decimal comma should parse")
-    assert(loose.usdRate === 40.25, "Loose labeled values should parse")
+    assert(loose.usdRate === 0.79, "Loose labeled values should parse")
+    assert(
+      requestBodies[0].messages?.[0]?.content?.includes(
+        'Write the "rationale" text in Turkish.',
+      ) ?? false,
+      "Turkish forecast requests should preserve the requested language",
+    )
   } finally {
     globalThis.fetch = originalFetch
   }
@@ -95,7 +108,7 @@ async function run(): Promise<void> {
     provider: "openai",
     apiKey: "test-key",
     model: "test-model",
-    currencyCode: "TRY",
+    currencyCode: "EUR",
     targetYears: 10,
     signal: abortController.signal,
   })

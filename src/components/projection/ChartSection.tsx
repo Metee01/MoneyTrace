@@ -18,6 +18,7 @@ import { usePortfolioStore, useSettingsStore } from "../../store"
 import { calculateProjection } from "../../engine"
 import { useTheme } from "../../hooks/useTheme"
 import { formatLocalCurrency, formatUSD } from "../../lib/formatters"
+import { getFormattingLocale } from "../../lib/locales"
 import { TrendingUp, Flame } from "lucide-react"
 import { cn } from "../../lib/utils"
 
@@ -143,7 +144,7 @@ export const ChartSection: React.FC = () => {
   const [currencyMode, setCurrencyMode] = useState<"LOCAL" | "USD">("LOCAL")
   const [filterMode, setFilterMode] = useState<"all" | "yearly">("all")
 
-  const locale = i18n.language === "tr" ? "tr-TR" : "en-US"
+  const locale = getFormattingLocale(i18n.resolvedLanguage ?? i18n.language)
 
   const projectionResult = useMemo(() => {
     return calculateProjection(currentParams)

@@ -1,9 +1,24 @@
 import { Globe, TriangleAlert, User } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { getSitePath, type SiteLanguage, type SitePageId } from "@/seo/site"
+
+const FOOTER_PAGES: SitePageId[] = [
+  "methodology",
+  "about",
+  "privacy",
+  "cookies",
+  "contact",
+  "financialDisclaimer",
+]
 
 export function Footer() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const currentYear = new Date().getFullYear()
+  const language: SiteLanguage = (
+    i18n.resolvedLanguage ?? i18n.language
+  ).startsWith("en")
+    ? "en"
+    : "tr"
 
   return (
     <footer className="mt-auto border-t bg-card py-8 text-card-foreground">
@@ -20,53 +35,23 @@ export function Footer() {
 
           <nav aria-label={t("footer.legalNavigation")}>
             <ul className="flex max-w-2xl flex-wrap gap-x-5 gap-y-3 text-sm text-muted-foreground">
-              <li>
-                <a
-                  className="transition-colors hover:text-foreground"
-                  href="/about"
-                >
-                  {t("legal.nav.about")}
-                </a>
-              </li>
-              <li>
-                <a
-                  className="transition-colors hover:text-foreground"
-                  href="/privacy"
-                >
-                  {t("legal.nav.privacy")}
-                </a>
-              </li>
-              <li>
-                <a
-                  className="transition-colors hover:text-foreground"
-                  href="/cookies"
-                >
-                  {t("legal.nav.cookies")}
-                </a>
-              </li>
-              <li>
-                <a
-                  className="transition-colors hover:text-foreground"
-                  href="/contact"
-                >
-                  {t("legal.nav.contact")}
-                </a>
-              </li>
-              <li>
-                <a
-                  className="transition-colors hover:text-foreground"
-                  href="/financial-disclaimer"
-                >
-                  {t("legal.nav.financialDisclaimer")}
-                </a>
-              </li>
+              {FOOTER_PAGES.map((pageId) => (
+                <li key={pageId}>
+                  <a
+                    className="transition-colors hover:text-foreground"
+                    href={getSitePath(pageId, language)}
+                  >
+                    {t(`legal.nav.${pageId}`)}
+                  </a>
+                </li>
+              ))}
             </ul>
           </nav>
         </div>
 
         <div className="flex flex-col justify-between gap-4 border-t pt-5 md:flex-row md:items-center">
           <a
-            href="/financial-disclaimer"
+            href={getSitePath("financialDisclaimer", language)}
             className="flex max-w-2xl items-start gap-2 text-xs leading-5 text-muted-foreground transition-colors hover:text-foreground"
           >
             <TriangleAlert

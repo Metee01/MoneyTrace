@@ -37,9 +37,9 @@ export interface SettingsState extends Settings {
 
 const DEFAULT_SETTINGS: Settings = {
   theme: "system",
-  language: "en",
-  currencyCode: "USD",
-  currencySymbol: "$",
+  language: APP_CONFIG.app.defaultLanguage,
+  currencyCode: APP_CONFIG.app.defaultCurrencyCode,
+  currencySymbol: APP_CONFIG.app.defaultCurrencySymbol,
   aiApiKey: "",
   aiModelProvider: "gemini",
   aiModel: "",

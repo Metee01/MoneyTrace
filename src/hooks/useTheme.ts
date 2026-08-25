@@ -4,7 +4,10 @@ export type Theme = "dark" | "light" | "system"
 
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const saved = localStorage.getItem("moneytrace-theme") as Theme
+    const saved =
+      typeof window !== "undefined"
+        ? (window.localStorage.getItem("moneytrace-theme") as Theme)
+        : null
     return saved || "dark" // default is dark as requested
   })
 
@@ -25,7 +28,7 @@ export function useTheme() {
   }, [theme])
 
   const setTheme = (newTheme: Theme) => {
-    localStorage.setItem("moneytrace-theme", newTheme)
+    window.localStorage.setItem("moneytrace-theme", newTheme)
     setThemeState(newTheme)
   }
 

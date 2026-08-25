@@ -11,6 +11,7 @@ import { APP_CONFIG } from "../config"
 import type { AiForecastResult, AiModelProvider } from "../types"
 import { callDemoProxy } from "./demo-proxy"
 import { extractOpenAiResponseText } from "./ai-response"
+import { getLanguageDisplayName } from "./locales"
 
 /** Default model names (update in src/config/index.ts) */
 export const GEMINI_MODEL = APP_CONFIG.ai.models.gemini
@@ -97,7 +98,7 @@ function buildSystemPrompt(
     '  "rationale": "short 2-3 sentence explanation of the forecast"',
     "}",
     `Write the "rationale" text in ${language}.`,
-    "Use realistic, data-informed estimates based on the country of the given currency.",
+    "Use realistic, data-informed estimates relevant to the currency and its associated economy or economies.",
   ].join("\n")
 }
 
@@ -347,7 +348,7 @@ async function callOpenAiCompatible(
     "HTTP-Referer":
       typeof window !== "undefined"
         ? window.location.origin
-        : "https://moneytrace.metee.com.tr",
+        : APP_CONFIG.app.siteUrl,
     "X-Title": "MoneyTrace",
   }
   if (apiKey.trim()) {
@@ -422,7 +423,7 @@ export async function forecastEconomics(
   const systemPrompt = buildSystemPrompt(
     request.currencyCode,
     request.targetYears,
-    request.language === "tr" ? "Turkish" : "English",
+    getLanguageDisplayName(request.language ?? APP_CONFIG.app.defaultLanguage),
   )
 
   let result: AiForecastResult
