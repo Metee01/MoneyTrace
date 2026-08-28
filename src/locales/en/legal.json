@@ -8,9 +8,10 @@
   "legal": {
     "eyebrow": "MoneyTrace information center",
     "backToApp": "Back to calculator",
-    "lastUpdated": "Last updated: August 22, 2026",
+    "lastUpdated": "Last updated: August 25, 2026",
     "pageNavigation": "Information page navigation",
     "nav": {
+      "methodology": "Methodology",
       "about": "About",
       "privacy": "Privacy",
       "cookies": "Cookies",
@@ -25,9 +26,70 @@
       "analyticsPrivacy": "Vercel Analytics privacy"
     },
     "pages": {
+      "methodology": {
+        "title": "Calculation methodology",
+        "description": "Review the assumptions MoneyTrace uses to calculate compound growth, regular contributions, inflation adjustments, reference-currency values, and withdrawals.",
+        "sections": {
+          "compoundGrowth": {
+            "title": "Compound growth",
+            "body": "The engine converts the annual return assumption to an equivalent monthly rate and applies each month's return to that month's portfolio balance. Outputs are rounded to two decimal places.",
+            "bullets": {
+              "0": "The return rate remains constant across the horizon; market volatility is not generated.",
+              "1": "Each period's return becomes part of the next period's opening balance.",
+              "2": "Negative return assumptions are supported; past performance does not determine future results."
+            }
+          },
+          "inflation": {
+            "title": "Inflation-adjusted real value",
+            "body": "The nominal portfolio balance is divided by the compounded effect of the selected inflation rate to express it in the starting period's purchasing power.",
+            "bullets": {
+              "0": "Nominal value is the future amount of currency shown in the account.",
+              "1": "Real value approximates what that amount could buy at starting-period prices.",
+              "2": "Inflation is a constant assumption and may not represent changes in your personal spending basket."
+            }
+          },
+          "contributions": {
+            "title": "Regular contributions",
+            "body": "A monthly contribution is added in each calculation period. When annual contribution growth is selected, the monthly amount rises by that rate at the start of each projection year.",
+            "bullets": {
+              "0": "Starting capital and monthly contributions are tracked separately in total invested principal.",
+              "1": "Contribution growth can compare scenarios such as income growth or a planned increase in savings.",
+              "2": "Actual trade dates, fees, and market-price differences are not modeled."
+            }
+          },
+          "currency": {
+            "title": "Reference-currency comparison",
+            "body": "The local portfolio balance is also shown in a reference currency using the starting exchange rate and currency-growth assumption you enter.",
+            "bullets": {
+              "0": "A reference currency is a performance comparison, not an investment recommendation.",
+              "1": "Currency growth is constant and does not forecast actual exchange-rate movements.",
+              "2": "Spreads, conversion fees, taxes, and liquidity costs are not included."
+            }
+          },
+          "withdrawals": {
+            "title": "Withdrawals and estimated gain tax",
+            "body": "Planned withdrawals reduce the portfolio balance. The optional tax rate is a simplified estimate applied only to the calculated gain portion of a withdrawal.",
+            "bullets": {
+              "0": "The default estimated tax rate is zero.",
+              "1": "The calculation does not model jurisdiction- and product-specific rules such as cost methods, account types, tax brackets, or annual offsets.",
+              "2": "Independently confirm any rate you use under the rules that apply to you."
+            }
+          },
+          "limits": {
+            "title": "Model limitations",
+            "body": "MoneyTrace is a deterministic scenario tool. The same inputs always produce the same outputs; results are not forecasts or guarantees of future performance.",
+            "bullets": {
+              "0": "Return, inflation, and exchange-rate growth remain constant over the projection.",
+              "1": "Asset allocation, volatility, sequence risk, and rebalancing are not modeled separately.",
+              "2": "Fees, commissions, and product-specific taxes affect results only when reflected in your assumptions.",
+              "3": "Compare multiple scenarios and verify material assumptions with current primary sources before making decisions."
+            }
+          }
+        }
+      },
       "about": {
         "title": "About MoneyTrace",
-        "description": "MoneyTrace is an open-source portfolio projection tool that helps you explore the effects of compound returns, regular contributions, inflation, exchange rates, withdrawals, and withholding tax.",
+        "description": "MoneyTrace is an open-source portfolio projection tool that helps you explore compound returns, regular contributions, inflation, exchange rates, withdrawals, and an optional estimated gain tax.",
         "sections": {
           "purpose": {
             "title": "Why it exists",
@@ -37,7 +99,7 @@
             "title": "What you can do",
             "body": "The application combines a deterministic calculation engine with optional AI assistance.",
             "bullets": {
-              "0": "Model lump-sum capital, monthly contributions, contribution growth, withdrawals, and withholding tax.",
+              "0": "Model lump-sum capital, monthly contributions, contribution growth, withdrawals, and an optional estimated gain tax.",
               "1": "Compare nominal value, today's purchasing power, and a reference-currency value over time.",
               "2": "Save and compare scenarios locally in your browser, then export or import them.",
               "3": "Optionally ask an AI provider for macroeconomic assumptions or discuss your portfolio context."

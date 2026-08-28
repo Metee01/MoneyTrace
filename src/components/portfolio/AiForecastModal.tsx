@@ -33,6 +33,7 @@ interface AiForecastModalProps {
 }
 
 const ERROR_CODE_KEYS: Record<AiForecastErrorCode, string> = {
+  aborted: "ai.errorUnknown",
   auth: "ai.errorAuth",
   network: "ai.errorNetwork",
   quota: "ai.errorQuota",
@@ -154,7 +155,7 @@ export const AiForecastModal: React.FC<AiForecastModalProps> = ({
           {/* No API Key Warning */}
           {!hasApiKey && (
             <div className="p-3 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs rounded-lg border border-amber-500/20 space-y-2">
-              <p>{t("chat.noApiKey")}</p>
+              <p>{t("ai.noApiKey")}</p>
               {onOpenSettings && (
                 <Button
                   size="sm"

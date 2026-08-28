@@ -1,6 +1,7 @@
 import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
 import { useSettingsStore } from "../store/settings-store"
+import { APP_CONFIG } from "../config"
 import trTranslations from "../locales/tr/translation.json"
 import enTranslations from "../locales/en/translation.json"
 import trLegalTranslations from "../locales/tr/legal.json"
@@ -32,12 +33,12 @@ const initialLanguage = SUPPORTED_LANGUAGES.some(
   (l) => l.code === savedLanguage,
 )
   ? savedLanguage
-  : "en"
+  : APP_CONFIG.app.defaultLanguage
 
 i18n.use(initReactI18next).init({
   resources,
   lng: initialLanguage, // restored from saved settings, default is English
-  fallbackLng: "en",
+  fallbackLng: APP_CONFIG.app.defaultLanguage,
   interpolation: {
     escapeValue: false, // React already safes from XSS
   },

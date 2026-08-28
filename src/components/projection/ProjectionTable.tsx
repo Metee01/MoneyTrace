@@ -20,6 +20,7 @@ import {
   formatNumber,
 } from "../../lib/formatters"
 import { exportToCsv } from "../../lib/export"
+import { getFormattingLocale } from "../../lib/locales"
 
 export const ProjectionTable: React.FC = () => {
   const { t, i18n } = useTranslation()
@@ -32,7 +33,7 @@ export const ProjectionTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
 
-  const locale = i18n.language === "tr" ? "tr-TR" : "en-US"
+  const locale = getFormattingLocale(i18n.resolvedLanguage ?? i18n.language)
 
   const projectionResult = useMemo(() => {
     return calculateProjection(currentParams)
@@ -374,7 +375,7 @@ export const ProjectionTable: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* Stopaj Kesintisi */}
+                      {/* Estimated gain tax */}
                       <td className="py-2 px-3 text-right font-medium text-orange-600 dark:text-orange-400">
                         {formatLocalCurrency(
                           row.withholdingTax,

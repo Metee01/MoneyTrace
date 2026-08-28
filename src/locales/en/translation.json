@@ -6,6 +6,7 @@
     "clear": "Clear",
     "save": "Save",
     "cancel": "Cancel",
+    "close": "Close",
     "delete": "Delete",
     "copy": "Copy",
     "edit": "Edit",
@@ -20,7 +21,8 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
-    "website": "Metee.com.tr"
+    "website": "Metee.com.tr",
+    "switchLanguage": "Switch to the Turkish version"
   },
   "portfolio": {
     "title": "Portfolio Inputs",
@@ -40,7 +42,7 @@
     "expectedInflationRate": "Expected Annual Inflation Rate (%)",
     "expectedInflationRateHelp": "Expected annual inflation rate reducing purchasing power.",
     "usdRate": "Initial Exchange Rate (Ref Currency / Local)",
-    "usdRateHelp": "Exchange rate between your local currency and reference currency (USD recommended).",
+    "usdRateHelp": "Exchange rate between your local currency and the reference currency you want to compare.",
     "expectedUsdGrowthRate": "Expected Annual Ref. Currency Growth (%)",
     "expectedUsdGrowthRateHelp": "Expected annual percentage appreciation of reference currency against local currency.",
     "expectedReturnRateMonthly": "Expected Monthly Portfolio Return (%)",
@@ -63,8 +65,8 @@
     "portfolioNamePlaceholder": "e.g., 10-Year Retirement Plan",
     "portfolioDesc": "Description (Optional)",
     "savedSuccess": "Portfolio saved successfully!",
-    "withholdingTaxRate": "Withholding Tax Rate (%)",
-    "withholdingTaxRateHelp": "Monthly tax deducted from investment returns (e.g. 15% for deposits, 10% for funds)."
+    "withholdingTaxRate": "Estimated Gain Tax Rate (%)",
+    "withholdingTaxRateHelp": "A simplified estimated rate applied to the gain portion of a withdrawal. Confirm the current rate for your own tax system."
   },
   "validation": {
     "positiveNumber": "Please enter a non-negative number.",
@@ -92,7 +94,7 @@
     "clearCustomWithdrawals": "Reset Custom Withdrawals",
     "usdRateCol": "Exchange Rate",
     "totalRows": "Listing {{count}} total periods",
-    "withholdingTaxCol": "Withholding Tax",
+    "withholdingTaxCol": "Estimated Tax",
     "nominalProfitChangeCol": "Nominal Profit Δ",
     "realProfitChangeCol": "Real Profit Δ",
     "taxCalcButton": "Calculate Tax",
@@ -102,7 +104,7 @@
     "taxCalcInvested": "Capital Invested",
     "taxCalcProfitRatio": "Profit Ratio",
     "taxCalcProfitPortion": "Profit Portion",
-    "taxCalcTaxAmount": "Withholding Tax",
+    "taxCalcTaxAmount": "Estimated Tax",
     "taxCalcNetAmount": "Net Amount",
     "taxCalcNoProfit": "No profit in this period — no tax applies.",
     "taxCalcExceedsValue": "Withdrawal cannot exceed portfolio value."
@@ -144,9 +146,22 @@
   "scenarios": {
     "title": "Scenario Management",
     "newScenario": "New Scenario",
+    "newScenarioDescription": "Save the current portfolio parameters as a new scenario.",
+    "editScenario": "Edit Scenario",
+    "editScenarioDescription": "Update the scenario name, color, and projection parameters.",
     "scenarioName": "Scenario Name",
     "scenarioNamePlaceholder": "e.g., Optimistic Market",
+    "scenarioColor": "Scenario Color",
+    "scenarioParameters": "Projection Parameters",
     "compareScenarios": "Compare Scenarios",
+    "comparisonDescription": "Comparing {{count}} scenarios side by side",
+    "tableScenario": "Scenario",
+    "tableReturnRate": "Return Rate",
+    "tableInflationRate": "Inflation Rate",
+    "tableNominalValue": "Nominal Value",
+    "tableRealValue": "Real Value",
+    "tableRealRoi": "Real ROI",
+    "tableNetRealProfit": "Net Real Profit",
     "noScenarios": "No saved scenarios yet. Configure parameters and save your first scenario.",
     "duplicateName": "A scenario with this name already exists.",
     "deleteConfirm": "Are you sure you want to delete scenario \"{{name}}\"?",
@@ -156,6 +171,7 @@
   },
   "settings": {
     "title": "Application Settings",
+    "description": "Configure the application language, currency, and AI provider, and review system information.",
     "languageSelect": "Language",
     "themeSelect": "Theme Preference",
     "saved": "Settings saved successfully.",
@@ -163,6 +179,9 @@
     "defaultCurrency": "Local Currency",
     "aiSettings": "AI Settings",
     "aiSettingsDesc": "Configure your AI provider and API key for forecasts and chat.",
+    "aiAutoApproveMutations": "Automatically approve AI actions",
+    "aiAutoApproveMutationsDesc": "When enabled, explicitly requested portfolio and scenario changes from AI chat are applied without a separate confirmation.",
+    "aiAutoApproveMutationsWarning": "AI actions can immediately modify your saved portfolio data.",
     "useDemoApi": "Use Demo API",
     "useDemoApiDesc": "Use the free demo API key to test the system.",
     "demoUsageQuota": "Demo Usage Quotas",
@@ -172,6 +191,7 @@
   "ai": {
     "modalTitle": "AI Economic Forecast",
     "modalDesc": "Generate inflation, exchange rate, and return expectations for your selected currency and fill the form in one click.",
+    "noApiKey": "Configure an AI API key in Settings to generate a forecast.",
     "provider": "AI Provider",
     "custom": "Custom (OpenAI-compatible)",
     "model": "Model",
@@ -211,6 +231,10 @@
     "title": "MoneyTrace AI Assistant",
     "subtitle": "Ask questions about your portfolio",
     "placeholder": "Type a message...",
+    "stopGenerating": "Stop generating",
+    "open": "Open chat",
+    "close": "Close chat",
+    "autoApprovalEnabled": "Automatic approval is enabled",
     "send": "Send",
     "thinking": "Thinking...",
     "welcome": "Hello! 👋 I'm your MoneyTrace AI financial assistant. I can see your current portfolio data, calculated projection tables, and charts. Ask me anything about your investments!",
@@ -231,6 +255,61 @@
     "proposalTitle": "AI wants to update your portfolio data",
     "proposalApply": "Apply",
     "proposalReject": "Reject",
-    "toolExecuted": "AI data updated"
+    "toolExecuted": "AI tool executed"
+  },
+  "notFound": {
+    "title": "This page could not be found",
+    "description": "The link may have changed or the address may be incorrect. Return to the calculator to continue your projection.",
+    "action": "Back to calculator"
+  },
+  "seo": {
+    "hero": {
+      "eyebrow": "Measure purchasing power",
+      "title": "Is your money gaining real value as your portfolio grows?",
+      "description": "Calculate compound returns, regular investments, and inflation in one projection. See today's purchasing power alongside the future nominal balance.",
+      "start": "Start calculating",
+      "methodology": "Review the methodology",
+      "signals": {
+        "0": "Projections up to 50 years",
+        "1": "No account required",
+        "2": "Open-source calculation engine"
+      }
+    },
+    "ledger": {
+      "label": "Value check",
+      "badge": "Real-value view",
+      "nominal": "Nominal balance",
+      "real": "Today's purchasing power",
+      "adjusted": "Inflation adjusted",
+      "note": "The same nominal amount can buy fewer goods and services as prices rise. Real value makes that difference visible."
+    },
+    "guide": {
+      "eyebrow": "Meaning behind the numbers",
+      "title": "Read a portfolio projection from three angles",
+      "description": "Compare return, inflation, and regular-contribution assumptions instead of focusing on one future balance. Results are scenarios driven by your inputs, not forecasts.",
+      "items": {
+        "0": {
+          "title": "What is a real return?",
+          "body": "Real return separates inflation's purchasing-power effect from nominal growth. A positive nominal return does not always mean a positive real return."
+        },
+        "1": {
+          "title": "How does compounding grow?",
+          "body": "Each period's return joins the balance and can generate another return in the next period. Small assumption differences expand over longer horizons."
+        },
+        "2": {
+          "title": "What do regular investments change?",
+          "body": "Monthly contributions increase invested principal over time. Compare different savings plans by adding an annual contribution increase."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Calculations run in your browser",
+      "body": "Portfolio inputs and scenarios stay on your device through localStorage. Financial inputs are not sent to an AI provider unless you choose to use an AI feature.",
+      "source": "Review the source code"
+    },
+    "staticCalculator": {
+      "title": "Interactive portfolio calculator",
+      "body": "With JavaScript enabled, adjust starting capital, regular contributions, return, inflation, withdrawals, and reference-currency assumptions to calculate results instantly."
+    }
   }
 }

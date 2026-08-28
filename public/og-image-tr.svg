@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#09090b" />
+      <stop offset="1" stop-color="#111827" />
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#27272a" stroke-width="1" />
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.55" />
+  <rect x="68" y="64" width="66" height="66" rx="16" fill="#1d4ed8" />
+  <path d="M87 109 L102 91 L114 102 L128 82" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="154" y="111" fill="#f8fafc" font-family="Arial, sans-serif" font-size="38" font-weight="700">MoneyTrace</text>
+  <text x="68" y="226" fill="#f8fafc" font-family="Arial, sans-serif" font-size="62" font-weight="700">Rakam büyür.</text>
+  <text x="68" y="300" fill="#60a5fa" font-family="Arial, sans-serif" font-size="62" font-weight="700">Satın alma gücü?</text>
+  <text x="70" y="355" fill="#a1a1aa" font-family="Arial, sans-serif" font-size="25">Enflasyondan arındırılmış portföy projeksiyonu</text>
+  <rect x="70" y="432" width="440" height="14" rx="7" fill="#3f3f46" />
+  <rect x="70" y="432" width="440" height="14" rx="7" fill="#93c5fd" opacity="0.45" />
+  <text x="70" y="417" fill="#d4d4d8" font-family="Arial, sans-serif" font-size="18">Nominal değer</text>
+  <rect x="70" y="500" width="440" height="14" rx="7" fill="#3f3f46" />
+  <rect x="70" y="500" width="298" height="14" rx="7" fill="#3b82f6" />
+  <text x="70" y="485" fill="#d4d4d8" font-family="Arial, sans-serif" font-size="18">Reel satın alma gücü</text>
+  <rect x="700" y="118" width="420" height="394" rx="28" fill="#18181b" stroke="#3f3f46" stroke-width="2" />
+  <text x="748" y="178" fill="#a1a1aa" font-family="Arial, sans-serif" font-size="18" letter-spacing="3">TEK PROJEKSİYONDA</text>
+  <text x="748" y="249" fill="#f8fafc" font-family="Arial, sans-serif" font-size="30" font-weight="700">Bileşik getiri</text>
+  <text x="748" y="314" fill="#f8fafc" font-family="Arial, sans-serif" font-size="30" font-weight="700">Düzenli yatırım</text>
+  <text x="748" y="379" fill="#f8fafc" font-family="Arial, sans-serif" font-size="30" font-weight="700">Enflasyon etkisi</text>
+  <text x="748" y="444" fill="#f8fafc" font-family="Arial, sans-serif" font-size="30" font-weight="700">Senaryo karşılaştırma</text>
+  <circle cx="720" cy="239" r="5" fill="#3b82f6" />
+  <circle cx="720" cy="304" r="5" fill="#3b82f6" />
+  <circle cx="720" cy="369" r="5" fill="#3b82f6" />
+  <circle cx="720" cy="434" r="5" fill="#3b82f6" />
+</svg>

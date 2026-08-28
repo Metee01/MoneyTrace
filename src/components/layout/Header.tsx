@@ -2,22 +2,40 @@ import { useTranslation } from "react-i18next"
 import { useTheme } from "@/hooks/useTheme"
 import { Button } from "@/components/ui/button"
 import { APP_CONFIG } from "@/config"
-import { Sun, Moon, Laptop, TrendingUp, Settings } from "lucide-react"
+import {
+  Sun,
+  Moon,
+  Laptop,
+  TrendingUp,
+  Settings,
+  Languages,
+} from "lucide-react"
+import { getAlternatePath, getSitePath, type SiteLanguage } from "@/seo/site"
 
 interface HeaderProps {
   onOpenSettings?: () => void
 }
 
 export function Header({ onOpenSettings }: HeaderProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { theme, setTheme } = useTheme()
+  const language: SiteLanguage = (
+    i18n.resolvedLanguage ?? i18n.language
+  ).startsWith("en")
+    ? "en"
+    : "tr"
+  const alternateLanguage: SiteLanguage = language === "tr" ? "en" : "tr"
+  const pathname =
+    typeof window === "undefined"
+      ? getSitePath("home", language)
+      : window.location.pathname
 
   return (
     <header className="border-b bg-card text-card-foreground">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo & Brand */}
         <a
-          href="/"
+          href={getSitePath("home", language)}
           className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={t("common.appName")}
         >
@@ -34,6 +52,16 @@ export function Header({ onOpenSettings }: HeaderProps) {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
+          <a
+            href={getAlternatePath(pathname, alternateLanguage)}
+            hrefLang={alternateLanguage}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border bg-background px-2.5 text-xs font-semibold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={t("common.switchLanguage")}
+          >
+            <Languages className="size-3.5" aria-hidden="true" />
+            {alternateLanguage.toUpperCase()}
+          </a>
+
           {/* Theme Switcher buttons */}
           <div className="flex items-center border rounded-lg p-0.5 bg-muted/50">
             <Button

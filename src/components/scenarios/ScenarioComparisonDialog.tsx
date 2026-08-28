@@ -22,6 +22,7 @@ import { usePortfolioStore, useSettingsStore } from "../../store"
 import { calculateProjection } from "../../engine"
 import { useTheme } from "../../hooks/useTheme"
 import { formatLocalCurrency, formatPercent } from "../../lib/formatters"
+import { getFormattingLocale } from "../../lib/locales"
 import type { ProjectionResult, Scenario } from "../../types"
 
 interface ScenarioComparisonDialogProps {
@@ -44,13 +45,13 @@ export const ScenarioComparisonDialog: React.FC<
   ScenarioComparisonDialogProps
 > = ({ open, onOpenChange }) => {
   const { t, i18n } = useTranslation()
-  const { scenarios } = usePortfolioStore()
+  const { scenarios, baselineScenarioId } = usePortfolioStore()
   const { currencyCode } = useSettingsStore()
   const { theme } = useTheme()
 
   const [valueType, setValueType] = useState<"real" | "nominal">("real")
 
-  const locale = i18n.language === "tr" ? "tr-TR" : "en-US"
+  const locale = getFormattingLocale(i18n.resolvedLanguage ?? i18n.language)
 
   // Calculate projections for each scenario
   const scenarioResults: ScenarioResultItem[] = useMemo(() => {
@@ -105,24 +106,26 @@ export const ScenarioComparisonDialog: React.FC<
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-6">
-        <DialogHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] overflow-y-auto p-4 sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100%-2rem)] sm:max-w-5xl sm:p-6">
+        <DialogHeader className="pr-8">
+          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
               <DialogTitle className="text-xl font-bold">
                 {t("scenarios.compareScenarios")}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-1">
-                Comparing {scenarios.length} scenarios side-by-side
+                {t("scenarios.comparisonDescription", {
+                  count: scenarios.length,
+                })}
               </DialogDescription>
             </div>
 
             {/* Value Type Toggle (Real / Nominal) */}
-            <div className="inline-flex items-center rounded-lg border border-border bg-muted p-0.5 text-xs">
+            <div className="grid w-full grid-cols-1 items-center gap-0.5 rounded-lg border border-border bg-muted p-0.5 text-xs sm:w-auto sm:grid-cols-2">
               <Button
                 variant={valueType === "real" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 text-xs px-2.5"
+                className="h-7 w-full px-2.5 text-xs"
                 onClick={() => setValueType("real")}
               >
                 {t("projection.realValue")}
@@ -130,7 +133,7 @@ export const ScenarioComparisonDialog: React.FC<
               <Button
                 variant={valueType === "nominal" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 text-xs px-2.5"
+                className="h-7 w-full px-2.5 text-xs"
                 onClick={() => setValueType("nominal")}
               >
                 {t("projection.nominalBalance")}
@@ -144,13 +147,13 @@ export const ScenarioComparisonDialog: React.FC<
             {t("scenarios.noScenarios")}
           </div>
         ) : (
-          <div className="space-y-6 pt-2">
+          <div className="min-w-0 space-y-4 pt-1 sm:space-y-6 sm:pt-2">
             {/* Comparison Overlay Chart */}
-            <div className="h-[320px] w-full border border-border rounded-xl p-4 bg-card">
+            <div className="h-[260px] min-w-0 w-full rounded-xl border border-border bg-card p-2 sm:h-[320px] sm:p-4">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={chartData}
-                  margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
+                  margin={{ top: 10, right: 4, left: 0, bottom: 20 }}
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -166,6 +169,7 @@ export const ScenarioComparisonDialog: React.FC<
                     dy={8}
                   />
                   <YAxis
+                    width={56}
                     stroke={axisColor}
                     fontSize={11}
                     tickLine={false}
@@ -205,17 +209,36 @@ export const ScenarioComparisonDialog: React.FC<
             </div>
 
             {/* Scenario Summary Comparison Table */}
-            <div className="overflow-x-auto border border-border rounded-xl">
-              <table className="w-full text-xs text-left">
+            <div
+              className="min-w-0 overflow-x-auto overscroll-x-contain rounded-xl border border-border"
+              role="region"
+              aria-label={t("scenarios.compareScenarios")}
+              tabIndex={0}
+            >
+              <table className="w-full min-w-[760px] whitespace-nowrap text-left text-xs">
                 <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border">
                   <tr>
-                    <th className="py-2.5 px-3">Scenario</th>
-                    <th className="py-2.5 px-3 text-right">Return Rate</th>
-                    <th className="py-2.5 px-3 text-right">Inflation Rate</th>
-                    <th className="py-2.5 px-3 text-right">Nominal Value</th>
-                    <th className="py-2.5 px-3 text-right">Real Value</th>
-                    <th className="py-2.5 px-3 text-right">Real ROI</th>
-                    <th className="py-2.5 px-3 text-right">Net Real Profit</th>
+                    <th className="py-2.5 px-3">
+                      {t("scenarios.tableScenario")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableReturnRate")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableInflationRate")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableNominalValue")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableRealValue")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableRealRoi")}
+                    </th>
+                    <th className="py-2.5 px-3 text-right">
+                      {t("scenarios.tableNetRealProfit")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40 font-mono">
@@ -227,19 +250,21 @@ export const ScenarioComparisonDialog: React.FC<
                         key={scenario.id}
                         className="hover:bg-muted/30 transition-colors"
                       >
-                        <td className="py-2.5 px-3 font-sans font-semibold flex items-center gap-2">
-                          <span
-                            className="w-3 h-3 rounded-full inline-block"
-                            style={{ backgroundColor: scenario.color }}
-                          />
-                          <span className="text-foreground">
-                            {scenario.name}
-                          </span>
-                          {scenario.isBaseline && (
-                            <span className="px-1.5 py-0.2 rounded text-[10px] bg-primary/10 text-primary font-normal">
-                              Baseline
+                        <td className="px-3 py-2.5 font-sans font-semibold">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="inline-block h-3 w-3 shrink-0 rounded-full"
+                              style={{ backgroundColor: scenario.color }}
+                            />
+                            <span className="text-foreground">
+                              {scenario.name}
                             </span>
-                          )}
+                            {scenario.id === baselineScenarioId && (
+                              <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-normal text-primary">
+                                Baseline
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="py-2.5 px-3 text-right text-muted-foreground">
                           %{scenario.params.expectedReturnRate}

@@ -8,9 +8,10 @@
   "legal": {
     "eyebrow": "MoneyTrace bilgi merkezi",
     "backToApp": "Hesaplayıcıya dön",
-    "lastUpdated": "Son güncelleme: 22 Ağustos 2026",
+    "lastUpdated": "Son güncelleme: 25 Ağustos 2026",
     "pageNavigation": "Bilgi sayfaları navigasyonu",
     "nav": {
+      "methodology": "Metodoloji",
       "about": "Hakkında",
       "privacy": "Gizlilik",
       "cookies": "Çerezler",
@@ -25,9 +26,70 @@
       "analyticsPrivacy": "Vercel Analytics gizliliği"
     },
     "pages": {
+      "methodology": {
+        "title": "Hesaplama metodolojisi",
+        "description": "MoneyTrace'in bileşik büyüme, düzenli katkı, enflasyon düzeltmesi, referans döviz ve çekim sonuçlarını hangi varsayımlarla hesapladığını inceleyin.",
+        "sections": {
+          "compoundGrowth": {
+            "title": "Bileşik büyüme",
+            "body": "Hesaplama motoru yıllık getiri oranını eşdeğer aylık orana dönüştürür ve her ayın getirisini o ayın portföy bakiyesine uygular. Sonuçlar iki ondalık basamağa yuvarlanır.",
+            "bullets": {
+              "0": "Getiri oranı vade boyunca sabit kabul edilir; piyasa dalgalanması üretilmez.",
+              "1": "Bir dönemin getirisi sonraki dönemin başlangıç bakiyesine dahil olur.",
+              "2": "Negatif getiri oranları girilebilir; geçmiş performans gelecekteki sonucu belirlemez."
+            }
+          },
+          "inflation": {
+            "title": "Enflasyondan arındırılmış reel değer",
+            "body": "Nominal portföy bakiyesi, seçilen enflasyon oranının zaman içindeki bileşik etkisine bölünerek başlangıç döneminin satın alma gücüyle ifade edilir.",
+            "bullets": {
+              "0": "Nominal değer gelecekte görünen para tutarıdır.",
+              "1": "Reel değer aynı tutarın başlangıç dönemindeki yaklaşık satın alma gücünü gösterir.",
+              "2": "Enflasyon sabit bir varsayımdır; kişisel harcama sepetinizdeki değişimi tam olarak temsil etmeyebilir."
+            }
+          },
+          "contributions": {
+            "title": "Düzenli katkılar",
+            "body": "Aylık katkı her hesaplama döneminde portföye eklenir. Yıllık katkı artışı seçildiğinde aylık tutar her yeni projeksiyon yılında belirtilen oranda yükselir.",
+            "bullets": {
+              "0": "Başlangıç sermayesi ve aylık katkılar yatırılan toplam anaparada ayrı izlenir.",
+              "1": "Katkı artış oranı gelir artışı veya planlı tasarruf artışı gibi senaryoları karşılaştırmak içindir.",
+              "2": "Gerçek işlem günü, komisyon ve piyasa fiyatı farklılıkları modellenmez."
+            }
+          },
+          "currency": {
+            "title": "Referans para birimi karşılaştırması",
+            "body": "Yerel portföy bakiyesi, girdiğiniz başlangıç kuru ve kur artış varsayımı kullanılarak bir referans para birimi cinsinden ayrıca gösterilir.",
+            "bullets": {
+              "0": "Referans para birimi bir performans karşılaştırmasıdır; yatırım önerisi değildir.",
+              "1": "Kur artışı sabit varsayılır ve gerçek döviz hareketlerini tahmin etmez.",
+              "2": "Makas, dönüşüm ücreti, vergi ve likidite maliyetleri dahil değildir."
+            }
+          },
+          "withdrawals": {
+            "title": "Çekimler ve tahmini kazanç vergisi",
+            "body": "Planlanan çekimler portföy bakiyesinden düşülür. İsteğe bağlı vergi oranı yalnızca çekimin hesaplanan kazanç payına uygulanan basitleştirilmiş bir tahmindir.",
+            "bullets": {
+              "0": "Varsayılan tahmini vergi oranı sıfırdır.",
+              "1": "Hesap; maliyet yöntemi, hesap türü, vergi dilimi veya yıllık mahsup gibi ülkeye ve ürüne özgü kuralları modellemez.",
+              "2": "Kullanacağınız oranı tabi olduğunuz kurallara göre bağımsız olarak doğrulamalısınız."
+            }
+          },
+          "limits": {
+            "title": "Modelin sınırları",
+            "body": "MoneyTrace deterministik bir senaryo aracıdır. Aynı girdiler her zaman aynı sonucu üretir; sonuçlar gelecek performans tahmini veya garantisi değildir.",
+            "bullets": {
+              "0": "Getiri, enflasyon ve kur oranlarının dönem boyunca sabit kaldığı varsayılır.",
+              "1": "Varlık dağılımı, oynaklık, sıra riski ve yeniden dengeleme ayrı ayrı modellenmez.",
+              "2": "Ücretler, komisyonlar ve ürüne özgü vergiler yalnızca girdilere dahil edildiyse sonuçlara yansır.",
+              "3": "Karar vermeden önce birden fazla senaryo deneyin ve önemli varsayımları güncel birincil kaynaklarla doğrulayın."
+            }
+          }
+        }
+      },
       "about": {
         "title": "MoneyTrace Hakkında",
-        "description": "MoneyTrace; bileşik getiri, düzenli katkı, enflasyon, döviz kuru, çekim ve stopaj etkilerini incelemenize yardımcı olan açık kaynaklı bir portföy projeksiyon aracıdır.",
+        "description": "MoneyTrace; bileşik getiri, düzenli katkı, enflasyon, döviz kuru, çekim ve tahmini kazanç vergisi etkilerini incelemenize yardımcı olan açık kaynaklı bir portföy projeksiyon aracıdır.",
         "sections": {
           "purpose": {
             "title": "Neden var?",
@@ -37,7 +99,7 @@
             "title": "Neler yapabilirsiniz?",
             "body": "Uygulama, deterministik bir hesaplama motorunu isteğe bağlı AI desteğiyle bir araya getirir.",
             "bullets": {
-              "0": "Başlangıç sermayesi, aylık katkı, katkı artışı, çekimler ve stopajı modelleyebilirsiniz.",
+              "0": "Başlangıç sermayesi, aylık katkı, katkı artışı, çekimler ve isteğe bağlı tahmini kazanç vergisini modelleyebilirsiniz.",
               "1": "Nominal değeri, bugünkü satın alma gücünü ve referans döviz değerini zaman içinde karşılaştırabilirsiniz.",
               "2": "Senaryoları tarayıcınızda yerel olarak kaydedip karşılaştırabilir, dışa veya içe aktarabilirsiniz.",
               "3": "İsteğe bağlı olarak bir AI sağlayıcısından makroekonomik varsayımlar isteyebilir veya portföy bağlamınızı konuşabilirsiniz."

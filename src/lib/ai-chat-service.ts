@@ -14,9 +14,18 @@ import type {
   ProjectionSummary,
   ProjectionResult,
 } from "../types"
-import { GEMINI_MODEL, OPENAI_MODEL, AiForecastError } from "./ai-service"
+import {
+  GEMINI_MODEL,
+  OPENAI_MODEL,
+  AiForecastError,
+  createAbortError,
+  isAbortError,
+  throwIfAborted,
+} from "./ai-service"
 import { TOOL_SCHEMAS, parseToolCalls } from "./ai-tools"
 import { callDemoProxy } from "./demo-proxy"
+import { extractOpenAiResponseText } from "./ai-response"
+import { getLanguageDisplayName } from "./locales"
 
 // ─── Helpers shared with ai-service ──────────────────────────────────────────
 
@@ -112,15 +121,24 @@ function formatCurrency(value: number, decimals = 2): string {
   })
 }
 
-export function buildSystemPrompt(ctx: PortfolioContext): string {
-  const langLabel = ctx.language === "tr" ? "Turkish" : "English"
+export function buildSystemPrompt(
+  ctx: PortfolioContext,
+  autoApproveMutations = false,
+): string {
+  const langLabel = getLanguageDisplayName(ctx.language)
   const today = new Date().toISOString().slice(0, 10)
   const p = ctx.params
   const isMonthly = p.rateInputPeriod === "monthly"
   const periodLabel = isMonthly ? "monthly" : "annual"
+  const savedChangeRule = autoApproveMutations
+    ? `   • If the user explicitly asks to save those values, call the appropriate mutating tool. Automatic approval is enabled, so do not ask for confirmation. Never mutate app data based only on an analysis, suggestion, or hypothetical question.`
+    : `   • If the user wants those hypothetical values SAVED into the portfolio, propose the change with a mutating tool call and wait for approval.`
+  const mutationApprovalRule = autoApproveMutations
+    ? `• Mutating tools (apply_params, set_custom_withdrawal, clear_custom_withdrawals, create_scenario, reset_params) are automatically authorized only for changes the user explicitly requested. Never claim data changed before receiving the tool result.`
+    : `• Mutating tools (apply_params, set_custom_withdrawal, clear_custom_withdrawals, create_scenario, reset_params) ALWAYS trigger an approval prompt in the UI — never claim the data was changed before the user approves.`
 
   const lines: string[] = [
-    `You are MoneyTrace AI, a knowledgeable and friendly financial analysis assistant.`,
+    `You are MoneyTrace AI, a clear, direct, and professional financial analysis assistant.`,
     `Today is ${today}. The user's local currency is ${p.usdRate === 1 ? "USD" : ctx.currencyCode}.`,
     `Always respond in ${langLabel}.`,
     ``,
@@ -157,7 +175,7 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
       `• Total Actual Withdrawals (Gross Nominal): ${formatCurrency(s.totalWithdrawals)} ${ctx.currencyCode}`,
       `• Total Net Withdrawals Landed in Hand (Nominal): ${formatCurrency(s.totalNetWithdrawals)} ${ctx.currencyCode}`,
       `• Total Actual Withdrawals (Real): ${formatCurrency(s.totalRealWithdrawals)} ${ctx.currencyCode}`,
-      `• Total Withholding Tax (Stopaj): ${formatCurrency(s.totalWithholdingTax)} ${ctx.currencyCode}`,
+      `• Total Withholding Tax: ${formatCurrency(s.totalWithholdingTax)} ${ctx.currencyCode}`,
       `• Final Exchange Rate: ${s.finalUsdRate.toFixed(4)}`,
     )
   }
@@ -165,36 +183,39 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
   if (ctx.projection && ctx.projection.rows.length > 0) {
     lines.push(
       ``,
-      `── Full Month-by-Month Calculated Projection Data (${ctx.projection.rows.length} months) ──`,
-      `Below is the complete, exact monthly calculation table rendered in the user's UI data tables and charts:`,
+      `── Monthly Projection Data ──`,
+      `The projection contains ${ctx.projection.rows.length} calculated monthly rows. They are intentionally omitted from this prompt to keep the context focused.`,
+      `For any exact month or year value, call "calculate_projection" with the required month numbers in "highlightMonths" and use only the returned figures.`,
     )
-    ctx.projection.rows.forEach((r) => {
-      lines.push(
-        `• Month ${r.month} (Y${r.yearIndex}M${r.monthInYear}): MonthlyDCA: ${formatCurrency(r.monthlyDca)} ${ctx.currencyCode} | TotalInvested: ${formatCurrency(r.totalInvested)} ${ctx.currencyCode} | RealTotalInvested: ${formatCurrency(r.realTotalInvested)} ${ctx.currencyCode} | NominalValue: ${formatCurrency(r.nominalValue)} ${ctx.currencyCode} | RealValue: ${formatCurrency(r.realValue)} ${ctx.currencyCode} | NominalProfit: ${formatCurrency(r.nominalProfit)} ${ctx.currencyCode} | NominalProfitChange(Delta): ${formatCurrency(r.nominalProfitChange)} ${ctx.currencyCode} | RealProfit: ${formatCurrency(r.realProfit)} ${ctx.currencyCode} | RealProfitChange(Delta): ${formatCurrency(r.realProfitChange)} ${ctx.currencyCode} | GrossWithdrawal: ${formatCurrency(r.withdrawal)} ${ctx.currencyCode} | WithholdingTax(Stopaj): ${formatCurrency(r.withholdingTax)} ${ctx.currencyCode} | NetWithdrawal(ElineGecen): ${formatCurrency(r.netWithdrawal)} ${ctx.currencyCode} | SafeWithdrawal(Nominal): ${formatCurrency(r.safeWithdrawal)} ${ctx.currencyCode} | SafeWithdrawal(Real): ${formatCurrency(r.realSafeWithdrawal)} ${ctx.currencyCode} | CumInflationFactor: ${r.cumulativeInflationFactor.toFixed(4)} | USDValue: $${formatCurrency(r.usdValue)} | USDRate: ${r.usdRate.toFixed(2)}`,
-      )
-    })
   }
 
   lines.push(
     ``,
     `── Strict Calculation & Data Integrity Protocol ──`,
     `1. DO NOT PERFORM CUSTOM CALCULATIONS BY DEFAULT:`,
-    `   • You must rely STRICTLY on the exact figures provided in the "Current Portfolio Parameters", "Projection Summary", and "Full Month-by-Month Calculated Projection Data" sections above.`,
-    `   • The dataset includes all monthly calculated values from the user's projection table: Monthly DCA, Total Invested (Nominal & Real), Portfolio Values (Nominal, Real, USD), Profits & Deltas, Gross Withdrawals, Withholding Tax (Stopaj), Net Withdrawals Landed in Hand (Eline Geçecek Net Tutar), Safe Withdrawals (Nominal & Real), Inflation Factors, and USD Exchange Rates.`,
-    `   • All monthly figures including withholding tax (stopaj), gross withdrawals, and net withdrawals landed in hand ARE pre-calculated and explicitly listed in the monthly data above. Do NOT state that monthly stopaj or net withdrawal data is missing.`,
+    `   • You must rely STRICTLY on the exact figures provided in "Current Portfolio Parameters", "Projection Summary", and tool results.`,
+    `   • Monthly rows are available through "calculate_projection", including DCA, invested totals, portfolio values, profits, withdrawals, withholding tax, net withdrawals, inflation factors, and exchange rates.`,
+    `   • When a requested monthly figure is not already in a tool result, retrieve it with "calculate_projection". Do not claim it is unavailable and do not estimate it yourself.`,
     ``,
     `2. PROTOCOL WHEN REQUIRED DATA IS OUTSIDE THE PROJECTION HORIZON:`,
     `   • If the user asks for a month/year beyond the current projection horizon (${p.targetYears} years) or for hypothetical parameters not in the current portfolio, call "calculate_projection" with the requested updates/highlightMonths to get the exact engine output.`,
-    `   • If the user wants those hypothetical values SAVED into the portfolio, propose the change with a mutating tool call and wait for approval.`,
+    savedChangeRule,
     ``,
     `3. NO HAND-MADE ESTIMATIONS:`,
     `   • NEVER produce your own multiplication/compounding numbers. Always resolve questions through "calculate_projection" and cite the returned figures.`,
     ``,
+    `── Mandatory Response Style ──`,
+    `• Start immediately with the answer. Never begin with a greeting, thanks, praise, agreement, validation, conversational filler, or a meta-preface, regardless of the response language.`,
+    `• Give the shortest response that still answers the question clearly and correctly. Do not restate the user's question or add background they did not request.`,
+    `• Never end with an offer to help, an invitation to continue, or an unnecessary follow-up question, regardless of the response language.`,
+    `• Ask one brief clarifying question only when missing information makes a correct or safe answer impossible. Ask it directly without filler.`,
+    `• Include a brief statement that AI analysis is not formal investment advice only when giving an individualized recommendation or material forward-looking financial guidance. Do not append it to factual portfolio or calculation answers.`,
+    `• These response-style rules also apply after tool results and after the user rejects a proposed tool call.`,
+    ``,
     `── General Guidelines ──`,
-    `• Answer financial questions about the user's portfolio, projections, and investment strategies concisely and professionally.`,
-    `• If the user asks something completely unrelated to finance or their portfolio, politely redirect.`,
+    `• Answer financial questions about the user's portfolio, projections, and investment strategies directly and professionally.`,
+    `• If the user asks something completely unrelated to finance or their portfolio, state the scope briefly without adding an invitation or follow-up question.`,
     `• Never fabricate portfolio data — only reference what is provided above or the results of tool calls.`,
-    `• Always include appropriate disclaimers that AI analysis is NOT formal investment advice.`,
     ``,
     `── Tool Calling Protocol ──`,
     `You can modify the app's portfolio data (form fields, custom withdrawals, scenarios) and run exact engine calculations on the fly. The app executes your requests and returns precise results.`,
@@ -202,19 +223,19 @@ export function buildSystemPrompt(ctx: PortfolioContext): string {
     `<TOOL_CALLS>[{"tool": "tool_name", "args": {...}}]</TOOL_CALLS>`,
     `• The block must contain RAW JSON only — never wrap it in markdown fences and never split it across multiple blocks.`,
     `• You may call several tools in one block. Tools run in order; later "calculate_projection" calls see earlier mutations that the user approved.`,
-    `• Mutating tools (apply_params, set_custom_withdrawal, clear_custom_withdrawals, create_scenario, reset_params) ALWAYS trigger an approval prompt in the UI — never claim the data was changed before the user approves.`,
+    mutationApprovalRule,
     `• Read-only tools (calculate_projection, forecast_economics) run instantly without approval.`,
     `• AVAILABLE TOOLS:`,
   )
   TOOL_SCHEMAS.forEach((schema) => {
     lines.push(
-      `  - ${schema.name} (${schema.kind === "read" ? "instant" : "requires approval"}): ${schema.description}`,
+      `  - ${schema.name} (${schema.kind === "read" ? "instant" : autoApproveMutations ? "auto-approved for explicit requests" : "requires approval"}): ${schema.description}`,
       `    args: ${schema.argsDoc}`,
     )
   })
   lines.push(
     `• After the app executes your calls, a "[Tool result]" message follows this message's context. Base your final answer STRICTLY on those returned figures — never estimate or recalculate by hand.`,
-    `• If the user rejects the proposed changes, do not apply them and continue the conversation politely.`,
+    `• If the user rejects the proposed changes, do not apply them. State this briefly and continue only when a direct answer is needed, without an offer or follow-up question.`,
     `• NEVER emit a tool call block unless you actually need to change data or you need exact engine figures that are not already in the context above.`,
   )
 
@@ -237,6 +258,8 @@ export interface ChatRequest {
   messages: ChatMessage[]
   context: PortfolioContext
   isDemo?: boolean
+  autoApproveMutations?: boolean
+  signal?: AbortSignal
 }
 
 import { APP_CONFIG } from "../config"
@@ -267,6 +290,7 @@ async function chatWithGemini(
   model: string,
   systemPrompt: string,
   messages: ChatMessage[],
+  signal?: AbortSignal,
 ): Promise<string> {
   const endpoint = `${GEMINI_API_BASE}/${model}:generateContent`
 
@@ -291,8 +315,10 @@ async function chatWithGemini(
           maxOutputTokens: APP_CONFIG.ai.maxTokens,
         },
       }),
+      signal,
     })
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError(
       "network",
       "Network error while calling Gemini API.",
@@ -306,7 +332,8 @@ async function chatWithGemini(
   let data: unknown
   try {
     data = await response.json()
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError("parse", "Invalid JSON response from Gemini API.")
   }
 
@@ -333,13 +360,14 @@ async function chatWithOpenAi(
   systemPrompt: string,
   messages: ChatMessage[],
   label: string,
+  signal?: AbortSignal,
 ): Promise<string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "HTTP-Referer":
       typeof window !== "undefined"
         ? window.location.origin
-        : "https://moneytrace.metee.com.tr",
+        : APP_CONFIG.app.siteUrl,
     "X-Title": "MoneyTrace",
   }
   if (apiKey.trim()) {
@@ -367,8 +395,10 @@ async function chatWithOpenAi(
         temperature: 0.8,
         max_tokens: APP_CONFIG.ai.maxTokens,
       }),
+      signal,
     })
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw toNetworkError(endpoint, label)
   }
 
@@ -379,16 +409,12 @@ async function chatWithOpenAi(
   let data: unknown
   try {
     data = await response.json()
-  } catch {
+  } catch (err) {
+    if (isAbortError(err, signal)) throw createAbortError()
     throw new AiForecastError("parse", `Invalid JSON response from ${label}.`)
   }
 
-  const choices = (
-    data as {
-      choices?: Array<{ message?: { content?: string } }>
-    }
-  ).choices
-  const rawContent = choices?.[0]?.message?.content ?? ""
+  const rawContent = extractOpenAiResponseText(data)
   const cleanedContent = cleanReasoningTokens(rawContent)
   if (!cleanedContent) {
     throw new AiForecastError("parse", `${label} response has no text content.`)
@@ -417,6 +443,7 @@ export interface ChatServiceResponse {
 export async function sendChatMessage(
   request: ChatRequest,
 ): Promise<ChatServiceResponse> {
+  throwIfAborted(request.signal)
   if (request.isDemo) {
     // Cooldown rate limit (persisted so a page reload cannot reset it)
     const now = Date.now()
@@ -443,7 +470,15 @@ export async function sendChatMessage(
 
   // Security: Truncate user messages if using demo key to prevent excessive
   // token abuse. Internal tool-protocol messages are exempt.
-  const sanitizeMessages = request.messages.map((m) => {
+  const firstUserMessageIndex = request.messages.findIndex(
+    (message) => message.role === "user",
+  )
+  const conversationMessages =
+    firstUserMessageIndex > 0
+      ? request.messages.slice(firstUserMessageIndex)
+      : request.messages
+
+  const sanitizeMessages = conversationMessages.map((m) => {
     if (
       request.isDemo &&
       !m.internal &&
@@ -458,31 +493,35 @@ export async function sendChatMessage(
     return m
   })
 
-  const systemPrompt = buildSystemPrompt(request.context)
+  const systemPrompt = buildSystemPrompt(
+    request.context,
+    request.autoApproveMutations,
+  )
   let responseText: string
 
   try {
     if (request.isDemo) {
-      const data = await callDemoProxy("chat", {
-        model: APP_CONFIG.ai.models.demo,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...sanitizeMessages
-            .filter((m) => m.role !== "system")
-            .map((m) => ({
-              role: m.role as "user" | "assistant",
-              content: m.content,
-            })),
-        ],
-        temperature: 0.8,
-        max_tokens: APP_CONFIG.ai.maxTokens,
-      })
-      const choices = (
-        data as {
-          choices?: Array<{ message?: { content?: string } }>
-        }
-      ).choices
-      const rawContent = choices?.[0]?.message?.content ?? ""
+      const data = await callDemoProxy(
+        "chat",
+        {
+          model: APP_CONFIG.ai.models.demo,
+          stream: false,
+          reasoning: APP_CONFIG.ai.demo.reasoning,
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...sanitizeMessages
+              .filter((m) => m.role !== "system")
+              .map((m) => ({
+                role: m.role as "user" | "assistant",
+                content: m.content,
+              })),
+          ],
+          temperature: 0.8,
+          max_tokens: APP_CONFIG.ai.maxTokens,
+        },
+        request.signal,
+      )
+      const rawContent = extractOpenAiResponseText(data)
       const cleanedContent = cleanReasoningTokens(rawContent)
       if (!cleanedContent) {
         throw new AiForecastError(
@@ -516,6 +555,7 @@ export async function sendChatMessage(
         systemPrompt,
         sanitizeMessages,
         "custom provider",
+        request.signal,
       )
     } else if (!request.apiKey.trim()) {
       throw new AiForecastError("auth", "No API key provided.")
@@ -528,6 +568,7 @@ export async function sendChatMessage(
         model,
         systemPrompt,
         sanitizeMessages,
+        request.signal,
       )
     } else {
       const model =
@@ -540,10 +581,11 @@ export async function sendChatMessage(
         systemPrompt,
         sanitizeMessages,
         "OpenAI API",
+        request.signal,
       )
     }
   } catch (err) {
-    if (request.isDemo) {
+    if (request.isDemo && !isAbortError(err, request.signal)) {
       useSettingsStore.getState().decrementDemoChatCount()
     }
     throw err

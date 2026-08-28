@@ -252,6 +252,7 @@ export interface Settings {
   aiBaseUrl?: string
   aiCorsProxy?: string
   aiCorsProxyEnabled?: boolean
+  aiAutoApproveMutations?: boolean
   useDemoApi?: boolean
   demoForecastCount?: number
   demoChatCount?: number

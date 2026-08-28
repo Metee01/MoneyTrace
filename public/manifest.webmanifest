@@ -1,0 +1,17 @@
+{
+  "name": "MoneyTrace Portfolio Calculator",
+  "short_name": "MoneyTrace",
+  "description": "Inflation-adjusted portfolio projections with compound growth, regular contributions, and scenario comparison.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

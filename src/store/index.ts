@@ -1,5 +1,5 @@
 /**
- * MoneyTrace Store Modülü
+ * MoneyTrace Store Module
  */
 
 export * from "./portfolio-store"

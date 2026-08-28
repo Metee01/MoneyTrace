@@ -28,6 +28,7 @@ const mockStorage = {
 import type { AiForecastResult, AiToolCall, ProjectionParams } from "../types"
 import {
   TOOL_SCHEMAS,
+  getToolCallDisposition,
   parseToolCalls,
   stripToolCalls,
   sanitizeParams,
@@ -40,6 +41,7 @@ import {
   usePortfolioStore,
   DEFAULT_PROJECTION_PARAMS,
 } from "../store/portfolio-store"
+import { AiForecastError, createAbortError } from "./ai-service"
 
 function fakeDeps(overrides: Partial<ToolDeps> = {}): ToolDeps {
   let params: ProjectionParams = { ...DEFAULT_PROJECTION_PARAMS }
@@ -67,7 +69,7 @@ function fakeDeps(overrides: Partial<ToolDeps> = {}): ToolDeps {
       expectedInflationRate: 3.2,
       expectedUsdGrowthRate: 1.1,
       expectedReturnRate: 8.5,
-      usdRate: 36.4,
+      usdRate: 0.92,
       rationale: "Test forecast",
     }),
     ...overrides,
@@ -94,6 +96,31 @@ async function runToolTests() {
       (s) => s.name === "calculate_projection" && s.kind === "read",
     ),
     "calculate_projection must be a read tool",
+  )
+  console.assert(
+    getToolCallDisposition([]) === "none",
+    "No tool calls should require no action",
+  )
+  console.assert(
+    getToolCallDisposition([
+      { tool: "forecast_economics", args: {} },
+      { tool: "calculate_projection", args: {} },
+    ]) === "execute",
+    "Read-only tool calls should execute automatically",
+  )
+  console.assert(
+    getToolCallDisposition([
+      { tool: "forecast_economics", args: {} },
+      { tool: "apply_params", args: { monthlyDca: 700 } },
+    ]) === "approval",
+    "Any mutation tool should require approval",
+  )
+  console.assert(
+    getToolCallDisposition(
+      [{ tool: "apply_params", args: { monthlyDca: 700 } }],
+      true,
+    ) === "execute",
+    "Auto-approved mutation tools should execute without pausing",
   )
 
   // Test 2: parseToolCalls — single object block
@@ -239,6 +266,82 @@ async function runToolTests() {
   )
   console.assert(callsRecord(deps).length === 0, "store must stay untouched")
 
+  const strictDeps = fakeDeps()
+  const rejectedAutoMutation = await executeToolCall(
+    { tool: "apply_params", args: { monthlyDca: 1e20 } },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    !rejectedAutoMutation.ok &&
+      strictDeps.getParams().monthlyDca ===
+        DEFAULT_PROJECTION_PARAMS.monthlyDca,
+    "Auto-approved out-of-range updates must fail without changing params",
+  )
+  const rejectedAutoScenario = await executeToolCall(
+    { tool: "create_scenario", args: {} },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    !rejectedAutoScenario.ok,
+    "Auto-approved scenario creation must require an explicit name",
+  )
+  const rejectedTypoWithdrawal = await executeToolCall(
+    {
+      tool: "set_custom_withdrawal",
+      args: { month: 13, ammount: 50000 },
+    },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    !rejectedTypoWithdrawal.ok,
+    "Auto-approved mutations must reject unknown argument names",
+  )
+  const rejectedBooleanWithdrawal = await executeToolCall(
+    { tool: "set_custom_withdrawal", args: { month: 13, amount: true } },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    !rejectedBooleanWithdrawal.ok,
+    "Auto-approved mutations must reject non-numeric amount types",
+  )
+  const rejectedScenarioTypo = await executeToolCall(
+    {
+      tool: "create_scenario",
+      args: { name: "Strict Scenario", update: { monthlyDca: 900 } },
+    },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    !rejectedScenarioTypo.ok,
+    "Auto-approved scenario creation must reject misspelled update arguments",
+  )
+  const acceptedAutoMutation = await executeToolCall(
+    { tool: "apply_params", args: { monthlyDca: 800 } },
+    strictDeps,
+    true,
+    undefined,
+    true,
+  )
+  console.assert(
+    acceptedAutoMutation.ok && strictDeps.getParams().monthlyDca === 800,
+    "Valid auto-approved mutations should execute",
+  )
+
   // Test 11: apply_params (approved) via fake deps
   console.log("\n--- Test 11: apply_params (approved) ---")
   const applyResult = await executeToolCall(
@@ -347,7 +450,33 @@ async function runToolTests() {
   console.log(`Forecast ok: ${forecastResult.ok}`)
   console.assert(forecastResult.ok, "forecast tool failed")
   const parsed = JSON.parse(forecastResult.output) as AiForecastResult
-  console.assert(parsed.usdRate === 36.4, "forecast payload mismatch")
+  console.assert(parsed.usdRate === 0.92, "forecast payload mismatch")
+
+  const abortController = new AbortController()
+  const pendingForecast = executeToolCall(
+    { tool: "forecast_economics", args: {} },
+    fakeDeps({
+      forecastEconomics: async (signal) =>
+        new Promise((_resolve, reject) => {
+          signal?.addEventListener("abort", () => reject(createAbortError()), {
+            once: true,
+          })
+        }),
+    }),
+    false,
+    abortController.signal,
+  )
+  abortController.abort()
+  let abortError: unknown
+  try {
+    await pendingForecast
+  } catch (error) {
+    abortError = error
+  }
+  console.assert(
+    abortError instanceof AiForecastError && abortError.code === "aborted",
+    "forecast tool must propagate cancellation instead of returning a tool error",
+  )
 
   // Test 15: unknown tool
   console.log("\n--- Test 15: Unknown Tool ---")

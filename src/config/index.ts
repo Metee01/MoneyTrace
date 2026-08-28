@@ -9,8 +9,9 @@ export const APP_CONFIG = {
   /** Application metadata */
   app: {
     name: "MoneyTrace",
-    version: "1.5.0",
-    defaultLanguage: "en",
+    version: "1.7.0",
+    siteUrl: "https://moneytrace.metee.com.tr",
+    defaultLanguage: "tr",
     defaultCurrencyCode: "USD",
     defaultCurrencySymbol: "$",
     supportedLanguages: ["en", "tr"] as const,
@@ -53,6 +54,11 @@ export const APP_CONFIG = {
       maxMessageLength: 500,
       /** Rate-limiting cooldown period between messages in milliseconds */
       cooldownMs: 3000,
+      /** Keep reasoning models from exhausting the output budget before their final answer. */
+      reasoning: {
+        effort: "medium" as const,
+        exclude: true,
+      },
     },
     /** Direct links to acquire API keys */
     links: {

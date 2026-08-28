@@ -1,9 +1,9 @@
 {
   "name": "moneytrace",
   "private": true,
-  "version": "1.5.0",
+  "version": "1.7.0",
   "type": "module",
-  "description": "A personal finance management application built with React, TypeScript, and Tailwind CSS.",
+  "description": "An open-source, inflation-adjusted portfolio projection calculator with scenario analysis and optional AI assistance.",
   "license": "MIT",
   "author": "",
   "engines": {
@@ -15,7 +15,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && tsx --tsconfig tsconfig.app.json scripts/generate-static-pages.tsx && tsx --tsconfig tsconfig.app.json scripts/verify-seo.ts",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -23,7 +23,11 @@
     "test:engine": "tsx src/engine/engine.test.ts",
     "test:store": "tsx src/store/store.test.ts && tsx src/store/chat-store.test.ts",
     "test:tools": "tsx src/lib/ai-tools.test.ts",
-    "test": "npm run test:engine && npm run test:store && npm run test:tools"
+    "test:input": "tsx src/lib/numeric-input.test.ts",
+    "test:chat-service": "tsx src/lib/ai-chat-service.test.ts",
+    "test:ai-service": "tsx src/lib/ai-service.test.ts",
+    "test:demo-api": "tsx scripts/demo-api.test.ts",
+    "test": "npm run test:engine && npm run test:store && npm run test:tools && npm run test:input && npm run test:chat-service && npm run test:ai-service && npm run test:demo-api"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

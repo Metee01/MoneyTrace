@@ -55,6 +55,10 @@ async function runStoreTests() {
     useSettingsStore.getState().language === "en",
     "Language update failed",
   )
+  console.assert(
+    useSettingsStore.getState().aiAutoApproveMutations === false,
+    "AI mutation auto-approval should be disabled by default",
+  )
 
   // Test 2: Portfolio Store Defaults & Parameter Actions
   console.log("\n--- Test 2: Portfolio Store Parameter Actions ---")
@@ -128,6 +132,34 @@ async function runStoreTests() {
     "Baseline scenario mismatch",
   )
 
+  const editedScenarioParams = {
+    ...sc2.params,
+    expectedReturnRate: 6.5,
+    expectedInflationRate: 2.5,
+  }
+  usePortfolioStore.getState().updateScenario(sc2.id, {
+    name: "Updated Pessimistic Scenario",
+    color: "#8B5CF6",
+    params: editedScenarioParams,
+  })
+  const updatedScenario = usePortfolioStore
+    .getState()
+    .scenarios.find((scenario) => scenario.id === sc2.id)
+  console.assert(
+    updatedScenario?.name === "Updated Pessimistic Scenario" &&
+      updatedScenario.color === "#8B5CF6",
+    "Scenario metadata update failed",
+  )
+  console.assert(
+    updatedScenario?.params.expectedReturnRate === 6.5 &&
+      updatedScenario.params.expectedInflationRate === 2.5,
+    "Scenario parameter update failed",
+  )
+  console.assert(
+    usePortfolioStore.getState().baselineScenarioId === sc1.id,
+    "Editing a scenario should not change the baseline",
+  )
+
   usePortfolioStore.getState().deleteScenario(sc1.id)
   console.log(
     `After Deleting Baseline, New Baseline ID: ${usePortfolioStore.getState().baselineScenarioId} (Expected: ${sc2.id})`,
@@ -135,6 +167,13 @@ async function runStoreTests() {
   console.assert(
     usePortfolioStore.getState().baselineScenarioId === sc2.id,
     "Baseline fallback after delete failed",
+  )
+  console.assert(
+    usePortfolioStore
+      .getState()
+      .scenarios.find((scenario) => scenario.id === sc2.id)?.isBaseline ===
+      true,
+    "Baseline fallback should update the scenario marker",
   )
 
   // Test 5: LocalStorage Keys
@@ -206,6 +245,7 @@ async function runStoreTests() {
   useSettingsStore.getState().setAiSettings({
     corsProxy: "https://corsproxy.io/?url={url}",
     corsProxyEnabled: true,
+    autoApproveMutations: true,
   })
   console.log(
     `CORS Proxy: ${useSettingsStore.getState().aiCorsProxy} (Expected: https://corsproxy.io/?url={url})`,
@@ -221,6 +261,10 @@ async function runStoreTests() {
   console.assert(
     useSettingsStore.getState().aiCorsProxyEnabled === true,
     "CORS proxy toggle update failed",
+  )
+  console.assert(
+    useSettingsStore.getState().aiAutoApproveMutations === true,
+    "AI mutation auto-approval update failed",
   )
 
   await new Promise((resolve) => setTimeout(resolve, 50))
@@ -253,6 +297,10 @@ async function runStoreTests() {
     persistedSettings.state?.aiCorsProxyEnabled === true,
     "CORS proxy toggle not persisted",
   )
+  console.assert(
+    persistedSettings.state?.aiAutoApproveMutations === true,
+    "AI mutation auto-approval not persisted",
+  )
 
   useSettingsStore.getState().resetSettings()
   console.log(
@@ -282,6 +330,10 @@ async function runStoreTests() {
   console.assert(
     useSettingsStore.getState().aiCorsProxyEnabled === false,
     "Reset settings should disable CORS proxy toggle",
+  )
+  console.assert(
+    useSettingsStore.getState().aiAutoApproveMutations === false,
+    "Reset settings should disable AI mutation auto-approval",
   )
 
   // Test 7: Demo API Quotas & Toggle

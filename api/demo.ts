@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * MoneyTrace - Demo API Proxy (Vercel Serverless Function)
  *
@@ -11,7 +13,7 @@
  * otherwise).
  */
 
-import { APP_CONFIG } from "../src/config"
+import { APP_CONFIG } from "../src/config/index.js"
 
 export const config = { runtime: "edge" }
 
@@ -48,7 +50,7 @@ function createMemoryStore(): CounterStore {
   return {
     async incr(key) {
       const entry = map.get(key)
-      if (!entry || entry.expire <= now()) {
+      if (!entry || (entry.expire !== 0 && entry.expire <= now())) {
         map.set(key, { count: 1, expire: 0 })
         return 1
       }
@@ -69,7 +71,7 @@ function createMemoryStore(): CounterStore {
 }
 
 const memoryStore = createMemoryStore()
-let redis: typeof import("@upstash/redis").Redis | null | undefined
+let redis: import("@upstash/redis").Redis | null | undefined
 
 async function resolveStore(): Promise<CounterStore> {
   if (redis === undefined) {
@@ -93,7 +95,7 @@ async function resolveStore(): Promise<CounterStore> {
       return redis!.incr(key)
     },
     async decr(key) {
-      return redis!.decr(key)
+      await redis!.decr(key)
     },
     async acquire(key, ttlMs) {
       const result = await redis!.set(key, "1", { nx: true, px: ttlMs })
@@ -147,12 +149,20 @@ export default async function handler(req: Request): Promise<Response> {
     })
   }
 
-  let body: Record<string, unknown>
+  let parsedBody: unknown
   try {
-    body = await req.json()
+    parsedBody = await req.json()
   } catch {
     return json(400, { error: { message: "Invalid JSON body." } })
   }
+  if (
+    !parsedBody ||
+    typeof parsedBody !== "object" ||
+    Array.isArray(parsedBody)
+  ) {
+    return json(400, { error: { message: "Invalid JSON body." } })
+  }
+  const body = parsedBody as Record<string, unknown>
 
   const mode = body.mode === "chat" ? "chat" : "forecast"
   const userId = safeId(body.userId)
@@ -218,26 +228,47 @@ export default async function handler(req: Request): Promise<Response> {
     })
   }
 
-  const upstreamBody = { ...(payload as Record<string, unknown>), model: MODEL }
+  const upstreamBody = {
+    ...(payload as Record<string, unknown>),
+    model: MODEL,
+    stream: false,
+    reasoning: APP_CONFIG.ai.demo.reasoning,
+  }
+  if (req.signal.aborted) {
+    return json(499, { error: { message: "Request cancelled by client." } })
+  }
+
+  const upstreamController = new AbortController()
+  const abortUpstream = () => upstreamController.abort()
+  const timeoutId = setTimeout(abortUpstream, UPSTREAM_TIMEOUT_MS)
+  req.signal.addEventListener("abort", abortUpstream, { once: true })
+
   let upstream: Response
+  let upstreamText: string
   try {
     upstream = await fetch(PROVIDER_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${DEMO_KEY}`,
-        "HTTP-Referer": "https://moneytrace.metee.com.tr",
+        "HTTP-Referer": APP_CONFIG.app.siteUrl,
         "X-Title": APP_CONFIG.app.name,
       },
       body: JSON.stringify(upstreamBody),
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+      signal: upstreamController.signal,
     })
+    upstreamText = await upstream.text()
   } catch {
-    await rollbackQuota()
+    if (!req.signal.aborted) await rollbackQuota()
+    if (req.signal.aborted) {
+      return json(499, { error: { message: "Request cancelled by client." } })
+    }
     return json(502, { error: { message: "Upstream provider unreachable." } })
+  } finally {
+    clearTimeout(timeoutId)
+    req.signal.removeEventListener("abort", abortUpstream)
   }
 
-  const upstreamText = await upstream.text()
   if (!upstream.ok) {
     await rollbackQuota()
     return new Response(upstreamText, {

@@ -1,9 +1,38 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
     {
-      "source": "/((?!api/|@|src/|node_modules/|__)(?!.*\\.).*)",
-      "destination": "/index.html"
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "moneytrace.vercel.app" }],
+      "destination": "https://moneytrace.metee.com.tr/:path*",
+      "permanent": true
+    },
+    { "source": "/tr", "destination": "/", "permanent": true },
+    { "source": "/about", "destination": "/en/about", "permanent": true },
+    { "source": "/privacy", "destination": "/en/privacy", "permanent": true },
+    { "source": "/cookies", "destination": "/en/cookies", "permanent": true },
+    { "source": "/contact", "destination": "/en/contact", "permanent": true },
+    {
+      "source": "/financial-disclaimer",
+      "destination": "/en/financial-disclaimer",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
+      "source": "/assets/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     }
   ]
 }

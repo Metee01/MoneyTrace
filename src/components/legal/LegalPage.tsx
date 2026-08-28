@@ -1,4 +1,3 @@
-import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import {
   ArrowLeft,
@@ -7,6 +6,7 @@ import {
   GitFork,
   Info,
   Mail,
+  BookOpenText,
   ShieldCheck,
   TriangleAlert,
   type LucideIcon,
@@ -14,12 +14,14 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { LEGAL_PAGES, type LegalPageDefinition } from "./legal-pages"
+import { getSitePath, type SiteLanguage } from "@/seo/site"
 
 interface LegalPageProps {
   page: LegalPageDefinition
 }
 
 const PAGE_ICONS: Record<LegalPageDefinition["id"], LucideIcon> = {
+  methodology: BookOpenText,
   about: Info,
   privacy: ShieldCheck,
   cookies: Cookie,
@@ -28,27 +30,34 @@ const PAGE_ICONS: Record<LegalPageDefinition["id"], LucideIcon> = {
 }
 
 export function LegalPage({ page }: LegalPageProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const Icon = PAGE_ICONS[page.id]
   const pageKey = `legal.pages.${page.id}`
-
-  useEffect(() => {
-    document.title = `${t(`${pageKey}.title`)} | MoneyTrace`
-    const description = document.querySelector<HTMLMetaElement>(
-      'meta[name="description"]',
-    )
-    description?.setAttribute("content", t(`${pageKey}.description`))
-  }, [pageKey, t])
+  const language: SiteLanguage = (
+    i18n.resolvedLanguage ?? i18n.language
+  ).startsWith("en")
+    ? "en"
+    : "tr"
+  const alternateLanguage: SiteLanguage = language === "tr" ? "en" : "tr"
 
   return (
     <article className="mx-auto max-w-4xl space-y-8 pb-8">
-      <a
-        href="/"
-        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        {t("legal.backToApp")}
-      </a>
+      <div className="flex items-center justify-between gap-4">
+        <a
+          href={getSitePath("home", language)}
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          {t("legal.backToApp")}
+        </a>
+        <a
+          href={getSitePath(page.id, alternateLanguage)}
+          hrefLang={alternateLanguage}
+          className="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-muted"
+        >
+          {alternateLanguage.toUpperCase()}
+        </a>
+      </div>
 
       <header className="space-y-5 border-b pb-8">
         <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -75,7 +84,7 @@ export function LegalPage({ page }: LegalPageProps) {
           {LEGAL_PAGES.map((item) => (
             <li key={item.id}>
               <a
-                href={item.path}
+                href={getSitePath(item.id, language)}
                 aria-current={item.id === page.id ? "page" : undefined}
                 className="inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground aria-[current=page]:border-primary aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground"
               >
@@ -151,7 +160,7 @@ export function LegalPage({ page }: LegalPageProps) {
         </div>
       ) : (
         <div className="flex flex-wrap gap-3">
-          <Button render={<a href="/" />}>
+          <Button render={<a href={getSitePath("home", language)} />}>
             {t("legal.actions.openCalculator")}
           </Button>
           <Button

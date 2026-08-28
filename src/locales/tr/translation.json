@@ -6,6 +6,7 @@
     "clear": "Temizle",
     "save": "Kaydet",
     "cancel": "İptal",
+    "close": "Kapat",
     "delete": "Sil",
     "copy": "Kopyala",
     "edit": "Düzenle",
@@ -20,7 +21,8 @@
     "loading": "Yükleniyor...",
     "error": "Hata",
     "success": "Başarılı",
-    "website": "Metee.com.tr"
+    "website": "Metee.com.tr",
+    "switchLanguage": "İngilizce sürüme geç"
   },
   "portfolio": {
     "title": "Portföy Girişi",
@@ -40,7 +42,7 @@
     "expectedInflationRate": "Tahmini Yıllık Enflasyon Oranı (%)",
     "expectedInflationRateHelp": "Paranın satın alma gücünü düşüren yıllık enflasyon beklentisi.",
     "usdRate": "Başlangıç Döviz Kuru (Referans / Yerel)",
-    "usdRateHelp": "Yerel para biriminiz ile hedeflediğiniz referans döviz kuru (USD kullanılması tavsiye edilir).",
+    "usdRateHelp": "Yerel para biriminiz ile karşılaştırmak istediğiniz referans para birimi arasındaki kur.",
     "expectedUsdGrowthRate": "Tahmini Yıllık Referans Döviz Artışı (%)",
     "expectedUsdGrowthRateHelp": "Referans dövizin yerel para birimi karşısındaki yıllık ortalama yükseliş yüzdesi.",
     "expectedReturnRateMonthly": "Tahmini Aylık Portföy Getirisi (%)",
@@ -63,8 +65,8 @@
     "portfolioNamePlaceholder": "Örn: 10 Yıllık Birikim Planı",
     "portfolioDesc": "Açıklama (Opsiyonel)",
     "savedSuccess": "Portföy başarıyla kaydedildi!",
-    "withholdingTaxRate": "Stopaj Oranı (%)",
-    "withholdingTaxRateHelp": "Yatırım getirisi üzerinden kesilen aylık vergi oranı (örn. mevduat için %15, fon için %10)."
+    "withholdingTaxRate": "Tahmini Kazanç Vergisi Oranı (%)",
+    "withholdingTaxRateHelp": "Çekimin kazanç kısmına uygulanacak basitleştirilmiş tahmini oran. Kendi vergi sisteminize uygun güncel oranı doğrulayın."
   },
   "validation": {
     "positiveNumber": "Lütfen 0 veya daha büyük bir sayı girin.",
@@ -92,19 +94,19 @@
     "clearCustomWithdrawals": "Özel Çekimleri Sıfırla",
     "usdRateCol": "Döviz Kuru",
     "totalRows": "Toplam {{count}} dönem listeleniyor",
-    "withholdingTaxCol": "Stopaj Kesintisi",
+    "withholdingTaxCol": "Tahmini Vergi",
     "nominalProfitChangeCol": "Nominal Kar Δ",
     "realProfitChangeCol": "Reel Kar Δ",
-    "taxCalcButton": "Stopaj Hesapla",
-    "taxCalcTitle": "Çekim Stopaj Hesaplayıcı",
+    "taxCalcButton": "Tahmini Vergiyi Hesapla",
+    "taxCalcTitle": "Çekim Vergisi Tahmini",
     "taxCalcAmount": "Çekmek İstediğiniz Tutar",
     "taxCalcPortfolioValue": "Portföy Değeri",
     "taxCalcInvested": "Yatırılan Anapara",
     "taxCalcProfitRatio": "Kâr Oranı",
     "taxCalcProfitPortion": "Kâr Payı",
-    "taxCalcTaxAmount": "Stopaj Kesintisi",
+    "taxCalcTaxAmount": "Tahmini Vergi",
     "taxCalcNetAmount": "Net Eline Geçen",
-    "taxCalcNoProfit": "Bu dönemde kâr bulunmadığından stopaj uygulanmaz.",
+    "taxCalcNoProfit": "Bu dönemde kâr bulunmadığından tahmini vergi uygulanmaz.",
     "taxCalcExceedsValue": "Çekim tutarı portföy değerini aşamaz."
   },
   "projection": {
@@ -144,9 +146,22 @@
   "scenarios": {
     "title": "Senaryo Yönetimi",
     "newScenario": "Yeni Senaryo",
+    "newScenarioDescription": "Mevcut portföy parametrelerini yeni bir senaryo olarak kaydedin.",
+    "editScenario": "Senaryoyu Düzenle",
+    "editScenarioDescription": "Senaryo adını, rengini ve projeksiyon parametrelerini güncelleyin.",
     "scenarioName": "Senaryo Adı",
     "scenarioNamePlaceholder": "Örn: İyimser Senaryo",
+    "scenarioColor": "Senaryo Rengi",
+    "scenarioParameters": "Projeksiyon Parametreleri",
     "compareScenarios": "Senaryoları Karşılaştır",
+    "comparisonDescription": "{{count}} senaryo yan yana karşılaştırılıyor",
+    "tableScenario": "Senaryo",
+    "tableReturnRate": "Getiri Oranı",
+    "tableInflationRate": "Enflasyon Oranı",
+    "tableNominalValue": "Nominal Değer",
+    "tableRealValue": "Reel Değer",
+    "tableRealRoi": "Reel Getiri",
+    "tableNetRealProfit": "Net Reel Kazanç",
     "noScenarios": "Henüz kayıtlı bir senaryo yok. Parametrelerinizi girdikten sonra ilk senaryonuzu kaydedin.",
     "duplicateName": "Bu isimde bir senaryo zaten mevcut.",
     "deleteConfirm": "\"{{name}}\" senaryosunu silmek istediğinize emin misiniz?",
@@ -156,6 +171,7 @@
   },
   "settings": {
     "title": "Uygulama Ayarları",
+    "description": "Uygulama dilini, para birimini ve AI sağlayıcısını yapılandırın; sistem bilgilerini görüntüleyin.",
     "languageSelect": "Varsayılan Dil",
     "themeSelect": "Tema Tercihi",
     "saved": "Ayarlar başarıyla kaydedildi.",
@@ -163,6 +179,9 @@
     "defaultCurrency": "Yerel Para Birimi",
     "aiSettings": "AI Ayarları",
     "aiSettingsDesc": "Tahminler ve sohbet için AI sağlayıcınızı ve API anahtarınızı yapılandırın.",
+    "aiAutoApproveMutations": "AI işlemlerini otomatik onayla",
+    "aiAutoApproveMutationsDesc": "Etkinleştirildiğinde AI chat üzerinden açıkça istediğiniz portföy ve senaryo değişiklikleri ayrıca onay sorulmadan uygulanır.",
+    "aiAutoApproveMutationsWarning": "AI işlemleri kayıtlı portföy verilerinizi anında değiştirebilir.",
     "useDemoApi": "Demo API'yi Kullan",
     "useDemoApiDesc": "Sistemi denemek için sunulan ücretsiz demo API anahtarını kullanın.",
     "demoUsageQuota": "Demo Kullanım Kotaları",
@@ -172,6 +191,7 @@
   "ai": {
     "modalTitle": "AI Ekonomik Tahmin",
     "modalDesc": "Seçtiğiniz para birimi için enflasyon, döviz kuru ve getiri beklentilerini oluşturun ve formu tek tıkla doldurun.",
+    "noApiKey": "Tahmin oluşturmak için Ayarlar'dan bir AI API anahtarı yapılandırın.",
     "provider": "AI Sağlayıcısı",
     "custom": "Özel (OpenAI-uyumlu)",
     "model": "Model",
@@ -211,6 +231,10 @@
     "title": "MoneyTrace AI Asistan",
     "subtitle": "Portföyünüz hakkında sorular sorun",
     "placeholder": "Bir mesaj yazın...",
+    "stopGenerating": "Yanıtı durdur",
+    "open": "Sohbeti aç",
+    "close": "Sohbeti kapat",
+    "autoApprovalEnabled": "Otomatik onay etkin",
     "send": "Gönder",
     "thinking": "Düşünüyor...",
     "welcome": "Merhaba! 👋 Ben MoneyTrace yapay zekâ finans asistanınızım. Mevcut portföy verilerinizi, hesaplanan tablo ve grafik kırılımlarınızı görebiliyorum. Yatırımlarınız hakkında her şeyi sorabilirsiniz!",
@@ -231,6 +255,61 @@
     "proposalTitle": "AI portföy verilerinizi güncellemek istiyor",
     "proposalApply": "Uygula",
     "proposalReject": "Reddet",
-    "toolExecuted": "AI verileri güncelledi"
+    "toolExecuted": "AI aracı çalıştırıldı"
+  },
+  "notFound": {
+    "title": "Bu sayfa bulunamadı",
+    "description": "Bağlantı değişmiş veya adres hatalı olabilir. Hesaplayıcıya dönerek projeksiyonunuza devam edebilirsiniz.",
+    "action": "Hesaplayıcıya dön"
+  },
+  "seo": {
+    "hero": {
+      "eyebrow": "Satın alma gücünüzü ölçün",
+      "title": "Portföyünüz büyürken paranız gerçekten değer kazanıyor mu?",
+      "description": "Bileşik getiri, düzenli yatırım ve enflasyonu aynı projeksiyonda hesaplayın. Nominal bakiyenin yanında bugünün parasıyla reel satın alma gücünüzü de görün.",
+      "start": "Hesaplamaya başla",
+      "methodology": "Hesaplama yöntemini incele",
+      "signals": {
+        "0": "50 yıla kadar projeksiyon",
+        "1": "Hesap gerektirmez",
+        "2": "Açık kaynak hesaplama motoru"
+      }
+    },
+    "ledger": {
+      "label": "Değer kontrolü",
+      "badge": "Reel görünüm",
+      "nominal": "Nominal bakiye",
+      "real": "Bugünkü satın alma gücü",
+      "adjusted": "Enflasyona göre",
+      "note": "Aynı nominal tutar, fiyatlar yükseldikçe daha az mal ve hizmet satın alabilir. Reel değer bu farkı görünür kılar."
+    },
+    "guide": {
+      "eyebrow": "Rakamların arkasındaki anlam",
+      "title": "Portföy projeksiyonunu üç açıdan okuyun",
+      "description": "Tek bir gelecek bakiyesine odaklanmak yerine getiri, enflasyon ve düzenli katkı varsayımlarını birlikte karşılaştırın. Sonuçlar tahmin değil, girdiğiniz oranlara bağlı senaryolardır.",
+      "items": {
+        "0": {
+          "title": "Reel getiri nedir?",
+          "body": "Reel getiri, nominal büyümeden enflasyonun satın alma gücü etkisini ayırır. Pozitif nominal getiri her zaman pozitif reel getiri anlamına gelmez."
+        },
+        "1": {
+          "title": "Bileşik getiri nasıl büyür?",
+          "body": "Her dönemin getirisi mevcut bakiyeye eklenir ve sonraki dönemde yeniden getiri üretir. Vade uzadıkça varsayımlardaki küçük farklar büyür."
+        },
+        "2": {
+          "title": "Düzenli yatırım neyi değiştirir?",
+          "body": "Aylık katkılar yatırılan anaparayı zaman içinde artırır. Yıllık katkı artışıyla farklı tasarruf planlarını aynı tabloda karşılaştırabilirsiniz."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Hesaplamalar tarayıcınızda çalışır",
+      "body": "Portföy girdileriniz ve senaryolarınız localStorage ile cihazınızda saklanır. AI özelliklerini kullanmadığınız sürece finansal girdileriniz bir AI sağlayıcısına gönderilmez.",
+      "source": "Kaynak kodunu incele"
+    },
+    "staticCalculator": {
+      "title": "Etkileşimli portföy hesaplayıcı",
+      "body": "JavaScript etkin olduğunda başlangıç sermayesi, düzenli katkı, getiri, enflasyon, çekim ve referans döviz varsayımlarınızı değiştirerek sonuçları anında hesaplayabilirsiniz."
+    }
   }
 }

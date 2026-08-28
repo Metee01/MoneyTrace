@@ -10,7 +10,7 @@
  * @returns Monthly rate as decimal (e.g., 0.035 for 3.5%)
  */
 export function calculateMonthlyRate(annualRate: number): number {
-  if (annualRate <= 0) return 0
+  if (annualRate <= -100) return -1
   return Math.pow(1 + annualRate / 100, 1 / 12) - 1
 }
 
@@ -37,7 +37,7 @@ export function annualPercentToMonthlyPercent(
 export function monthlyPercentToAnnualPercent(
   monthlyRatePercent: number,
 ): number {
-  if (monthlyRatePercent <= 0) return 0
+  if (monthlyRatePercent <= -100) return -100
   return (Math.pow(1 + monthlyRatePercent / 100, 12) - 1) * 100
 }
 
@@ -90,8 +90,8 @@ export interface WithdrawalTaxResult {
 }
 
 /**
- * Calculates withholding tax (stopaj) on a cash withdrawal from portfolio.
- * Stopaj is only levied on the profit portion of the withdrawal.
+ * Calculates withholding tax on a cash withdrawal from a portfolio.
+ * Withholding tax is only levied on the profit portion of the withdrawal.
  *
  * @param requestedWithdrawal Target amount to withdraw
  * @param nominalValue Total portfolio nominal value

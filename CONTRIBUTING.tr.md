@@ -93,27 +93,19 @@ MoneyTrace, `i18next` ve `react-i18next` altyapısını kullanır. Çeviriler `s
 3. Dosya içerisindeki metin değerlerini (anahtarları değiştirmeden) yeni dile çevirin.
 4. Yeni dili `src/lib/i18n.ts` dosyasında statik import ile tanımlayın ve `resources` nesnesine kaydedin.
 5. Dilin görünür adını (örn. `de: "Deutsch (DE)"`) `src/lib/i18n.ts` içindeki `LANGUAGE_LABELS` haritasına ekleyin (Ayarlar'daki dil seçicisi buradan beslenir).
-6. **Merkezi yapılandırmayı güncelleyin:** `src/config/index.ts` dosyasındaki `APP_CONFIG.app.supportedLanguages` dizisine yeni dil kodunu ekleyin (şu an `["en", "tr"] as const`):
-   ```typescript
-   supportedLanguages: ["en", "tr", "de"] as const,
-   ```
-   Desteklenen dillerin tek kaynağı yapılandırma dosyasıdır.
+6. **Merkezi yapılandırmayı güncelleyin:** Yeni dil kodunu `src/config/index.ts` dosyasındaki `APP_CONFIG.app.supportedLanguages` dizisine, mevcut kayıtların tümünü koruyarak ekleyin. Böylece sabit bir dil kümesi varsayılmadan desteklenen dillerin tek kaynağı yapılandırma dosyası olarak kalır.
 
 Örnek `src/lib/i18n.ts` kaydı:
 ```typescript
 import deTranslation from '../locales/de/translation.json';
 
-// resources nesnesine ekleyin:
 const resources = {
-  en: { translation: enTranslation },
-  tr: { translation: trTranslation },
+  // Keep all existing language resources.
   de: { translation: deTranslation },
 };
 
-// LANGUAGE_LABELS haritasına ekleyin:
 const LANGUAGE_LABELS = {
-  en: "English (EN)",
-  tr: "Türkçe (TR)",
+  // Keep all existing language labels.
   de: "Deutsch (DE)",
 };
 ```

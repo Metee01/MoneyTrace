@@ -251,7 +251,10 @@ export const usePortfolioStore = create<PortfolioState>()(
           }
 
           return {
-            scenarios: remainingScenarios,
+            scenarios: remainingScenarios.map((scenario) => ({
+              ...scenario,
+              isBaseline: scenario.id === newBaselineId,
+            })),
             baselineScenarioId: newBaselineId,
           }
         }),

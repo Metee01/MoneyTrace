@@ -16,6 +16,9 @@ dist-ssr
 *.tsbuildinfo
 coverage
 .vercel
+
+# Local browser verification artifacts
+.playwright-cli/
 graphify-out/
 
 # Environment & Local
