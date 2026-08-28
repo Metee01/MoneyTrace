@@ -26,7 +26,8 @@
     "test:input": "tsx src/lib/numeric-input.test.ts",
     "test:chat-service": "tsx src/lib/ai-chat-service.test.ts",
     "test:ai-service": "tsx src/lib/ai-service.test.ts",
-    "test": "npm run test:engine && npm run test:store && npm run test:tools && npm run test:input && npm run test:chat-service && npm run test:ai-service"
+    "test:demo-api": "tsx scripts/demo-api.test.ts",
+    "test": "npm run test:engine && npm run test:store && npm run test:tools && npm run test:input && npm run test:chat-service && npm run test:ai-service && npm run test:demo-api"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

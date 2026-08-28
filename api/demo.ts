@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * MoneyTrace - Demo API Proxy (Vercel Serverless Function)
  *
@@ -11,7 +13,7 @@
  * otherwise).
  */
 
-import { APP_CONFIG } from "../src/config"
+import { APP_CONFIG } from "../src/config/index.js"
 
 export const config = { runtime: "edge" }
 
@@ -48,7 +50,7 @@ function createMemoryStore(): CounterStore {
   return {
     async incr(key) {
       const entry = map.get(key)
-      if (!entry || entry.expire <= now()) {
+      if (!entry || (entry.expire !== 0 && entry.expire <= now())) {
         map.set(key, { count: 1, expire: 0 })
         return 1
       }
@@ -69,7 +71,7 @@ function createMemoryStore(): CounterStore {
 }
 
 const memoryStore = createMemoryStore()
-let redis: typeof import("@upstash/redis").Redis | null | undefined
+let redis: import("@upstash/redis").Redis | null | undefined
 
 async function resolveStore(): Promise<CounterStore> {
   if (redis === undefined) {
@@ -93,7 +95,7 @@ async function resolveStore(): Promise<CounterStore> {
       return redis!.incr(key)
     },
     async decr(key) {
-      return redis!.decr(key)
+      await redis!.decr(key)
     },
     async acquire(key, ttlMs) {
       const result = await redis!.set(key, "1", { nx: true, px: ttlMs })
@@ -147,12 +149,20 @@ export default async function handler(req: Request): Promise<Response> {
     })
   }
 
-  let body: Record<string, unknown>
+  let parsedBody: unknown
   try {
-    body = await req.json()
+    parsedBody = await req.json()
   } catch {
     return json(400, { error: { message: "Invalid JSON body." } })
   }
+  if (
+    !parsedBody ||
+    typeof parsedBody !== "object" ||
+    Array.isArray(parsedBody)
+  ) {
+    return json(400, { error: { message: "Invalid JSON body." } })
+  }
+  const body = parsedBody as Record<string, unknown>
 
   const mode = body.mode === "chat" ? "chat" : "forecast"
   const userId = safeId(body.userId)
